@@ -1,0 +1,9 @@
+TuttoSport		http://www.tuttosport.com/rss/
+Stampa 			http://www.lastampa.it/rss.xml
+Adnkrons		http://www.adnkronos.com/rss/primapagina
+Republica		http://www.repubblica.it/rss/homepage/rss2.0.xml
+Sole24Ore		http://www.ilsole24ore.com/rssalias/primapagina.xml
+CoriereSport 	http://www.corrieredellosport.it/rss/
+CoriereNapoli	http://www.corriere.it/rss/homepage_napoli.xml
+Coriere 		http://xml.corriereobjects.it/rss/homepage.xml
+Ansa 			http://www.ansa.it/sito/ansait_rss.xml
