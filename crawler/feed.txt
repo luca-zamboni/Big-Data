@@ -7,3 +7,4 @@ CoriereSport 	http://www.corrieredellosport.it/rss/
 CoriereNapoli	http://www.corriere.it/rss/homepage_napoli.xml
 Coriere 		http://xml.corriereobjects.it/rss/homepage.xml
 Ansa 			http://www.ansa.it/sito/ansait_rss.xml
+GoogleNews		http://news.google.com/?output=rss
