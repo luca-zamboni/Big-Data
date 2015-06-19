@@ -86,7 +86,9 @@ while(True):
 
 			root = ET.fromstring(text)
 			insert("Google",root.iter('item'))
+			time.sleep( 15 )
+		
 
 	except Exception: 
-  		print("Except")
-	time.sleep( 5 )
+		print("Except")
+	time.sleep( 120 )

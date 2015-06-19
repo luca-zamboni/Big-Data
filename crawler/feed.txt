@@ -1,4 +1,3 @@
-TuttoSport		http://www.tuttosport.com/rss/
 Stampa 			http://www.lastampa.it/rss.xml
 Adnkrons		http://www.adnkronos.com/rss/primapagina
 Republica		http://www.repubblica.it/rss/homepage/rss2.0.xml
