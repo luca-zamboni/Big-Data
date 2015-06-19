@@ -10,8 +10,8 @@ tempnews = []
 md5 = {}
 
 def remove_tags(raw_html):
-  cleanr =re.compile('<.*?>')
-  cleantext = re.sub(cleanr,'', raw_html)
+  cleanr = re.compile('<.*?>')
+  cleantext = re.sub(cleanr,' ', raw_html)
   return cleantext
 
 def addToFile(testata,title,testo):
@@ -21,7 +21,7 @@ def addToFile(testata,title,testo):
 		myfile.write(title + "\n")
 		myfile.write(testo + "\n")
 
-def insert(testata,news):
+def insert(testata,news,RSS):
 	for n in news:
 		title = n.find('title').text
 		title = remove_tags(re.sub('[^A-Za-z0-9\.èòùàù]+', ' ', title).rstrip('\n'))
@@ -50,7 +50,7 @@ def insert(testata,news):
 					break;
 				#print(n + " --- " + title)
 			if not found:
-				addToFile(testata,title,testo)
+				addToFile(RSS,title,testo)
 
 while(True):
 	try:
@@ -85,8 +85,8 @@ while(True):
 			#print(text)
 
 			root = ET.fromstring(text)
-			insert("Google",root.iter('item'))
-			time.sleep( 15 )
+			insert("Google",root.iter('item'),RSS)
+			time.sleep( 0 )
 		
 
 	except Exception: 

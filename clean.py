@@ -80,10 +80,10 @@ while i < len(news):
 	text = clean(text)
 
 	###### ONLY FOR GOOGLE ######
-	testata = getRealTestata(title)
+	realTestata = getRealTestata(title)
 
-	print(testata + "\n" + title + "\n" + text)
+	#print(testata + "\n" + title + "\n" + text)
 
-	outF.write(testata + "\n" + title + "\n" + text + "\n");
+	outF.write(testata + "\n" + realTestata + "\n" + title + "\n" + text + "\n");
 
 	i+=3
