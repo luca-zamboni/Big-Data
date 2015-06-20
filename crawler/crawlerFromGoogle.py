@@ -24,7 +24,7 @@ def addToFile(testata,title,testo):
 def insert(testata,news,RSS):
 	for n in news:
 		title = n.find('title').text
-		title = remove_tags(re.sub('[^A-Za-z0-9\.èòùàù]+', ' ', title).rstrip('\n'))
+		title = remove_tags(re.sub('[^A-Za-z0-9\.èòùàù-]+', ' ', title).rstrip('\n'))
 		title = title.strip()
 
 		testo = n.find('description').text
@@ -86,7 +86,7 @@ while(True):
 
 			root = ET.fromstring(text)
 			insert("Google",root.iter('item'),RSS)
-			time.sleep( 0 )
+			time.sleep( 10 )
 		
 
 	except Exception: 
