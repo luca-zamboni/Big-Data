@@ -5,9 +5,14 @@ import xml
 import hashlib
 import re
 import time
+import os.path	# files management and checks
 
 tempnews = []
 md5 = {}
+
+
+GOOGLE_NEWS_PATH = "newsG.txt"
+
 
 def remove_tags(raw_html):
   cleanr = re.compile('<.*?>')
@@ -16,7 +21,7 @@ def remove_tags(raw_html):
 
 def addToFile(testata,title,testo):
 	print("Added news from " + testata)
-	with open("newsG.txt", "a") as myfile:
+	with open("newsG.txt", "a+") as myfile:
 		myfile.write(testata + "\n")
 		myfile.write(title + "\n")
 		myfile.write(testo + "\n")
@@ -32,25 +37,27 @@ def insert(testata,news,RSS):
 
 			testo = testo.strip().rstrip('\n')
 
-			
-			newsFile = open("newsG.txt", "r")
-			tempnews = []
-			while True:
-				testataF = newsFile.readline().rstrip('\n')
-				titleF = newsFile.readline().rstrip('\n')
-				testoF = newsFile.readline().rstrip('\n')
-				if not testataF or not titleF or not testoF: break
-				tempnews += [(titleF,testata)]
-			newsFile.close();
-
-			found = False
-			for n,t in tempnews:
-				if n == title and t == testata:
-					found = True
-					break;
-				#print(n + " --- " + title)
-			if not found:
+			if not os.path.exists(GOOGLE_NEWS_PATH):
 				addToFile(RSS,title,testo)
+			else:
+				newsFile = open(GOOGLE_NEWS_PATH, "r")
+				tempnews = []
+				while True:
+					testataF = newsFile.readline().rstrip('\n')
+					titleF = newsFile.readline().rstrip('\n')
+					testoF = newsFile.readline().rstrip('\n')
+					if not testataF or not titleF or not testoF: break
+					tempnews += [(titleF,testata)]
+				newsFile.close();
+
+				found = False
+				for n,t in tempnews:
+					if n == title and t == testata:
+						found = True
+						break;
+					#print(n + " --- " + title)
+				if not found:
+					addToFile(RSS,title,testo)
 
 while(True):
 	try:
