@@ -30,7 +30,7 @@ def insert(testata,news,RSS):
 		testo = n.find('description').text
 		if testo is not None and remove_tags(testo).strip().rstrip('\n') != "":
 
-			testo = remove_tags(testo).strip().rstrip('\n')
+			testo = testo.strip().rstrip('\n')
 
 			
 			newsFile = open("newsG.txt", "r")
