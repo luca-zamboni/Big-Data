@@ -60,29 +60,6 @@ def main():
 				pass
 
 
-			
-			
-			
-
-			'''for i in range(0,len(groups)):
-				if tup[0][0] in groups[i] :
-					if tup[1][0] not in groups[i]:
-						groups[i] += [tup[1][0]]
-					f = False
-				if tup[1][0] in groups[i]:
-					if tup[0][0] not in groups[i]:
-						groups[i] += [tup[0][0]]
-					f = False
-			if f:
-				groups += [[tup[0][0],tup[1][0]]]
-		else:
-			l = list(set(itertools.chain(*groups)))
-			print(tup[0][0],tup[1][0],l)
-			if(tup[1][0] not in l):
-				groups += [[tup[1][0]]]
-			if(tup[0][0] not in l):
-				groups += [[tup[0][0]]]
-			print(groups)'''
 
 
 	for g in groups:
