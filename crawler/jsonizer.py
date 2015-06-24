@@ -17,6 +17,8 @@ class MyHTMLParser(HTMLParser):
 		self.count_font = 0;
 		self.current_tag = ""
 
+		self.looking_for_testata = False
+
 		self.news = news
 		self.parse_news()
 
@@ -31,8 +33,14 @@ class MyHTMLParser(HTMLParser):
 			self.count_a += 1
 		elif tag == 'font':
 			self.count_font += 1
+		elif tag == 'td':
+			self.count_font = 0
 
-		for tag_name,value in attrs:
+		for tag_name, value in attrs:
+
+			# Testata
+			if tag == 'font' and tag_name == 'color' and value == '#6f6f6f':
+				self.looking_for_testata = True
 
 			# Immagine
 			if tag == 'img' and tag_name == "src" and self.count_a == 1:
@@ -46,9 +54,10 @@ class MyHTMLParser(HTMLParser):
 
 		# TESTATA
 		if self.current_tag == "font":
-			if self.count_font == 5:
-				self.news.set_testata(data)	
-			elif self.count_font == 6:
+			if self.looking_for_testata:
+				self.news.set_testata(data)
+				self.looking_for_testata = False
+			elif self.count_font == 4:
 				txt = self.news.get_description() + data;
 				self.news.set_description(txt)
 
@@ -139,9 +148,13 @@ class News:
 def parse_news(url, title, source):
 	news = News(url, title, source)
 	parser = MyHTMLParser(news)
-	print(news.to_JSON())
+	return news;
+
 
 def parse_news_file(path):
+
+	list_news = []
+	nid = 1
 
 	if not os.path.exists(path):
 		print("Sorry, no news to parse in ", path , ".")
@@ -158,21 +171,23 @@ def parse_news_file(path):
 			# Check emptyness
 			if not url or not title or not source: break
 
-			parse_news(url,title,source)
-
+			news = parse_news(url,title,source)
+			news.set_nid(nid)
+			nid += 1
+			list_news = list_news + [news]
 
 		newsFile.close();
+
+	return list_news
 
 def create_news_files(path):
 
 	if not os.path.exists(path):
 		print("Sorry, no news to parse in ", path , ".")
 	else:
-		strin = '<table border="0" cellpadding="2" cellspacing="7" style="vertical-align:top;"><tr><td width="80" align="center" valign="top"><font style="font-size:85%;font-family:arial,sans-serif"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;ct2=it&amp;usg=AFQjCNGLiCpLOfwJxLlRMrIfOyCLCtI02g&amp;clid=c3a7d30bb8a4878e06b80cf16b898331&amp;cid=52779454240467&amp;ei=ZHqFVYjcGNWoaseAg5gJ&amp;url=http://www.quotidiano.net/austria-suv-contro-passanti-1.1076583"><img src="//t3.gstatic.com/images?q=tbn:ANd9GcRk0XvPCFQ3WrTqXsZhr5JsdJQF0FgPMD4a9SAgfQyDZAnDWfclUEaO_cTMeQIMevsniSBlSAs" alt="" border="1" width="80" height="80"><br><font size="-2">Quotidiano.net</font></a></font></td><td valign="top" class="j"><font style="font-size:85%;font-family:arial,sans-serif"><br><div style="padding-top:0.8em;"><img alt="" height="1" width="1"></div><div class="lh"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;ct2=it&amp;usg=AFQjCNGLiCpLOfwJxLlRMrIfOyCLCtI02g&amp;clid=c3a7d30bb8a4878e06b80cf16b898331&amp;cid=52779454240467&amp;ei=ZHqFVYjcGNWoaseAg5gJ&amp;url=http://www.quotidiano.net/austria-suv-contro-passanti-1.1076583"><b>Austria, con il suv contro la folla: 3 morti Polizia: &quot;Armato, ma non è <b>...</b></b></a><br><font size="-1"><b><font color="#6f6f6f">Quotidiano.net</font></b></font><br><font size="-1">L&#39;autore del folle gesto è un 26enne austriaco di origini bosniache.Il giovane soffre di problemi psichici. Almeno 34 i feriti. Tra le vittime un bimbo di 7 anni e una donna. Austria, uomo si lancia con il suv contro la folla. (Ansa)&nbsp;...</font><br><font size="-1" class="p"></font><br><font class="p" size="-1"><a class="p" href="http://news.google.it/news/story?ncl=dkdCZaFrYIPByEM&amp;ned=it"><nobr><b>altro&nbsp;&raquo;</b></nobr></a></font></div></font></td></tr></table>'
 		f = open("news/gen_0.html", "a+")
 		f.write(HTMLBeautifier.beautify(strin, 4))
 		f.close()
-
 
 		# newsFile = open(path, "r")
 		# count = 0
@@ -189,15 +204,12 @@ def create_news_files(path):
 		# 	if not url or not title or not source: break
 
 		# 	path_single = "news/gen_" + str(count) + ".html"
-		# 	f = open(path_single, "a+")
+		# 	f = open(path_single, "w")
 		# 	f.write(HTMLBeautifier.beautify(source, 4))
 		# 	f.close()
 
 		# newsFile.close()
 
 
-create_news_files(GOOGLE_NEWS_PATH)
-# parse_news_file(GOOGLE_NEWS_PATH)
-
-
-
+# create_news_files(GOOGLE_NEWS_PATH)
+parse_news_file(GOOGLE_NEWS_PATH)
