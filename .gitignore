@@ -3,4 +3,4 @@
 /**/news.txt
 *.txt
 tmp
-/news/
+news/
