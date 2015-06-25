@@ -2,7 +2,8 @@ import json
 import re
 import os.path	# files management and checks
 from html.parser import HTMLParser
-from html.entities import name2codepoint # for html cha
+from html.entities import name2codepoint # for html character
+from html5print import HTMLBeautifier
 
 GOOGLE_NEWS_PATH = "newsG.txt"
 
@@ -15,6 +16,8 @@ class MyHTMLParser(HTMLParser):
 		self.count_a = 0;
 		self.count_font = 0;
 		self.current_tag = ""
+
+		self.looking_for_testata = False
 
 		self.news = news
 		self.parse_news()
@@ -30,8 +33,14 @@ class MyHTMLParser(HTMLParser):
 			self.count_a += 1
 		elif tag == 'font':
 			self.count_font += 1
+		elif tag == 'td':
+			self.count_font = 0
 
-		for tag_name,value in attrs:
+		for tag_name, value in attrs:
+
+			# Testata
+			if tag == 'font' and tag_name == 'color' and value == '#6f6f6f':
+				self.looking_for_testata = True
 
 			# Immagine
 			if tag == 'img' and tag_name == "src" and self.count_a == 1:
@@ -45,10 +54,10 @@ class MyHTMLParser(HTMLParser):
 
 		# TESTATA
 		if self.current_tag == "font":
-			print("è un font! ",data,self.count_font )
-			if self.count_font == 5:
-				self.news.set_testata(data)	
-			elif self.count_font == 6:
+			if self.looking_for_testata:
+				self.news.set_testata(data)
+				self.looking_for_testata = False
+			elif self.count_font == 4:
 				txt = self.news.get_description() + data;
 				self.news.set_description(txt)
 
@@ -139,22 +148,68 @@ class News:
 def parse_news(url, title, source):
 	news = News(url, title, source)
 	parser = MyHTMLParser(news)
-	print(news.to_JSON())
+	return news;
 
-def parse_news_file():
 
-	if not os.path.exists(GOOGLE_NEWS_PATH):
-		print("Sorry, no news to parse.")
+def parse_news_file(path):
+
+	list_news = []
+	nid = 1
+
+	if not os.path.exists(path):
+		print("Sorry, no news to parse in ", path , ".")
 	else:
 
-		newsFile = open(GOOGLE_NEWS_PATH, "r")
+		newsFile = open(path, "r")
 
-		url = newsFile.readline()
-		title = newsFile.readline().rstrip('\n')
-		source = newsFile.readline().rstrip('\n')
+		while True:
 
-		parse_news(url,title,source)
+			url = newsFile.readline().rstrip('\n')
+			title = newsFile.readline().rstrip('\n')
+			source = newsFile.readline().rstrip('\n')
+			
+			# Check emptyness
+			if not url or not title or not source: break
+
+			news = parse_news(url,title,source)
+			news.set_nid(nid)
+			nid += 1
+			list_news = list_news + [news]
 
 		newsFile.close();
 
-parse_news_file()
+	return list_news
+
+def create_news_files(path):
+
+	if not os.path.exists(path):
+		print("Sorry, no news to parse in ", path , ".")
+	else:
+		f = open("news/gen_0.html", "a+")
+		f.write(HTMLBeautifier.beautify(strin, 4))
+		f.close()
+
+		# newsFile = open(path, "r")
+		# count = 0
+
+		# while True:
+
+		# 	count += 1
+
+		# 	url = newsFile.readline().rstrip('\n')
+		# 	title = newsFile.readline().rstrip('\n')
+		# 	source = newsFile.readline().rstrip('\n')
+			
+		# 	# Check emptyness
+		# 	if not url or not title or not source: break
+
+		# 	path_single = "news/gen_" + str(count) + ".html"
+		# 	f = open(path_single, "w")
+		# 	f.write(HTMLBeautifier.beautify(source, 4))
+		# 	f.close()
+
+		# newsFile.close()
+
+
+# create_news_files(GOOGLE_NEWS_PATH)
+parse_news_file(GOOGLE_NEWS_PATH)
