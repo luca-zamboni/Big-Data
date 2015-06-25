@@ -240,7 +240,7 @@ def parse_news(url, title, source):
 
 def removePuntuaction(s):
 	for c in string.punctuation:
-		s = s.replace(c,"")
+		s = s.replace(c," ")
 	return s
 
 def clean_title(title):
@@ -318,7 +318,7 @@ def get_list_testata(list_news):
 
 def create_news_files(list_news, path = "news/list_news.json"):
 
-	mod = 'a+'
+	mod = 'w'
 	count = len(list_news)
 
 	if not os.path.exists(path):
