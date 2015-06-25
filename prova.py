@@ -1,23 +1,26 @@
 
 import itertools
 from random import shuffle
+import sys
+import jsonizer
 
-N_SHINGLES = 9
-THRESHOLD = 0.07
+N_SHINGLES = 5
+THRESHOLD_SIMILARITY = 0.185
 N_PERM = 100
+THRESHOLD_COUNT = 2
 
 BASE_STR_JOIN = " "
 
 shingles = []
+shinglesCount = {}
 
-# Jaccard Similarity of 2 list
+# Jaccard Similarity of 2 strings
 def jaccard(list1,list2):
 	list1 = getShingleList(list1)
 	list2 = getShingleList(list2)
-	s1 = set(list1)
-	s2 = set(list2)
-	return float(len(s1 & s2))/len(s1 | s2)
+	return jaccardForMinHash(list1,list2)
 
+# Jaccard Similarity of 2 strings
 def jaccardForMinHash(list1,list2):
 	s1 = set(list1)
 	s2 = set(list2)
@@ -30,24 +33,34 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	return s.split()
-	#return [s[i:i + n] for i in range(len(s) - n + 1)]
+	#return s.split()
+	return [s[i:i + n] for i in range(len(s) - n + 1)]
 
 
 
-def getAggregratedGroups(texts,groups):
+def getAggregratedGroups(signatureMatrix,groups):
+
+	distanceMatrix = [[] for i in range(len(signatureMatrix))]
+	for i in range(0,len(distanceMatrix)):
+		distanceMatrix[i] = [0.0 for y in range(len(signatureMatrix))]
+
 	# For each Tuple of News
-	for tup in list(itertools.combinations(texts,2)):
-		sim = jaccardForMinHash(tup[0][1],tup[1][1])
-		print(tup[0][0],tup[1][0],sim)
+	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
+
+		sim = jaccardForMinHash(l1,l2)
+		
+		#distanceMatrix[nid1][nid2] = 1 - sim
+
+		#print(nid1,nid2,"\t",sim)
+
 		f = True
 
-		if sim > THRESHOLD :
+		if sim > THRESHOLD_SIMILARITY :
 
 			for i in range(0,len(groups)):
-				if tup[0][0] in groups[i] :
+				if nid1 in groups[i] :
 					l1 = groups[i]
-				if tup[1][0] in groups[i]:
+				if nid2 in groups[i]:
 					l2 = groups[i]
 
 			#print(l1+l2)
@@ -60,16 +73,25 @@ def getAggregratedGroups(texts,groups):
 
 			except:
 				pass
+	#print(distanceMatrix)
+	#for item in distanceMatrix:
+		#print(item[0], ', '.join(map(str, item[1:])))
 	return groups
 	
 def addGlobalShingle(st):
 	global shingles
+	global shinglesCount
 	sh = getShingleList(st.split())
 	for s in sh:
 		if s not in shingles:
 			shingles += [s]
+			shinglesCount[s] = 1
+		else:
+			shinglesCount[s] += 1
 
-def fillMatrix(matrix,texts):
+# Return the signature matrix far all the singles  
+def fillMatrix(texts):
+	matrix = {}
 	for nid,s in texts:
 		sh = getShingleList(s.split())
 		matrix[nid] = []
@@ -78,16 +100,20 @@ def fillMatrix(matrix,texts):
 				matrix[nid] += [1]
 			else:
 				matrix[nid] += [0]
+	return matrix
 
+
+##########    SLOWWWWWW     ##########
 def getRandomPermutation():
 	permutation = []
 	n = len(shingles)
 	for j in range(0,N_PERM):
+		print(j,end="\r")
 		x = [[i] for i in range(0,n)]
-		shuffle(x)
+		shuffle(x)	### <<<<<<<<<<< SLOWWWWWWWWWWWWWWWWWWWWWW
 		permutation += [list(itertools.chain(*x))]
-	print(len(permutation[0]))
 	return permutation
+######## RLY FORKING SLOOOOOOOW #####
 
 # Getting signature matrix
 def getSignatureMatrix(matrix,permutations):
@@ -100,17 +126,25 @@ def getSignatureMatrix(matrix,permutations):
 						signatureMatrix[n] += [cell]
 					else:
 						signatureMatrix[n] = [cell]
-					#print(cell,n)
 					break;
 
 	return signatureMatrix
 
-			
+### REMOVE shingles with count < n
+def removeShinglesLowCount(n = THRESHOLD_COUNT):
+	global shingles
+	global shinglesCount
+	for sh in shinglesCount:
+		if shinglesCount[sh] < n:
+			shingles.remove(sh)
 
 # MAIN
 def main():
+
+	print(jsonizer.getListNews())
+
 	newsFile = open("newsProva.txt", "r")
-	i=4
+	i=0
 	groups = []
 	texts = []
 	matrix = {}
@@ -125,28 +159,21 @@ def main():
 
 		addGlobalShingle(testoF)
 		texts = texts + [(i,testoF)]
-		i+=4
+		i+=1
 
-	print(shingles)
+	# TRY TO OPTIMIZE
+	removeShinglesLowCount()
 
-	fillMatrix(matrix,texts)
+	#print(shingles)
+
+	matrix = fillMatrix(texts)
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
-	forGroup = []
-	for nid in signatureMatrix:
-		forGroup += [(nid,signatureMatrix[nid])]
-	#getting groups
-
-	groups = getAggregratedGroups(forGroup,groups)
+	groups = getAggregratedGroups(signatureMatrix,groups)
 
 	for g in groups:
 		print(sorted(g))
-
-	#for g in signatureMatrix:
-		#print(len(signatureMatrix[g]))
-
-
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":
