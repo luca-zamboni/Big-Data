@@ -341,5 +341,3 @@ def getListNews(remove_stop_word = False):
 	list_news = parse_news_file(remove_stop_word = False)
 	create_news_files(list_news)
 	return list_news
-
-getListNews()
