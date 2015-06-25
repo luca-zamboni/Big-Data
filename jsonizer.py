@@ -3,6 +3,7 @@ import re, sys
 import os.path	# files management and checks
 from html.parser import HTMLParser
 import re
+import string
 from html.entities import name2codepoint # for html character
 #from html5print import HTMLBeautifier
 
@@ -60,7 +61,7 @@ class MyHTMLParser(HTMLParser):
 				self.looking_for_testata = False
 			elif self.count_font == 4:
 				txt = self.news.get_description() + data;
-				self.news.set_description(txt)
+				self.news.set_description(removePuntuaction(txt))
 
 class WrapNews:
 
@@ -232,9 +233,15 @@ def load_stop_words():
 
 def parse_news(url, title, source):
 	title = clean_title(title)
+	title = removePuntuaction(title)
 	news = News(url, title, source)
 	parser = MyHTMLParser(news)
 	return news;
+
+def removePuntuaction(s):
+	for c in string.punctuation:
+		s = s.replace(c,"")
+	return s
 
 def clean_title(title):
 	return re.sub(' - .*', ' ', title)
