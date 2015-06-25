@@ -257,7 +257,7 @@ def remove_stop_word_from_string(s,stop_words):
 
 # Parses a file which contains a set of news.
 # source_path is the path of the file as results of the crawler.
-# remove_stop_word is a flag which means whether the stop words have to be removed from text or not.
+# remove_stop_word is a flag that tells whether the stop words have to be removed from text or not.
 def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	list_news = []
@@ -338,7 +338,7 @@ def create_news_files(list_news, path = "news/list_news.json"):
 
 def getListNews(remove_stop_word = False):
 
-	list_news = parse_news_file(remove_stop_word = remove_stop_word)
+	list_news = parse_news_file(remove_stop_word)
 	create_news_files(list_news)
 
 	return list_news
