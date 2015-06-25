@@ -1,13 +1,13 @@
 import json
-import re, sys
+import string
+import re
 import os.path	# files management and checks
 from html.parser import HTMLParser
-import re
-import string
 from html.entities import name2codepoint # for html character
-#from html5print import HTMLBeautifier
 
-GOOGLE_NEWS_PATH = "newsGProva.txt"
+GOOGLE_NEWS_PATH = "crawler/newsG.txt"
+STOP_WORDS_PATH = "stopword.txt"
+JSON_OUTPUT_PATH = "crawler/news/list_news.json"
 
 class MyHTMLParser(HTMLParser):
 
@@ -221,7 +221,7 @@ class News:
 
 def load_stop_words():
 
-	stop_words_path = "stopword.txt"
+	stop_words_path = STOP_WORDS_PATH
 	stop_words = []
 	f = open(stop_words_path, "r")
 	line = f.readline()
@@ -306,7 +306,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 # Test function
 def check_list_news(list_news):
-	print("numero news: ", len(list_news))
+	print(len(list_news), "news found.")
 	for news in list_news:
 		if(news.get_description() == "" or news.get_testata() == "" or news.get_source_url() == ""):
 			print(str(news.get_nid()))
@@ -316,7 +316,7 @@ def get_list_testata(list_news):
 	for news in list_news:
 		print(str(news.get_testata()))
 
-def create_news_files(list_news, path = "news/list_news.json"):
+def create_news_files(list_news, path = JSON_OUTPUT_PATH):
 
 	mod = 'w'
 	count = len(list_news)
@@ -338,7 +338,8 @@ def create_news_files(list_news, path = "news/list_news.json"):
 
 def getListNews(remove_stop_word = False):
 
-	list_news = parse_news_file(remove_stop_word)
+	list_news = parse_news_file(remove_stop_word = False)
 	create_news_files(list_news)
-
 	return list_news
+
+getListNews()
