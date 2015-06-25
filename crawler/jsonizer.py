@@ -217,11 +217,27 @@ class News:
 	def to_JSON(self):
 		return json.dumps(self.wrap_news(), default=lambda o: o.__dict__, sort_keys=True, indent=4, ensure_ascii=False)
 
+def load_stop_words():
+
+	stop_words_path = "../stopword.txt"
+	stop_words = []
+	f = open(stop_words_path, "r")
+	line = f.readline()
+	while line:
+	    stop_words += [line.rstrip('\n')]
+	    line = f.readline()
+	f.close()
+	return stop_words
+
 def parse_news(url, title, source):
 	news = News(url, title, source)
 	parser = MyHTMLParser(news)
 	return news;
 
+
+# Parses a file which contains a set of news.
+# source_path is the path of the file as results of the crawler.
+# remove_stop_word is a flag which means whether the stop words have to be removed from text or not.
 def parse_news_file(source_path, remove_stop_word = False):
 
 	list_news = []
@@ -231,18 +247,35 @@ def parse_news_file(source_path, remove_stop_word = False):
 		print("Sorry, no news to parse in ", source_path , ".")
 	else:
 
-		newsFile = open(source_path, "r")
+		# Loads stop words into a variable, for performance purposes
+		if remove_stop_word:
+			stop_words = load_stop_words()
 
+		# File which contains all the news taken from the crawler..
+		# Each news is a set of 3 lines: 
+		#	1)	URL
+		#	2)	Title
+		#	3)	HTML source code
+		newsFile = open(source_path, "r")
+		
 		while True:
 
+			# Read lines about a single news..
 			url = newsFile.readline().rstrip('\n')
 			title = newsFile.readline().rstrip('\n')
 			source = newsFile.readline().rstrip('\n')
 			
-			# Check emptyness
+			# Check emptyness..
 			if not url or not title or not source: break
 
-			news = parse_news(url,title,source)
+			# Check if stop words have to be removed..
+			if remove_stop_word:
+				url = remove_stop_word_from_string(url)
+				title = remove_stop_word_from_string(title)
+				source = remove_stop_word_from_string(source)
+
+			# Converts a news into an object News..
+			news = parse_news(url, title, source)
 			news.set_nid(nid)
 			nid += 1
 			list_news = list_news + [news]
@@ -251,17 +284,17 @@ def parse_news_file(source_path, remove_stop_word = False):
 
 	return list_news
 
+# Test function
 def check_list_news(list_news):
 	print("numero news: ", len(list_news))
 	for news in list_news:
 		if(news.get_description() == "" or news.get_testata() == "" or news.get_source_url() == ""):
 			print(str(news.get_nid()))
 
+# Lists the set of sources from which the news are taken
 def get_list_testata(list_news):
 	for news in list_news:
 		print(str(news.get_testata()))
-
-def clean(list_news):
 
 def create_news_files(list_news, path = "news/list_news.json"):
 
