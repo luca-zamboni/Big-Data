@@ -7,7 +7,7 @@ from html.entities import name2codepoint # for html character
 
 GOOGLE_NEWS_PATH = "crawler/newsG.txt"
 STOP_WORDS_PATH = "stopword.txt"
-JSON_OUTPUT_PATH = "crawler/news/list_news.json"
+JSON_OUTPUT_PATH = "news/list_news.json"
 
 class MyHTMLParser(HTMLParser):
 
