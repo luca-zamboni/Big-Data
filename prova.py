@@ -5,7 +5,7 @@ import sys
 import jsonizer
 
 N_SHINGLES = 5
-THRESHOLD_SIMILARITY = 0.185
+THRESHOLD_SIMILARITY = 0.07
 N_PERM = 100
 THRESHOLD_COUNT = 2
 
@@ -51,7 +51,7 @@ def getAggregratedGroups(signatureMatrix,groups):
 		
 		#distanceMatrix[nid1][nid2] = 1 - sim
 
-		#print(nid1,nid2,"\t",sim)
+		print(nid1,nid2,"\t",sim)
 
 		f = True
 
@@ -141,28 +141,19 @@ def removeShinglesLowCount(n = THRESHOLD_COUNT):
 # MAIN
 def main():
 
-	print(jsonizer.getListNews())
-
-	newsFile = open("newsProva.txt", "r")
-	i=0
 	groups = []
 	texts = []
 	matrix = {}
-	while True:
-		testataF = newsFile.readline().rstrip('\n')
-		realTestataF = newsFile.readline().rstrip('\n')
-		titleF = newsFile.readline().rstrip('\n')
-		testoF = newsFile.readline().rstrip('\n')
-		if not testataF or not titleF or not testoF: break
 
-		groups += [[i]]
+	for n in jsonizer.getListNews(remove_stop_word = True):
 
-		addGlobalShingle(testoF)
-		texts = texts + [(i,testoF)]
-		i+=1
+		groups += [[n.get_nid()]]
+
+		addGlobalShingle(n.get_title() + " " + n.get_description())
+		texts = texts + [(n.get_nid(),n.get_description())]
 
 	# TRY TO OPTIMIZE
-	removeShinglesLowCount()
+	#removeShinglesLowCount()
 
 	#print(shingles)
 
