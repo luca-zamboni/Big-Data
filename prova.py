@@ -1,10 +1,12 @@
 
 import itertools
+from random import shuffle
 
-N_SHINGLES = 4
+N_SHINGLES = 9
 THRESHOLD = 0.07
+N_PERM = 100
 
-BASE_STR_JOIN = ""
+BASE_STR_JOIN = " "
 
 shingles = []
 
@@ -16,6 +18,11 @@ def jaccard(list1,list2):
 	s2 = set(list2)
 	return float(len(s1 & s2))/len(s1 | s2)
 
+def jaccardForMinHash(list1,list2):
+	s1 = set(list1)
+	s2 = set(list2)
+	return float(len(s1 & s2))/len(s1 | s2)
+
 # Get shingles of a list of strings
 def getShingleList(l):
 	s = BASE_STR_JOIN.join(l)
@@ -23,13 +30,16 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	return [s[i:i + n] for i in range(len(s) - n + 1)]
+	return s.split()
+	#return [s[i:i + n] for i in range(len(s) - n + 1)]
+
+
 
 def getAggregratedGroups(texts,groups):
 	# For each Tuple of News
 	for tup in list(itertools.combinations(texts,2)):
-		sim = jaccard(tup[0][1].split(),tup[1][1].split())
-		#print(sim,tup[0][0],tup[1][0])
+		sim = jaccardForMinHash(tup[0][1],tup[1][1])
+		print(tup[0][0],tup[1][0],sim)
 		f = True
 
 		if sim > THRESHOLD :
@@ -65,9 +75,36 @@ def fillMatrix(matrix,texts):
 		matrix[nid] = []
 		for shi in shingles:
 			if shi in sh:
-				matrix[nid] += [0]
-			else:
 				matrix[nid] += [1]
+			else:
+				matrix[nid] += [0]
+
+def getRandomPermutation():
+	permutation = []
+	n = len(shingles)
+	for j in range(0,N_PERM):
+		x = [[i] for i in range(0,n)]
+		shuffle(x)
+		permutation += [list(itertools.chain(*x))]
+	print(len(permutation[0]))
+	return permutation
+
+# Getting signature matrix
+def getSignatureMatrix(matrix,permutations):
+	signatureMatrix = {}
+	for n in matrix:
+		for p in permutations:
+			for cell in p:
+				if matrix[n][cell] == 1:
+					if n in signatureMatrix:
+						signatureMatrix[n] += [cell]
+					else:
+						signatureMatrix[n] = [cell]
+					#print(cell,n)
+					break;
+
+	return signatureMatrix
+
 			
 
 # MAIN
@@ -90,18 +127,26 @@ def main():
 		texts = texts + [(i,testoF)]
 		i+=4
 
+	print(shingles)
 
 	fillMatrix(matrix,texts)
+	permutations = getRandomPermutation()
+	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
+	forGroup = []
+	for nid in signatureMatrix:
+		forGroup += [(nid,signatureMatrix[nid])]
 	#getting groups
-	groups = getAggregratedGroups(texts,groups)
+
+	groups = getAggregratedGroups(forGroup,groups)
 
 	for g in groups:
 		print(sorted(g))
 
-	
-	
-	#print(matrix)
+	#for g in signatureMatrix:
+		#print(len(signatureMatrix[g]))
+
+
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":
