@@ -49,8 +49,8 @@ class MyHTMLParser(HTMLParser):
 				self.news.set_image_url(value)
 
 			# URLs
-			if tag == 'a' and tag_name == "href" and self.count_a == 1:
-				self.news.set_source_url(value)
+			#if tag == 'a' and tag_name == "href" and self.count_a == 1:
+				#self.news.set_source_url(value)
 
 	def handle_data(self, data):
 
