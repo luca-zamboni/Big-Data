@@ -232,27 +232,30 @@ def load_stop_words():
 	return stop_words
 
 def parse_news(url, title, source):
-	title = clean_title(title)
-	title = removePuntuaction(title)
 	news = News(url, title, source)
 	parser = MyHTMLParser(news)
 	return news;
 
 def removePuntuaction(s):
 	for c in string.punctuation:
-		s = s.replace(c," ")
+		s = s.replace(c, ' ')
+	s = re.sub('\s+', ' ', s).strip()
 	return s
 
 def clean_title(title):
-	return re.sub(' - .*', ' ', title)
+	title = re.sub(' - .*', ' ', title)
+	title = re.sub('\s+', ' ', title).strip()
+	return title
 
-def remove_stop_word_from_string(s,stop_words):
+def remove_stop_word_from_string(string, stop_words):
 	ret = []
-	for ss in s.split():
+	for ss in string.split():
 		if ss not in stop_words:
 			ret += [ss]
 
-	return " ".join(ret)
+	string = " ".join(ret)
+	string = removePuntuaction(string)
+	return string
 
 
 # Parses a file which contains a set of news.
@@ -290,15 +293,20 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 			# Check if stop words have to be removed..
 			if remove_stop_word:
-				url = remove_stop_word_from_string(url,stop_words)
+				# url = remove_stop_word_from_string(url,stop_words)
 				title = remove_stop_word_from_string(title,stop_words)
 				source = remove_stop_word_from_string(source,stop_words)
+
+				title = clean_title(title)
+
 
 			# Converts a news into an object News..
 			news = parse_news(url, title, source)
 			news.set_nid(nid)
 			nid += 1
 			list_news = list_news + [news]
+
+			print(news.get_title())
 			
 		newsFile.close();
 
@@ -341,3 +349,5 @@ def getListNews(remove_stop_word = False):
 	list_news = parse_news_file(remove_stop_word = False)
 	create_news_files(list_news)
 	return list_news
+
+getListNews()
