@@ -5,9 +5,9 @@ import os.path	# files management and checks
 from html.parser import HTMLParser
 from html.entities import name2codepoint # for html character
 
-GOOGLE_NEWS_PATH = "crawler/newsG.txt"
+GOOGLE_NEWS_PATH = "newsG.txt"
 STOP_WORDS_PATH = "stopword.txt"
-JSON_OUTPUT_PATH = "news/list_news.json"
+JSON_OUTPUT_PATH = "newsG.json"
 
 class MyHTMLParser(HTMLParser):
 
@@ -65,11 +65,12 @@ class MyHTMLParser(HTMLParser):
 
 class WrapNews:
 
-	def __init__(self, nid = 0, title = "", testata = "", body = "", source_url = "", image_url = ""):
+	def __init__(self, nid = 0, title = "", testata = "", date = "", body = "", source_url = "", image_url = ""):
 
 		self.set_nid(nid)
 		self.set_title(title)
 		self.set_testata(testata)
+		self.set_date(date)
 		self.set_body(body)
 		self.set_source_url(source_url)
 		self.set_image_url(image_url)
@@ -102,6 +103,14 @@ class WrapNews:
 	def set_testata(self, testata):
 		self.testata = self.decode_from_utf8(testata)
 
+	# DATE
+
+	def get_date(self):
+		return self.date
+
+	def set_date(self, date):
+		self.date = date
+
 	# BODY
 
 	def get_body(self):
@@ -128,10 +137,11 @@ class WrapNews:
 
 class News:
 
-	def __init__(self, url = "", title = "", source = "", nid = 0, testata = "", description = "", image_url = "", source_url = ""):
+	def __init__(self, url = "", title = "", date = "", source = "", nid = 0, testata = "", description = "", image_url = "", source_url = ""):
 
 		self.set_url(url)
 		self.set_title(title)
+		self.set_date(date)
 		self.set_source(source)
 
 		self.nid = nid
@@ -163,6 +173,14 @@ class News:
 
 	def set_title(self, title):
 		self.title = title
+
+	# DATE
+
+	def get_date(self):
+		return self.date
+
+	def set_date(self, date):
+		self.date = date
 
 	# SOURCEs
 
@@ -210,6 +228,7 @@ class News:
 		wrapper = WrapNews()
 		wrapper.set_nid(self.get_nid())
 		wrapper.set_title(self.get_title())
+		wrapper.set_date(self.get_date())
 		wrapper.set_testata(self.get_testata())
 		wrapper.set_body(self.get_description())
 		wrapper.set_source_url(self.get_source_url())
@@ -231,8 +250,8 @@ def load_stop_words():
 	f.close()
 	return stop_words
 
-def parse_news(url, title, source):
-	news = News(url, title, source)
+def parse_news(url, title, date, source):
+	news = News(url, title, date, source)
 	parser = MyHTMLParser(news)
 	return news;
 
@@ -286,6 +305,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			# Read lines about a single news..
 			url = newsFile.readline().rstrip('\n')
 			title = newsFile.readline().rstrip('\n')
+			date = newsFile.readline().rstrip('\n')
 			source = newsFile.readline().rstrip('\n')
 			
 			# Check emptyness..
@@ -301,13 +321,11 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 
 			# Converts a news into an object News..
-			news = parse_news(url, title, source)
+			news = parse_news(url, title, date, source)
 			news.set_nid(nid)
 			nid += 1
 			list_news = list_news + [news]
 
-			print(news.get_title())
-			
 		newsFile.close();
 
 	return list_news
@@ -316,7 +334,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 def check_list_news(list_news):
 	print(len(list_news), "news found.")
 	for news in list_news:
-		if(news.get_description() == "" or news.get_testata() == "" or news.get_source_url() == ""):
+		if(news.get_description() == "" or news.get_date() == "" or news.get_testata() == "" or news.get_source_url() == ""):
 			print(str(news.get_nid()))
 
 # Lists the set of sources from which the news are taken
@@ -329,8 +347,8 @@ def create_news_files(list_news, path = JSON_OUTPUT_PATH):
 	mod = 'w'
 	count = len(list_news)
 
-	if not os.path.exists(path):
-		mod = 'w'
+	# if not os.path.exists(path):
+	# 	mod = 'w'
 
 	f = open(path, mod)
 
@@ -349,3 +367,6 @@ def getListNews(remove_stop_word = False):
 	list_news = parse_news_file(remove_stop_word = False)
 	create_news_files(list_news)
 	return list_news
+
+
+getListNews(False)
