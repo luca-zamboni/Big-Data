@@ -99,9 +99,9 @@ def getCloserGroupsMean(groups,distanceMatrix):
 def getAggregatedWithClustering(signatureMatrix,groups):
 
 	# Instantiating distance matrix
-	distanceMatrix = [[] for i in range(0,len(signatureMatrix)+1)]
+	distanceMatrix = [[] for i in range(0,len(signatureMatrix))]
 	for i in range(0,len(distanceMatrix)):
-		distanceMatrix[i] = [1.0 for y in range(0,len(signatureMatrix)+1)]
+		distanceMatrix[i] = [1.0 for y in range(0,len(signatureMatrix))]
 
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
@@ -121,19 +121,26 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 
 def transformInReamMatrix(matrix):
 	ret = [[] for i in range(0,len(matrix))]
-	print(ret)
 	for i in matrix:
-		print(matrix[i])
 		ret[i] += matrix[i]
 	return ret
 
 	
 def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
-	n_clusters = 4
-	k_means = cluster.KMeans(n_clusters=n_clusters, n_init=len(shingles))
-	#k_means.fit(X)
-	#values = k_means.cluster_centers_.squeeze()
+	score = 0
+	oldscore = 0
+	for n_clusters in range(1,29):
+		k_means = cluster.KMeans(n_clusters=n_clusters, n_init=len(shingles),n_jobs=4)
+		k_means.fit(m)
+		c = k_means.predict(m)
+		if oldscore == 0:
+			oldscore = -(k_means.score(m))
+		else:
+			score = oldscore - (-k_means.score(m))
+			print(n_clusters,score)
+			oldscore = (- k_means.score(m))
+		values = k_means.cluster_centers_.squeeze()
 	
 def addGlobalShingle(st):
 	global shingles
@@ -228,7 +235,7 @@ def main():
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
-	groups = getKmeanCluster(matrix)
+	groups = getKmeanCluster(signatureMatrix)
 
 	print(groups)
 
