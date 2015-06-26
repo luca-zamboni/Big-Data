@@ -94,7 +94,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
-		print(dist,groups)
+		#print(dist,groups)
 
 	return groups
 	
@@ -114,7 +114,7 @@ def getAggregratedGroups(signatureMatrix,groups):
 		
 		#distanceMatrix[nid1][nid2] = 1 - sim
 
-		print(nid1,nid2,"\t",sim)
+		#print(nid1,nid2,"\t",sim)
 
 		f = True
 
@@ -182,6 +182,7 @@ def getRandomPermutation():
 def getSignatureMatrix(matrix,permutations):
 	signatureMatrix = {}
 	for n in matrix:
+		print(n)
 		for p in permutations:
 			for cell in p:
 				if matrix[n][cell] == 1:
@@ -222,7 +223,8 @@ def main():
 
 		addGlobalShingle(n.get_title() + " " + n.get_description())
 		texts = texts + [(n.get_nid(),n.get_description())]
-
+		print(n.get_title() + " " + n.get_description())
+		print(n.get_nid())
 	# TRY TO OPTIMIZE
 	#removeShinglesLowCount()
 
@@ -235,7 +237,7 @@ def main():
 	#groups = getAggregratedGroups(signatureMatrix,groups)
 	groups = getAggregatedWithClustering(signatureMatrix,groups)
 
-	print(groups)
+	#print(groups)
 
 	'''err = 0
 	for i in range(0,len(groups)):
