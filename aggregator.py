@@ -4,9 +4,10 @@ from random import shuffle
 import sys
 import jsonizer
 
-N_SHINGLES = 7
+N_SHINGLES = 5
 THRESHOLD_SIMILARITY = 0.19
-N_PERM = 1000
+THRESHOLD_AGGREGATION = 1 - 0.9813
+N_PERM = 300
 THRESHOLD_COUNT = 2
 
 BASE_STR_JOIN = " "
@@ -33,8 +34,70 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	#return s.split()
-	return [s[i:i + n] for i in range(len(s) - n + 1)]
+	return s.split()
+	#return [s[i:i + n] for i in range(len(s) - n + 1)]
+
+def getCloserGroupsFurther(groups,distanceMatrix):
+	closer = (None,None)
+	dist = 9.0
+	# Search closer groups
+	for g1,g2 in list(itertools.combinations(groups,2)):
+		maxDist = 0
+		for nid1 in g1:
+			for nid2 in g2:
+				if maxDist < distanceMatrix[nid1][nid2]:
+					maxDist = distanceMatrix[nid1][nid2]
+				#print(distanceMatrix[nid1][nid2])
+		if maxDist < dist:
+
+			closer = (g1,g2)
+			dist = maxDist
+
+	return dist,closer
+
+def getCloserGroupsMean(groups,distanceMatrix):
+	closer = (None,None)
+	dist = 9.0
+	# Search closer groups
+	for g1,g2 in list(itertools.combinations(groups,2)):
+		av = 0
+		for nid1 in g1:
+			for nid2 in g2:
+				av += distanceMatrix[nid1][nid2]
+				#print(distanceMatrix[nid1][nid2])
+
+		av = av / (len(g1) * len(g2))
+		if av < dist:
+
+			closer = (g1,g2)
+			dist = av
+
+	return dist,closer
+
+
+def getAggregatedWithClustering(signatureMatrix,groups):
+
+	# Instantiating distance matrix
+	distanceMatrix = [[] for i in range(0,len(signatureMatrix)+1)]
+	for i in range(0,len(distanceMatrix)):
+		distanceMatrix[i] = [1.0 for y in range(0,len(signatureMatrix)+1)]
+
+	# Generation distance matrix
+	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
+		sim = jaccardForMinHash(l1,l2)
+		distanceMatrix[nid1][nid2] = 1 - sim
+
+	dist = 1
+	# MERGE GROUPS till aggregation
+	while dist > THRESHOLD_AGGREGATION and len(groups) > 1:
+		dist,(g1,g2) = getCloserGroupsMean(groups,distanceMatrix)
+		groups += [g1+g2]
+		groups.remove(g1)
+		groups.remove(g2)
+		print(dist,groups)
+
+	return groups
+	
 
 
 
@@ -143,6 +206,7 @@ def getNewsById(nid,news):
 		if n.get_nid() == nid :
 			return n
 
+
 # MAIN
 def main():
 
@@ -160,7 +224,7 @@ def main():
 		texts = texts + [(n.get_nid(),n.get_description())]
 
 	# TRY TO OPTIMIZE
-	removeShinglesLowCount()
+	#removeShinglesLowCount()
 
 	#print(shingles)
 
@@ -168,11 +232,12 @@ def main():
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
-	groups = getAggregratedGroups(signatureMatrix,groups)
+	#groups = getAggregratedGroups(signatureMatrix,groups)
+	groups = getAggregatedWithClustering(signatureMatrix,groups)
 
 	print(groups)
 
-	err = 0
+	'''err = 0
 	for i in range(0,len(groups)):
 		gr = ""
 		for nid in groups[i]:
@@ -182,7 +247,7 @@ def main():
 			elif gr != n.get_url():
 				print(n.get_url())
 				err+=1
-	print("Da cavare sta roba errors : " + str(err))
+	print("Da cavare sta roba errors : " + str(err))'''
 
 
 # CHIAMATA AL MEIN

@@ -5,7 +5,7 @@ import os.path	# files management and checks
 from html.parser import HTMLParser
 from html.entities import name2codepoint # for html character
 
-GOOGLE_NEWS_PATH = "crawler/newsG.txt"
+GOOGLE_NEWS_PATH = "newsGProva.txt"
 STOP_WORDS_PATH = "stopword.txt"
 JSON_OUTPUT_PATH = "news/list_news.json"
 
@@ -306,7 +306,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			nid += 1
 			list_news = list_news + [news]
 
-			print(news.get_title())
+			#print(news.get_title())
 			
 		newsFile.close();
 
@@ -350,4 +350,4 @@ def getListNews(remove_stop_word = False):
 	create_news_files(list_news)
 	return list_news
 
-getListNews()
+#getListNews()
