@@ -65,8 +65,9 @@ class MyHTMLParser(HTMLParser):
 
 class WrapNews:
 
-	def __init__(self, nid = 0, title = "", testata = "", date = "", body = "", source_url = "", image_url = ""):
+	def __init__(self, feed_url = "", nid = 0, title = "", testata = "", date = "", body = "", source_url = "", image_url = ""):
 
+		self.set_feed_url(feed_url)
 		self.set_nid(nid)
 		self.set_title(title)
 		self.set_testata(testata)
@@ -78,6 +79,14 @@ class WrapNews:
 	def decode_from_utf8(self, string):
 		return string
 		# return bytes(string, 'utf-8').decode('utf-8','ignore')
+
+	# URL
+
+	def get_feed_url(self):
+		return self.feed_url
+
+	def set_feed_url(self, feed_url):
+		self.feed_url = feed_url
 
 	# NEWS - ID
 
@@ -137,9 +146,9 @@ class WrapNews:
 
 class News:
 
-	def __init__(self, url = "", title = "", date = "", source = "", nid = 0, testata = "", description = "", image_url = "", source_url = ""):
+	def __init__(self, feed_url = "", title = "", date = "", source = "", nid = 0, testata = "", description = "", image_url = "", source_url = ""):
 
-		self.set_url(url)
+		self.set_feed_url(feed_url)
 		self.set_title(title)
 		self.set_date(date)
 		self.set_source(source)
@@ -160,11 +169,11 @@ class News:
 
 	# URL
 
-	def get_url(self):
-		return self.url
+	def get_feed_url(self):
+		return self.feed_url
 
-	def set_url(self, url):
-		self.url = url
+	def set_feed_url(self, feed_url):
+		self.feed_url = feed_url
 
 	# TITLE
 
@@ -226,6 +235,7 @@ class News:
 
 	def wrap_news(self):
 		wrapper = WrapNews()
+		wrapper.set_feed_url(self.get_feed_url())
 		wrapper.set_nid(self.get_nid())
 		wrapper.set_title(self.get_title())
 		wrapper.set_date(self.get_date())
