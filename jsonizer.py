@@ -336,8 +336,6 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			nid += 1
 			list_news = list_news + [news]
 
-		newsFile.close();
-
 	return list_news
 
 # Test function
@@ -378,5 +376,4 @@ def getListNews(remove_stop_word = False):
 	create_news_files(list_news)
 	return list_news
 
-
-getListNews(False)
+#getListNews()
