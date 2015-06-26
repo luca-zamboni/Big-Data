@@ -4,10 +4,13 @@ from random import shuffle
 import sys
 import jsonizer
 
-N_SHINGLES = 5
-THRESHOLD_SIMILARITY = 0.19
-THRESHOLD_AGGREGATION = 1 - 0.9813
-N_PERM = 300
+import numpy as np
+from sklearn import cluster
+
+N_SHINGLES = 4
+THRESHOLD_SIMILARITY = 0.0
+THRESHOLD_AGGREGATION = 0.92
+N_PERM = 1000
 THRESHOLD_COUNT = 2
 
 BASE_STR_JOIN = " "
@@ -46,12 +49,30 @@ def getCloserGroupsFurther(groups,distanceMatrix):
 		for nid1 in g1:
 			for nid2 in g2:
 				if maxDist < distanceMatrix[nid1][nid2]:
-					maxDist = distanceMatrix[nid1][nid2]
+					maxDist = distanceMatrix[nid1][nid2] 
 				#print(distanceMatrix[nid1][nid2])
 		if maxDist < dist:
 
 			closer = (g1,g2)
 			dist = maxDist
+
+	return dist,closer
+
+def getCloserGroupsCloser(groups,distanceMatrix):
+	closer = (None,None)
+	dist = 9
+	# Search closer groups
+	for g1,g2 in list(itertools.combinations(groups,2)):
+		minDist = 9
+		for nid1 in g1:
+			for nid2 in g2:
+				if minDist > distanceMatrix[nid1][nid2]:
+					minDist = distanceMatrix[nid1][nid2]
+				#print(distanceMatrix[nid1][nid2])
+		if minDist < dist:
+
+			closer = (g1,g2)
+			dist = minDist
 
 	return dist,closer
 
@@ -63,7 +84,7 @@ def getCloserGroupsMean(groups,distanceMatrix):
 		av = 0
 		for nid1 in g1:
 			for nid2 in g2:
-				av += distanceMatrix[nid1][nid2]
+				av += distanceMatrix[nid1][nid2] 
 				#print(distanceMatrix[nid1][nid2])
 
 		av = av / (len(g1) * len(g2))
@@ -85,11 +106,11 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForMinHash(l1,l2)
-		distanceMatrix[nid1][nid2] = 1 - sim
+		distanceMatrix[nid1][nid2] = (1 - (sim)) * (1 - (sim))
 
-	dist = 1
+	dist = 0
 	# MERGE GROUPS till aggregation
-	while dist > THRESHOLD_AGGREGATION and len(groups) > 1:
+	while dist < THRESHOLD_AGGREGATION and len(groups) > 1:
 		dist,(g1,g2) = getCloserGroupsMean(groups,distanceMatrix)
 		groups += [g1+g2]
 		groups.remove(g1)
@@ -97,49 +118,22 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 		#print(dist,groups)
 
 	return groups
+
+def transformInReamMatrix(matrix):
+	ret = [[] for i in range(0,len(matrix))]
+	print(ret)
+	for i in matrix:
+		print(matrix[i])
+		ret[i] += matrix[i]
+	return ret
+
 	
-
-
-
-def getAggregratedGroups(signatureMatrix,groups):
-
-	distanceMatrix = [[] for i in range(len(signatureMatrix))]
-	for i in range(0,len(distanceMatrix)):
-		distanceMatrix[i] = [0.0 for y in range(len(signatureMatrix))]
-
-	# For each Tuple of News
-	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
-
-		sim = jaccardForMinHash(l1,l2)
-		
-		#distanceMatrix[nid1][nid2] = 1 - sim
-
-		#print(nid1,nid2,"\t",sim)
-
-		f = True
-
-		if sim > THRESHOLD_SIMILARITY :
-
-			for i in range(0,len(groups)):
-				if nid1 in groups[i] :
-					l1 = groups[i]
-				if nid2 in groups[i]:
-					l2 = groups[i]
-
-			#print(l1+l2)
-
-			try:
-				if l1 != l2:
-					groups += [l1+l2]
-					groups.remove(l1)
-					groups.remove(l2)
-
-			except:
-				pass
-	#print(distanceMatrix)
-	#for item in distanceMatrix:
-		#print(item[0], ', '.join(map(str, item[1:])))
-	return groups
+def getKmeanCluster(matrix):
+	m = transformInReamMatrix(matrix)
+	n_clusters = 4
+	k_means = cluster.KMeans(n_clusters=n_clusters, n_init=len(shingles))
+	#k_means.fit(X)
+	#values = k_means.cluster_centers_.squeeze()
 	
 def addGlobalShingle(st):
 	global shingles
@@ -171,7 +165,7 @@ def getRandomPermutation():
 	permutation = []
 	n = len(shingles)
 	for j in range(0,N_PERM):
-		print(j,end="\r")
+		#print(j,end="\r")
 		x = [[i] for i in range(0,n)]
 		shuffle(x)	### <<<<<<<<<<< SLOWWWWWWWWWWWWWWWWWWWWWW
 		permutation += [list(itertools.chain(*x))]
@@ -182,7 +176,6 @@ def getRandomPermutation():
 def getSignatureMatrix(matrix,permutations):
 	signatureMatrix = {}
 	for n in matrix:
-		print(n)
 		for p in permutations:
 			for cell in p:
 				if matrix[n][cell] == 1:
@@ -221,10 +214,10 @@ def main():
 
 		groups += [[n.get_nid()]]
 
-		addGlobalShingle(n.get_title() + " " + n.get_description())
-		texts = texts + [(n.get_nid(),n.get_description())]
-		print(n.get_title() + " " + n.get_description())
-		print(n.get_nid())
+		s = (n.get_title() + "     " + n.get_description()).lower()
+		addGlobalShingle(s)
+		texts = texts + [(n.get_nid(),s)]
+
 	# TRY TO OPTIMIZE
 	#removeShinglesLowCount()
 
@@ -234,10 +227,10 @@ def main():
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
-	#groups = getAggregratedGroups(signatureMatrix,groups)
-	groups = getAggregatedWithClustering(signatureMatrix,groups)
+	#groups = getAggregatedWithClustering(signatureMatrix,groups)
+	groups = getKmeanCluster(matrix)
 
-	#print(groups)
+	print(groups)
 
 	'''err = 0
 	for i in range(0,len(groups)):

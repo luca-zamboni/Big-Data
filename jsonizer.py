@@ -293,7 +293,7 @@ def remove_stop_word_from_string(string, stop_words):
 def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	list_news = []
-	nid = 1
+	nid = 0
 
 	if not os.path.exists(source_path):
 		print("Sorry, no news to parse in ", source_path , ".")
@@ -317,17 +317,18 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			title = newsFile.readline().rstrip('\n')
 			date = newsFile.readline().rstrip('\n')
 			source = newsFile.readline().rstrip('\n')
-			
+
 			# Check emptyness..
 			if not url or not title or not source: break
 
+			title = clean_title(title)
 			# Check if stop words have to be removed..
 			if remove_stop_word:
 				# url = remove_stop_word_from_string(url,stop_words)
 				title = remove_stop_word_from_string(title,stop_words)
 				source = remove_stop_word_from_string(source,stop_words)
 
-				title = clean_title(title)
+				
 
 
 			# Converts a news into an object News..
@@ -372,7 +373,7 @@ def create_news_files(list_news, path = JSON_OUTPUT_PATH):
 
 def getListNews(remove_stop_word = False):
 
-	list_news = parse_news_file(remove_stop_word = False)
+	list_news = parse_news_file(remove_stop_word = remove_stop_word)
 	create_news_files(list_news)
 	return list_news
 
