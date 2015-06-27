@@ -9,6 +9,9 @@ GOOGLE_NEWS_PATH = "newsG.txt"
 STOP_WORDS_PATH = "stopword.txt"
 JSON_OUTPUT_PATH = "newsG.json"
 
+clusters = {} # Dictionary for clusters
+array_clusters = [[]] # Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+
 class MyHTMLParser(HTMLParser):
 
 	def __init__(self, news):
@@ -65,7 +68,7 @@ class MyHTMLParser(HTMLParser):
 
 class WrapNews:
 
-	def __init__(self, feed_url = "", nid = 0, title = "", testata = "", date = "", body = "", source_url = "", image_url = ""):
+	def __init__(self, feed_url = "", nid = 0, title = "", testata = "", date = "", body = "", source_url = "", image_url = "", cluster_number = 0):
 
 		self.set_feed_url(feed_url)
 		self.set_nid(nid)
@@ -75,6 +78,7 @@ class WrapNews:
 		self.set_body(body)
 		self.set_source_url(source_url)
 		self.set_image_url(image_url)
+		self.set_cluster_number(cluster_number)
 
 	def decode_from_utf8(self, string):
 		return string
@@ -144,9 +148,17 @@ class WrapNews:
 	def set_image_url(self, image_url):
 		self.image_url = self.decode_from_utf8(image_url)
 
+	# CLUSTER NUMBER
+		
+	def get_cluster_number(self):
+		return self.cluster_number
+
+	def set_cluster_number(self, cluster_number):
+		self.cluster_number = cluster_number
+
 class News:
 
-	def __init__(self, feed_url = "", title = "", date = "", source = "", nid = 0, testata = "", description = "", image_url = "", source_url = ""):
+	def __init__(self, feed_url = "", title = "", date = "", source = "", nid = 0, testata = "", description = "", image_url = "", source_url = "", cluster_number = 0):
 
 		self.set_feed_url(feed_url)
 		self.set_title(title)
@@ -158,6 +170,7 @@ class News:
 		self.description = description
 		self.image_url = image_url
 		self.source_url = source_url
+		self.cluster_number = cluster_number
 
 	# NEWS - ID
 
@@ -231,6 +244,36 @@ class News:
 	def set_source_url(self, source_url):
 		self.source_url = source_url
 
+	# CLUSTER NUMBER
+		
+	def get_cluster_number(self):
+		return self.cluster_number
+
+	def set_cluster_number(self):
+
+		global clusters
+		global array_clusters
+
+		if len(clusters) == 0:
+			clusters[self.feed_url] = self.cluster_number = 0
+			array_clusters = [[self.get_nid()]]
+
+		else:
+
+			self.cluster_number = -1;
+			for cluster in clusters:
+				if self.feed_url in cluster:
+					self.cluster_number = clusters[self.feed_url]
+					break
+
+			if self.cluster_number == -1:
+				self.cluster_number = len(clusters)
+				clusters[self.feed_url] = self.cluster_number
+				array_clusters += [[self.get_nid()]]
+
+			else:
+				array_clusters[self.cluster_number] += [self.get_nid()]
+
 	# SERIALIZE
 
 	def wrap_news(self):
@@ -243,6 +286,7 @@ class News:
 		wrapper.set_body(self.get_description())
 		wrapper.set_source_url(self.get_source_url())
 		wrapper.set_image_url(self.get_image_url())
+		wrapper.set_cluster_number(self.get_cluster_number())
 		return wrapper
 
 	def to_JSON(self):
@@ -328,12 +372,10 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 				title = remove_stop_word_from_string(title,stop_words)
 				source = remove_stop_word_from_string(source,stop_words)
 
-				
-
-
 			# Converts a news into an object News..
 			news = parse_news(url, title, date, source)
 			news.set_nid(nid)
+			news.set_cluster_number()
 			nid += 1
 			list_news = list_news + [news]
 
@@ -356,9 +398,6 @@ def create_news_files(list_news, path = JSON_OUTPUT_PATH):
 	mod = 'w'
 	count = len(list_news)
 
-	# if not os.path.exists(path):
-	# 	mod = 'w'
-
 	f = open(path, mod)
 
 	f.write('[')
@@ -377,4 +416,4 @@ def getListNews(remove_stop_word = False):
 	create_news_files(list_news)
 	return list_news
 
-#getListNews()
+# getListNews()
