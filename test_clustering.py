@@ -3,12 +3,12 @@ import json
 JSON_OUTPUT_PATH = "newsG.json"
 
 # It calculates the purity value of clustering (a set of clusters resulting from the aggregator.py) with respect to the ground (which is given).
-# It provides also the value of precisio and recall for each cluster in clustering, and finally the value of f-measure.
+# It provides also the value of precision and recall for each cluster in clustering, and finally the value of f-measure.
 # Let r = len(clustering) and k = len(ground) then:
-# 1) When r = k, a purity value of one indicates perfect clustering.
+# 1) When r = k, a purity value of one indicates perfect clustering.
 # 2) When r > k, purity can be one when each of the clusters is a subset of a partition.
 # 3) When r < k, purity can never be one, since at least one cluster must contain points from more than one partition.
-# F-measure is the harmonic mean of the precision and recall values for each cluster.
+# F-measure is the harmonic mean of the precision and recall values for each cluster.
 # For a perfect clustering, when r = k, the maximum value of the F-measure is one.
 # Source from youtube: https://www.youtube.com/watch?v=y48o4MGShXE
 # Source from a draft by Cambridge University: http://www.cs.rpi.edu/~zaki/www-new/uploads/Dmcourse/Main/chap18.pdf
@@ -52,27 +52,27 @@ def get_purity_index(ground, clustering):
 				max_intersec_ground_index = j
 
 		# Precision of clustering[i]
-		precision_i = max_intersec / len(clustering[i])
+		precision_i = 1.0 * max_intersec / len(clustering[i])
 		precision_array += [precision_i]
 
 		# Recall of clustering[i]
-		recall_i = max_intersec / len(ground[max_intersec_ground_index])
+		recall_i = 1.0 * max_intersec / len(ground[max_intersec_ground_index])
 		recall_array += [recall_i]
 
 		# Purity
-		purity += (len(clustering[i]) * precision_i / elements)
+		purity += (1.0 * len(clustering[i]) * precision_i / elements)
 
 		# F-measure
-		f_measure_i = (2 * precision_i * recall_i) / (precision_i + recall_i)
+		f_measure_i = (2.0 * precision_i * recall_i) / (precision_i + recall_i)
 		f_measure += (f_measure_i / r)
 
-	# Awesom print..
-	print("Precision:")
-	print(precision_array)
-	print("Recall:")
-	print(recall_array)
-	print("Purity: ", purity)
-	print("F-measure: ", f_measure)
+	# Awesome print..
+	print "Precision:"
+	print precision_array
+	print "Recall:"
+	print recall_array
+	print "Purity: ", purity
+	print "F-measure: ", f_measure
 
 	return purity
 
@@ -80,7 +80,7 @@ def get_purity_index(ground, clustering):
 # def get_maximum_matching_index(ground, clustering):
 
 # Just an example..
-ground = 		[[1,2,3,4],[5,6,7,8],[9,10,11,12]]
-clustering = 	[[1,2,3,4],[5,6,7,8],[9,10,11,12]]
+# ground = 		[[1,2,3,4],[5,6,7,8],[9,10,11,12]]
+# clustering = 	[[1,2,3,4],[5,6,7,8],[9,10,11,12]]
 
-get_purity_index(ground, clustering)
+# get_purity_index(ground, clustering)
