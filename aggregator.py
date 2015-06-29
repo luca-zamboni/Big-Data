@@ -1,11 +1,16 @@
-
+from pyspark.mllib.clustering import KMeans, KMeansModel
+from pyspark import SparkContext
 import itertools
 from random import shuffle
 import sys
-import jsonizer
+import jsonizer as js
+import test_clustering as ts
+from math import sqrt
 
 import numpy as np
 from sklearn import cluster
+
+sc = SparkContext(appName="Aggregation")
 
 N_SHINGLES = 4
 THRESHOLD_SIMILARITY = 0.0
@@ -125,22 +130,42 @@ def transformInReamMatrix(matrix):
 		ret[i] += matrix[i]
 	return ret
 
-	
+def clusterKMeanSaprk(matrix):
+	m = transformInReamMatrix(matrix)
+	parsedData = sc.parallelize(m)
+	clusters = KMeans.train(parsedData, 2500, maxIterations=1000,runs=20, initializationMode="k-means||",epsilon=0.0001)
+	clu = []
+	def error(point):
+	    center = clusters.centers[clusters.predict(point)]
+	    return sqrt(sum([x**2 for x in (point - center)]))
+
+	WSSSE = parsedData.map(lambda point: error(point)).reduce(lambda x, y: x + y)
+	print("Within Set Sum of Squared Error = " + str(WSSSE))
+	for n in m:
+		clu += [clusters.predict(np.array(n))]
+
+	print(clu)
+	ret = [[] for i in range(0,max(clu)+1)]
+	for i in range(0,len(clu)):
+		ret[clu[i]] += [i]
+	return ret
+
 def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(1,20):
-		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
-		k_means.fit(m)
-		clu = k_means.predict(m)
-		print(clu)
-		if oldscore == 0:
-			oldscore = k_means.score(m)
-		else:
-			score = oldscore - k_means.score(m)
-			print(kc,k_means.score(m))
-			oldscore =  k_means.score(m)
+	#for kc in range(1,20):
+	k_means = cluster.KMeans(n_clusters=7, n_init=len(shingles))
+	k_means.fit(m)
+	clu = k_means.predict(m)
+	'''clu = k_means.predict(m)
+	print(clu)
+	if oldscore == 0:
+		oldscore = k_means.score(m)
+	else:
+		score = oldscore - k_means.score(m)
+		print(kc,k_means.score(m))
+		oldscore =  k_means.score(m)'''
 
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
@@ -165,10 +190,11 @@ def fillMatrix(texts):
 		sh = getShingleList(s.split())
 		matrix[nid] = []
 		for shi in shingles:
-			if shi in sh:
-				matrix[nid] += [1]
-			else:
-				matrix[nid] += [0]
+			matrix[nid] += [sh.count(shi)]
+			#if shi in sh:
+			#	matrix[nid] += [1]
+			#else:
+			#	matrix[nid] += [0]
 	return matrix
 
 
@@ -177,7 +203,7 @@ def getRandomPermutation():
 	permutation = []
 	n = len(shingles)
 	for j in range(0,N_PERM):
-		#print(j,end="\r")
+		print(str(j) + "\r")
 		x = [[i] for i in range(0,n)]
 		shuffle(x)	### <<<<<<<<<<< SLOWWWWWWWWWWWWWWWWWWWWWW
 		permutation += [list(itertools.chain(*x))]
@@ -216,11 +242,12 @@ def getNewsById(nid,news):
 # MAIN
 def main():
 
+
 	groups = []
 	texts = []
 	matrix = {}
 
-	news = jsonizer.getListNews(remove_stop_word = True)
+	news = js.getListNews(remove_stop_word = True)
 
 	for n in news:
 
@@ -230,31 +257,25 @@ def main():
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
+
 	# TRY TO OPTIMIZE
 	#removeShinglesLowCount()
 
 	#print(shingles)
 
 	matrix = fillMatrix(texts)
+	print("start perm")
 	permutations = getRandomPermutation()
+	print("end Perm")
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
-	groups = getKmeanCluster(matrix)
+	#groups = getKmeanCluster(matrix)
+	groups = clusterKMeanSaprk(signatureMatrix)
+
+	ts.get_purity_index(js.array_clusters,groups)
 
 	print(groups)
-
-	'''err = 0
-	for i in range(0,len(groups)):
-		gr = ""
-		for nid in groups[i]:
-			n = getNewsById(nid,news)
-			if gr == "":
-				gr = n.get_url()
-			elif gr != n.get_url():
-				print(n.get_url())
-				err+=1
-	print("Da cavare sta roba errors : " + str(err))'''
 
 
 # CHIAMATA AL MEIN
