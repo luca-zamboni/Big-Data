@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import json
 import string
 import re
 import os.path	# files management and checks
-from html.parser import HTMLParser
-from html.entities import name2codepoint # for html character
+from HTMLParser import HTMLParser
+#from html.entities import name2codepoint # for html character
 
 GOOGLE_NEWS_PATH = "newsG.txt"
 STOP_WORDS_PATH = "stopword.txt"
@@ -43,17 +44,12 @@ class MyHTMLParser(HTMLParser):
 
 		for tag_name, value in attrs:
 
-			# Testata
 			if tag == 'font' and tag_name == 'color' and value == '#6f6f6f':
 				self.looking_for_testata = True
 
-			# Immagine
 			if tag == 'img' and tag_name == "src" and self.count_a == 1:
 				self.news.set_image_url(value)
 
-			# URLs
-			#if tag == 'a' and tag_name == "href" and self.count_a == 1:
-				#self.news.set_source_url(value)
 
 	def handle_data(self, data):
 

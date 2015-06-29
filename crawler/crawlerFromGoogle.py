@@ -59,7 +59,7 @@ def insert(testata, news, RSS):
 
 				found = False
 				for n,t,d in tempnews:
-					if n == title and t == testata and d == date:
+					if n == title:
 						found = True
 						break;
 

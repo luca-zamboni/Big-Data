@@ -6,3 +6,5 @@ tmp
 news/
 *.json
 *.txt
+spark-1.4.0/
+*.pyc

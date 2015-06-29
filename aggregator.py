@@ -9,7 +9,7 @@ from sklearn import cluster
 
 N_SHINGLES = 4
 THRESHOLD_SIMILARITY = 0.0
-THRESHOLD_AGGREGATION = 0.92
+THRESHOLD_AGGREGATION = 0.95
 N_PERM = 1000
 THRESHOLD_COUNT = 2
 
@@ -115,7 +115,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
-		#print(dist,groups)
+		print(dist,groups)
 
 	return groups
 
@@ -130,17 +130,22 @@ def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for n_clusters in range(1,29):
-		k_means = cluster.KMeans(n_clusters=n_clusters, n_init=len(shingles),n_jobs=4)
+	for kc in range(1,20):
+		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
-		c = k_means.predict(m)
+		clu = k_means.predict(m)
+		print(clu)
 		if oldscore == 0:
-			oldscore = -(k_means.score(m))
+			oldscore = k_means.score(m)
 		else:
-			score = oldscore - (-k_means.score(m))
-			print(n_clusters,score)
-			oldscore = (- k_means.score(m))
-		values = k_means.cluster_centers_.squeeze()
+			score = oldscore - k_means.score(m)
+			print(kc,k_means.score(m))
+			oldscore =  k_means.score(m)
+
+	ret = [[] for i in range(0,max(clu)+1)]
+	for i in range(0,len(clu)):
+		ret[clu[i]] += [i]
+	return ret
 	
 def addGlobalShingle(st):
 	global shingles
@@ -235,7 +240,7 @@ def main():
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
-	groups = getKmeanCluster(signatureMatrix)
+	groups = getKmeanCluster(matrix)
 
 	print(groups)
 
