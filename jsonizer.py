@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import json     # JSON
-import codecs 	# For encoding and decoding of json files
-import string 	# Strings
-import re 		# Regular Expressions
+import json     	# JSON
+# import codecs 		# For encoding and decoding of json files
+import unicodedata 	# For encoding and decoding of json files
+import string 		# Strings
+import re 			# Regular Expressions
 import os
-import os.path 	# Files management and checks
-import timeit	# Timer
+import os.path 		# Files management and checks
+import timeit		# Timer
 from HTMLParser import HTMLParser
 
 # Global variables
@@ -335,8 +336,13 @@ def clean_title(title):
 def remove_stop_word_from_string(string, stop_words):
 	ret = []
 	for ss in string.split():
+
+		if type(ss) is unicode:
+				ss = unicodedata.normalize('NFKD', ss).encode('ascii','ignore')
+
 		if ss not in stop_words:
 			ret += [ss]
+
 	string = " ".join(ret)
 	string = removePuntuaction(string)
 	return string
