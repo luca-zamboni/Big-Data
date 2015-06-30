@@ -570,4 +570,3 @@ def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word
 # i2 = "crawler/categories/sport.txt"
 # output = "crawler/categories/merged.json"
 # l = mergeFromTxtToJson( i1, i2 , output, False)
-
