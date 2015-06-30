@@ -285,12 +285,11 @@ def addDate(matrix,news):
 # MAIN
 def main():
 
-
 	groups = []
 	texts = []
 	matrix = {}
 
-	news = js.getListNews(remove_stop_word = True)
+	news = js.getListNewsFromJson(remove_stop_word = True)
 
 	for n in news:
 

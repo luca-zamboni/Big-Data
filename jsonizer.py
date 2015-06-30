@@ -1,17 +1,25 @@
 # -*- coding: utf-8 -*-
-import json
-import string
-import re
-import os.path	# files management and checks
+
+import json     # JSON
+import codecs 	# For encoding and decoding of json files
+import string 	# Strings
+import re 		# Regular Expressions
+import os
+import os.path 	# Files management and checks
+import timeit	# Timer
 from HTMLParser import HTMLParser
-#from html.entities import name2codepoint # for html character
 
-GOOGLE_NEWS_PATH = "newsG.txt"
-STOP_WORDS_PATH = "stopword.txt"
-JSON_OUTPUT_PATH = "newsG.json"
+# Global variables
+# -----------------------------------------------------------------------------
 
-clusters = {} # Dictionary for clusters
-array_clusters = [[]] # Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+GOOGLE_NEWS_PATH 	= "newsG.txt"
+JSON_NEWS_PATH 	= "newsG.json"
+STOP_WORDS_PATH 	= "stopword.txt"
+
+clusters = {} 			# Dictionary for clusters
+array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+
+# -----------------------------------------------------------------------------
 
 class MyHTMLParser(HTMLParser):
 
@@ -66,7 +74,6 @@ class WrapNews:
 
 	def __init__(self, feed_url = "", nid = 0, title = "", testata = "", date = "", body = "", source_url = "", image_url = "", cluster_number = 0):
 
-		self.set_feed_url(feed_url)
 		self.set_nid(nid)
 		self.set_title(title)
 		self.set_testata(testata)
@@ -75,10 +82,7 @@ class WrapNews:
 		self.set_source_url(source_url)
 		self.set_image_url(image_url)
 		self.set_cluster_number(cluster_number)
-
-	def decode_from_utf8(self, string):
-		return string
-		# return bytes(string, 'utf-8').decode('utf-8','ignore')
+		self.set_feed_url(feed_url)
 
 	# URL
 
@@ -102,7 +106,7 @@ class WrapNews:
 		return self.title
 
 	def set_title(self, title):
-		self.title = self.decode_from_utf8(title)
+		self.title = title
 
 	# TESTATA
 
@@ -110,7 +114,7 @@ class WrapNews:
 		return self.testata
 
 	def set_testata(self, testata):
-		self.testata = self.decode_from_utf8(testata)
+		self.testata = testata
 
 	# DATE
 
@@ -126,7 +130,7 @@ class WrapNews:
 		return self.body
 
 	def set_body(self, body):
-		self.body = self.decode_from_utf8(body)
+		self.body = body
 
 	# SOURCEs
 
@@ -134,7 +138,7 @@ class WrapNews:
 		return self.source_url
 
 	def set_source_url(self, source_url):
-		self.source_url = self.decode_from_utf8(source_url)
+		self.source_url = source_url
 
 	# IMAGE URL
 		
@@ -142,7 +146,7 @@ class WrapNews:
 		return self.image_url
 
 	def set_image_url(self, image_url):
-		self.image_url = self.decode_from_utf8(image_url)
+		self.image_url = image_url
 
 	# CLUSTER NUMBER
 		
@@ -151,6 +155,11 @@ class WrapNews:
 
 	def set_cluster_number(self, cluster_number):
 		self.cluster_number = cluster_number
+
+	# JSON
+
+	def to_JSON(self):
+		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4, ensure_ascii=False)
 
 class News:
 
@@ -288,11 +297,18 @@ class News:
 	def to_JSON(self):
 		return json.dumps(self.wrap_news(), default=lambda o: o.__dict__, sort_keys=True, indent=4, ensure_ascii=False)
 
-def load_stop_words():
 
-	stop_words_path = STOP_WORDS_PATH
+def check_if_file_exists(path, msg = ""):
+	if not os.path.exists(path):
+		print "Sorry, the following file does not exist:", path
+		if msg != "":
+			print msg
+		return False
+	return True
+
+def load_stop_words():
 	stop_words = []
-	f = open(stop_words_path, "r")
+	f = open(STOP_WORDS_PATH, "r")
 	line = f.readline()
 	while line:
 	    stop_words += [line.rstrip('\n')]
@@ -321,33 +337,60 @@ def remove_stop_word_from_string(string, stop_words):
 	for ss in string.split():
 		if ss not in stop_words:
 			ret += [ss]
-
 	string = " ".join(ret)
 	string = removePuntuaction(string)
 	return string
 
+# Test function
+def check_list_news(list_news):
+	
+	print(len(list_news), "news found.")
+	for news in list_news:
+		if(news.get_description() == "" or news.get_date() == "" or news.get_testata() == "" or news.get_source_url() == ""):
+			print(str(news.get_nid()))
 
-# Parses a file which contains a set of news.
-# source_path is the path of the file as results of the crawler.
-# remove_stop_word is a flag that tells whether the stop words have to be removed from text or not.
+# Lists the set of sources from which the news are taken
+def get_list_testata(list_news):
+	
+	for news in list_news:
+		print(str(news.get_testata()))
+
+def create_news_json_file(list_news, output = JSON_NEWS_PATH):
+	
+	count = len(list_news)
+	f = open(output, 'w')
+	f.write('[')
+	for news in list_news:
+		f.write(str(news.to_JSON()))
+		count -= 1
+		if(count > 0):
+			f.write(',')
+	f.write(']')
+	f.close()
+	return list_news
+
+# Parses a txt file stored in GOOGLE_NEWS_PATH which contains a set of news.
+# Each news have 4 lines: url, title, date, source.
+# source_path is the path of the txt file as results of the Crawler.py
+# remove_stop_word is a flag that tells whether the stop words have to be removed from the news or not.
 def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
-	list_news = []
 	nid = 0
+	list_news = []
+	file_exists = check_if_file_exists(source_path)
 
-	if not os.path.exists(source_path):
-		print("Sorry, no news to parse in ", source_path , ".")
-	else:
+	if file_exists:
 
 		# Loads stop words into a variable, for performance purposes
 		if remove_stop_word:
 			stop_words = load_stop_words()
 
 		# File which contains all the news taken from the crawler..
-		# Each news is a set of 3 lines: 
+		# Each news is a set of 4 lines: 
 		#	1)	URL
 		#	2)	Title
-		#	3)	HTML source code
+		#	3)	Date
+		#	4)	HTML source code
 		newsFile = open(source_path, "r")
 		
 		while True:
@@ -362,9 +405,10 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			if not url or not title or not source: break
 
 			title = clean_title(title)
+
 			# Check if stop words have to be removed..
 			if remove_stop_word:
-				# url = remove_stop_word_from_string(url,stop_words)
+
 				title = remove_stop_word_from_string(title,stop_words)
 				source = remove_stop_word_from_string(source,stop_words)
 
@@ -377,39 +421,117 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	return list_news
 
-# Test function
-def check_list_news(list_news):
-	print(len(list_news), "news found.")
-	for news in list_news:
-		if(news.get_description() == "" or news.get_date() == "" or news.get_testata() == "" or news.get_source_url() == ""):
-			print(str(news.get_nid()))
+# It returns an ORDERED list of News() which are stored in GOOGLE_NEWS_PATH.
+def getListNewsFromTxt(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
-# Lists the set of sources from which the news are taken
-def get_list_testata(list_news):
-	for news in list_news:
-		print(str(news.get_testata()))
-
-def create_news_files(list_news, path = JSON_OUTPUT_PATH):
-
-	mod = 'w'
-	count = len(list_news)
-
-	f = open(path, mod)
-
-	f.write('[')
-	for news in list_news:
-		f.write(str(news.to_JSON()))
-		count -= 1
-		if(count > 0):
-			f.write(',')
-	
-	f.write(']')
-	f.close()
-
-def getListNews(remove_stop_word = False):
-
+	# Return value: list of News()
 	list_news = parse_news_file(remove_stop_word = remove_stop_word)
-	create_news_files(list_news)
+	list_news.sort(key=lambda n: n.get_nid())
 	return list_news
 
-# getListNews()
+# It returns an ORDERED list of News() which are stored in JSON_NEWS_PATH.
+# Crawler.py downloads news from Google and store them in a txt file in GOOGLE_NEWS_PATH.
+# Might be the case that the json file JSON_NEWS_PATH is not consistent with respect to the one in GOOGLE_NEWS_PATH
+# Some news might not be converted in json and stored in JSON_NEWS_PATH. Hence, need to do it manually.
+def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
+
+	# Retrieves news from GOOGLE_NEWS_PATH
+	list_news_from_crawler = getListNewsFromTxt(source_path, remove_stop_word)
+	list_news_from_json = []
+
+	# Check whether the json file JSON_NEWS_PATH exists..
+	json_exists = check_if_file_exists(json_path)
+
+	if not json_exists:
+
+		# The whole news stored in GOOGLE_NEWS_PATH have to be converted into json ones and stored in JSON_NEWS_PATH
+		print "Converting", source_path, "into", json_path, "..."
+		start_time = timeit.default_timer()
+		create_news_json_file(list_news_from_crawler)
+		elapsed = timeit.default_timer() - start_time
+		print len(list_news), "news have been imported from", JSON_NEWS_PATH
+		print "Done in .", elapsed
+		return list_news_from_crawler # It's the same as the one stored in the json file
+
+	# Retrieve news from JSON_NEWS_PATH..
+	newsFile = open(json_path, 'r')
+	list_news = json.loads(newsFile.read())	# Will be a list of json, need to convert it in WrapNews.
+
+	# Loads stop words into a variable, for performance purposes
+	if remove_stop_word:
+		stop_words = load_stop_words()
+
+	for news in list_news:
+
+		# Check if stop words have to be removed..
+		title = news['title']
+		body = news['body']
+		if remove_stop_word:
+			title = remove_stop_word_from_string(title, stop_words)
+			body = remove_stop_word_from_string(body, stop_words)
+
+		n = WrapNews()
+		n.set_nid(int(news['nid']))
+		n.set_title(title)
+		n.set_testata(news['testata'])
+		n.set_date(news['date'])
+		n.set_body(body)
+		n.set_source_url(news['source_url'])
+		n.set_image_url(news['image_url'])
+		n.set_cluster_number(int(news['cluster_number']))
+		n.set_feed_url(news['feed_url'])
+		list_news_from_json += [n]
+
+	newsFile.close()
+
+	# Get the nids form lists
+	list_nids_from_crawler = [n.get_nid() for n in list_news_from_crawler]
+	list_nids_from_json = [n.get_nid() for n in list_news_from_json]
+
+	# Get the intersection
+	nids_news_to_add = list(set(list_nids_from_crawler).difference(set(list_nids_from_json)))
+
+	# Check if there are news which are stored in the txt file but not stored yet in the json file..
+	if nids_news_to_add != []:
+
+		nids_news_to_add.sort()
+		news_to_add = [] 
+
+		# nids_news_to_add is ordered, need to scan GOOGLE_NEWS_PATH only once.. => O(n)
+		search = nids_news_to_add.pop(0)
+
+		for n in list_news_from_crawler:
+			if n.get_nid() == search:
+				news_to_add += [n]
+				if nids_news_to_add != []:
+					search = nids_news_to_add.pop(0)
+				else:
+					break
+
+		# Remove last line of the file, and add the news which are stored in news_to_add
+		newsFile = open(json_path, "r+")
+		newsFile.seek(0, os.SEEK_END)
+		pos = newsFile.tell() - 1
+		while pos > 0 and newsFile.read(1) != "\n":
+		    pos -= 1
+		    newsFile.seek(pos, os.SEEK_SET)
+
+		if pos > 0:
+		    newsFile.seek(pos, os.SEEK_SET)
+		    newsFile.truncate()
+
+		newsFile.write('\n},')
+		count = len(news_to_add)
+		for news in news_to_add:
+			newsFile.write(str(news.to_JSON()))
+			count -= 1
+			if(count > 0):
+				newsFile.write(',')
+		newsFile.write(']')
+		newsFile.close()
+
+		list_news_from_json += news_to_add
+
+	list_news_from_json.sort(key=lambda n: n.get_nid())
+
+	return list_news_from_json
