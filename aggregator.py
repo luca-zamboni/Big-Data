@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
 import itertools
@@ -321,13 +323,19 @@ def main():
 	texts = []
 	matrix = {}
 
-	news = js.getListNewsFromJson(remove_stop_word = True)
+	x = open("folder/newsProva.txt","w")
+
+	news = js.getListNewsFromJson(remove_stop_word = False)
 
 	for n in news:
 
 		groups += [[n.get_nid()]]
 
 		s = (n.get_title() + n.get_body()).lower()
+
+		print(n.get_title())
+		x.write(s + "\n")
+
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
