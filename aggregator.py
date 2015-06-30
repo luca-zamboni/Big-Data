@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
@@ -325,7 +324,7 @@ def main():
 
 	x = open("folder/newsProva.txt","w")
 
-	news = js.getListNewsFromJson(remove_stop_word = False)
+	news = js.getListNewsFromJson(remove_stop_word = True)
 
 	for n in news:
 
