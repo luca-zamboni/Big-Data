@@ -6,6 +6,9 @@ import sys
 import jsonizer as js
 import test_clustering as ts
 from math import sqrt
+from numpy import arange,array,ones,linalg
+from pylab import plot,show
+from scipy import stats
 
 import numpy as np
 from sklearn import cluster
@@ -14,9 +17,13 @@ sc = SparkContext(appName="Aggregation")
 
 N_SHINGLES = 4
 THRESHOLD_SIMILARITY = 0.0
-THRESHOLD_AGGREGATION = 0.95
+THRESHOLD_AGGREGATION = 0.97
 N_PERM = 1000
 THRESHOLD_COUNT = 2
+
+NUM_LINER_FITTING  = 5
+
+FACTOR_CLUSTER = 2
 
 BASE_STR_JOIN = " "
 
@@ -42,8 +49,8 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	return s.split()
-	#return [s[i:i + n] for i in range(len(s) - n + 1)]
+	#return s.split()
+	return [s[i:i + n] for i in range(len(s) - n + 1)]
 
 def getCloserGroupsFurther(groups,distanceMatrix):
 	closer = (None,None)
@@ -120,7 +127,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
-		print(dist,groups)
+		#print(dist,groups)
 
 	return groups
 
@@ -133,39 +140,73 @@ def transformInReamMatrix(matrix):
 def clusterKMeanSaprk(matrix):
 	m = transformInReamMatrix(matrix)
 	parsedData = sc.parallelize(m)
-	clusters = KMeans.train(parsedData, 2500, maxIterations=1000,runs=20, initializationMode="k-means||",epsilon=0.0001)
-	clu = []
-	def error(point):
-	    center = clusters.centers[clusters.predict(point)]
-	    return sqrt(sum([x**2 for x in (point - center)]))
+	y = []
+	x = []
+	clustersControl = range(24,25)
+	for kc in clustersControl:
+		clusters = KMeans.train(parsedData, kc, maxIterations=100000,runs=200, initializationMode="k-means||",epsilon=0.0001)
+		clu = []
 
-	WSSSE = parsedData.map(lambda point: error(point)).reduce(lambda x, y: x + y)
-	print("Within Set Sum of Squared Error = " + str(WSSSE))
-	for n in m:
-		clu += [clusters.predict(np.array(n))]
+		def error(point,clust):
+		    center = clust.centers[clust.predict(point)]
+		    return sqrt(sum([x**2 for x in (point - center)]))
 
-	print(clu)
+
+		WSSSE = parsedData.map(lambda point: error(point,clusters)).reduce(lambda x, y: x + y)
+		for n in m:
+			clu += [clusters.predict(np.array(n))]
+
+		'''y += [WSSSE]
+		x += [kc+0.0]
+
+		#print(kc)
+
+		if kc > NUM_LINER_FITTING+10 :
+
+			controlY = y.pop(0)
+			controlX = x.pop(0)
+			slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+
+			diff = controlY - (controlX*slope+intercept)
+
+			altreDiff = 0
+
+			for i in range(0,len(x)):
+				altreDiff += abs((x[i]*slope+intercept) - y[i])
+
+			print(diff,altreDiff,controlX,diff/altreDiff)
+
+			#line = map(lambda xi: xi*slope+intercept, x)
+			#plot(x,line,'r-',x,y,'o')
+			#show()'''
+
+
+	'''slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+
+	line = map(lambda xi: xi*slope+intercept, x)
+	plot(x,line,'r-',x,y,'o')
+	show()'''
+
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
 		ret[clu[i]] += [i]
 	return ret
 
+	
+
 def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
 	score = 0
 	oldscore = 0
-	#for kc in range(1,20):
-	k_means = cluster.KMeans(n_clusters=7, n_init=len(shingles))
-	k_means.fit(m)
-	clu = k_means.predict(m)
-	'''clu = k_means.predict(m)
-	print(clu)
-	if oldscore == 0:
-		oldscore = k_means.score(m)
-	else:
-		score = oldscore - k_means.score(m)
-		print(kc,k_means.score(m))
-		oldscore =  k_means.score(m)'''
+	for kc in range(24,25):
+		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
+		k_means.fit(m)
+		clu = k_means.predict(m)
+		ret = [[] for i in range(0,max(clu)+1)]
+		for i in range(0,len(clu)):
+			ret[clu[i]] += [i]
+		print("\n Clus:" + str(kc))
+		print(ts.get_purity_index(js.array_clusters,ret))
 
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
@@ -186,15 +227,16 @@ def addGlobalShingle(st):
 # Return the signature matrix far all the singles  
 def fillMatrix(texts):
 	matrix = {}
+	count = 0
 	for nid,s in texts:
 		sh = getShingleList(s.split())
 		matrix[nid] = []
 		for shi in shingles:
-			matrix[nid] += [sh.count(shi)]
-			#if shi in sh:
-			#	matrix[nid] += [1]
-			#else:
-			#	matrix[nid] += [0]
+			count += sh.count(shi)
+			if shi in sh:
+				matrix[nid] += [1]
+			else:
+				matrix[nid] += [0]
 	return matrix
 
 
@@ -203,7 +245,6 @@ def getRandomPermutation():
 	permutation = []
 	n = len(shingles)
 	for j in range(0,N_PERM):
-		print(str(j) + "\r")
 		x = [[i] for i in range(0,n)]
 		shuffle(x)	### <<<<<<<<<<< SLOWWWWWWWWWWWWWWWWWWWWWW
 		permutation += [list(itertools.chain(*x))]
@@ -264,18 +305,18 @@ def main():
 	#print(shingles)
 
 	matrix = fillMatrix(texts)
-	print("start perm")
 	permutations = getRandomPermutation()
-	print("end Perm")
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
 	#groups = getKmeanCluster(matrix)
-	groups = clusterKMeanSaprk(signatureMatrix)
+	#groups = clusterKMeanSaprk(signatureMatrix)
 
-	ts.get_purity_index(js.array_clusters,groups)
+	print(ts.get_purity_index(js.array_clusters,groups))
 
 	print(groups)
+
+	print(len(groups))
 
 
 # CHIAMATA AL MEIN

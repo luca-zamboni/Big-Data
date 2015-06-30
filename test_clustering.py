@@ -67,14 +67,14 @@ def get_purity_index(ground, clustering):
 		f_measure += (f_measure_i / r)
 
 	# Awesome print..
-	print "Precision:"
-	print precision_array
-	print "Recall:"
-	print recall_array
-	print "Purity: ", purity
-	print "F-measure: ", f_measure
+	#print "Precision:"
+	#print precision_array
+	#print "Recall:"
+	#print recall_array
+	#print "Purity: ", purity
+	#print "F-measure: ", f_measure
 
-	return purity
+	return purity,f_measure
 
 # The maximum matching measure ensures that only one cluster can match with a given partition, unlike purity, where two different clusters may share the same majority partition.
 # def get_maximum_matching_index(ground, clustering):
