@@ -107,7 +107,7 @@ class WrapNews:
 		return self.title
 
 	def set_title(self, title):
-		self.title = title
+		self.title = title.lower()
 
 	# TESTATA
 
@@ -131,7 +131,7 @@ class WrapNews:
 		return self.body
 
 	def set_body(self, body):
-		self.body = body
+		self.body = body.lower()
 
 	# SOURCEs
 
@@ -200,7 +200,7 @@ class News:
 		return self.title
 
 	def set_title(self, title):
-		self.title = title
+		self.title = title.lower()
 
 	# DATE
 
@@ -232,7 +232,7 @@ class News:
 		return self.description
 
 	def set_description(self, description):
-		self.description = description
+		self.description = description.lower()
 
 	# IMAGE URL
 		
@@ -329,7 +329,7 @@ def removePuntuaction(s):
 
 def clean_title(title):
 	title = re.sub(' - .*', ' ', title)
-	title = re.sub('\s+', ' ', title).strip()
+	title = re.sub('\s+', ' ', title).strip().replace(' ...','')
 	return title
 
 def remove_stop_word_from_string(string, stop_words):
@@ -406,15 +406,16 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 			title = clean_title(title)
 
-			# Check if stop words have to be removed..
-			if remove_stop_word:
-
-				title = remove_stop_word_from_string(title,stop_words)
-				source = remove_stop_word_from_string(source,stop_words)
-
 			# Converts a news into an object News..
 			nid += 1
-			list_news += [parse_news(url, title, date, source, nid)]
+			news = parse_news(url, title, date, source, nid)
+
+			# Check if stop words have to be removed..
+			if remove_stop_word:
+				news.set_title(remove_stop_word_from_string(news.get_title(),stop_words))
+				news.set_body(remove_stop_word_from_string(news.get_body(),stop_words))
+
+			list_news += [news]
 
 	return list_news
 
@@ -541,3 +542,7 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 def remove_news_which_belong_to_first_page(list_news):
 	return filter(lambda n: n.get_feed_url() != URL_FIRST_PAGE_NEWS, list_news)
+
+l = getListNewsFromJson(remove_stop_word = False)
+
+
