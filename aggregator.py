@@ -9,15 +9,17 @@ from math import sqrt
 from numpy import arange,array,ones,linalg
 from pylab import plot,show
 from scipy import stats
-
+import time
 import numpy as np
 from sklearn import cluster
+import networkx as nx
+import matplotlib.pyplot as plt
 
 sc = SparkContext(appName="Aggregation")
 
-N_SHINGLES = 4
+N_SHINGLES = 5
 THRESHOLD_SIMILARITY = 0.0
-THRESHOLD_AGGREGATION = 0.97
+THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
 THRESHOLD_COUNT = 2
 
@@ -30,17 +32,38 @@ BASE_STR_JOIN = " "
 shingles = []
 shinglesCount = {}
 
+distanceMatrix = []
+
 # Jaccard Similarity of 2 strings
 def jaccard(list1,list2):
 	list1 = getShingleList(list1)
 	list2 = getShingleList(list2)
 	return jaccardForMinHash(list1,list2)
 
-# Jaccard Similarity of 2 strings
 def jaccardForMinHash(list1,list2):
 	s1 = set(list1)
 	s2 = set(list2)
 	return float(len(s1 & s2))/len(s1 | s2)
+
+def jaccardForList(l1,l2):
+	andL = 0.0
+	orL = 0.0
+	for i in range(0,len(l1)):
+		if l1[i] == 1 and l2[i] ==1:
+			andL += 1
+		if l1[i] == 1 or l2[i] == 1:
+			orL += 1
+	if orL == 0:
+		return 0.0
+	return andL/orL
+
+def jaccardForSignature(l1,l2):
+	andL = 0.0
+	orL = 0.0
+	for i in range(0,len(l1)):
+		if l1[i] == l2[i]:
+			andL += 1
+	return andL/len(l1)
 
 # Get shingles of a list of strings
 def getShingleList(l):
@@ -115,10 +138,11 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	for i in range(0,len(distanceMatrix)):
 		distanceMatrix[i] = [1.0 for y in range(0,len(signatureMatrix))]
 
+	# print(signatureMatrix)
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
-		sim = jaccardForMinHash(l1,l2)
-		distanceMatrix[nid1][nid2] = (1 - (sim)) * (1 - (sim))
+		sim = jaccardForSignature(l1,l2)
+		distanceMatrix[nid1][nid2] =( 1.0 - sim) * (1.0 - sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
@@ -127,7 +151,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
-		#print(dist,groups)
+		print(dist,groups)
 
 	return groups
 
@@ -196,9 +220,10 @@ def clusterKMeanSaprk(matrix):
 
 def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
+	getDistanceMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(24,25):
+	for kc in range(1,3):
 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
 		clu = k_means.predict(m)
@@ -279,6 +304,15 @@ def getNewsById(nid,news):
 		if n.get_nid() == nid :
 			return n
 
+def graph(matrix):
+	G=nx.Graph()
+	for m in matrix:
+		for n in matrix:
+			for i in range(0,len(matrix[m])):
+				if matrix[m][i] >= 1 and matrix[n][i] >= 1:
+					G.add_edge(n,m)
+	nx.draw_random(G)
+	plt.show()
 
 # MAIN
 def main():
@@ -293,7 +327,7 @@ def main():
 
 		groups += [[n.get_nid()]]
 
-		s = (n.get_title() + "     " + n.get_description()).lower()
+		s = (n.get_title() + n.get_body()).lower()
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
@@ -307,7 +341,9 @@ def main():
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
-	#groups = getAggregatedWithClustering(signatureMatrix,groups)
+	#graph(matrix)
+
+	groups = getAggregatedWithClustering(signatureMatrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
 
@@ -316,7 +352,6 @@ def main():
 	print(groups)
 
 	print(len(groups))
-
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":

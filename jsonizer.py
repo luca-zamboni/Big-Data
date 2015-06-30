@@ -447,12 +447,8 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 		create_news_json_file(list_news_from_crawler)
 		elapsed = timeit.default_timer() - start_time
 		print len(list_news_from_crawler), "news have been imported from", JSON_NEWS_PATH
+
 		print "Done in ", elapsed
-
-
-		# DEBUG
-		# for i in list_news_from_crawler:
-		# 	print i.to_JSON()
 
 		return list_news_from_crawler # It's the same as the one stored in the json file
 
