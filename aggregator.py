@@ -279,6 +279,8 @@ def getNewsById(nid,news):
 		if n.get_nid() == nid :
 			return n
 
+def addDate(matrix,news):
+	pass
 
 # MAIN
 def main():
@@ -307,6 +309,8 @@ def main():
 	matrix = fillMatrix(texts)
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
+
+	matrix = addDate(matrix,news)
 
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
 	#groups = getKmeanCluster(matrix)
