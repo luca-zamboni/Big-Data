@@ -16,6 +16,8 @@ GOOGLE_NEWS_PATH 	= "newsG.txt"
 JSON_NEWS_PATH 	= "newsG.json"
 STOP_WORDS_PATH 	= "stopword.txt"
 
+URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
+
 clusters = {} 			# Dictionary for clusters
 array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
 
@@ -57,7 +59,6 @@ class MyHTMLParser(HTMLParser):
 
 			if tag == 'img' and tag_name == "src" and self.count_a == 1:
 				self.news.set_image_url(value)
-
 
 	def handle_data(self, data):
 
@@ -156,6 +157,29 @@ class WrapNews:
 	def set_cluster_number(self, cluster_number):
 		self.cluster_number = cluster_number
 
+		# global clusters
+		# global array_clusters
+
+		# if len(clusters) == 0:
+		# 	clusters[self.feed_url] = self.cluster_number = 0
+		# 	array_clusters = [[self.get_nid()]]
+
+		# else:
+
+		# 	self.cluster_number = -1;
+		# 	for cluster in clusters:
+		# 		if self.feed_url in cluster:
+		# 			self.cluster_number = clusters[self.feed_url]
+		# 			break
+
+		# 	if self.cluster_number == -1:
+		# 		self.cluster_number = len(clusters)
+		# 		clusters[self.feed_url] = self.cluster_number
+		# 		array_clusters += [[self.get_nid()]]
+
+		# 	else:
+		# 		array_clusters[self.cluster_number] += [self.get_nid()]
+
 	# JSON
 
 	def to_JSON(self):
@@ -175,7 +199,7 @@ class News:
 		self.description = description
 		self.image_url = image_url
 		self.source_url = source_url
-		self.cluster_number = cluster_number
+		self.set_cluster_number()
 
 	# NEWS - ID
 
@@ -250,7 +274,7 @@ class News:
 		self.source_url = source_url
 
 	# CLUSTER NUMBER
-		
+
 	def get_cluster_number(self):
 		return self.cluster_number
 
@@ -297,7 +321,6 @@ class News:
 	def to_JSON(self):
 		return json.dumps(self.wrap_news(), default=lambda o: o.__dict__, sort_keys=True, indent=4, ensure_ascii=False)
 
-
 def check_if_file_exists(path, msg = ""):
 	if not os.path.exists(path):
 		print "Sorry, the following file does not exist:", path
@@ -316,10 +339,10 @@ def load_stop_words():
 	f.close()
 	return stop_words
 
-def parse_news(url, title, date, source):
-	news = News(url, title, date, source)
+def parse_news(url, title, date, source, nid):
+	news = News(url, title, date, source, nid)
 	parser = MyHTMLParser(news)
-	return news;
+	return news.wrap_news();
 
 def removePuntuaction(s):
 	for c in string.punctuation:
@@ -413,11 +436,8 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 				source = remove_stop_word_from_string(source,stop_words)
 
 			# Converts a news into an object News..
-			news = parse_news(url, title, date, source)
-			news.set_nid(nid)
-			news.set_cluster_number()
 			nid += 1
-			list_news = list_news + [news]
+			list_news += [parse_news(url, title, date, source, nid)]
 
 	return list_news
 
@@ -450,7 +470,9 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 		create_news_json_file(list_news_from_crawler)
 		elapsed = timeit.default_timer() - start_time
 		print len(list_news_from_crawler), "news have been imported from", JSON_NEWS_PATH
-		print "Done in .", elapsed
+
+		print "Done in ", elapsed
+
 		return list_news_from_crawler # It's the same as the one stored in the json file
 
 	# Retrieve news from JSON_NEWS_PATH..
@@ -534,4 +556,11 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 	list_news_from_json.sort(key=lambda n: n.get_nid())
 
+	# Remove news which belong to the first page..
+	list_news_from_json = remove_news_which_belong_to_first_page(list_news_from_json)
+
 	return list_news_from_json
+
+
+def remove_news_which_belong_to_first_page(list_news):
+	return filter(lambda n: n.get_feed_url() != URL_FIRST_PAGE_NEWS, list_news)
