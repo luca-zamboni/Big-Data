@@ -542,7 +542,3 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 def remove_news_which_belong_to_first_page(list_news):
 	return filter(lambda n: n.get_feed_url() != URL_FIRST_PAGE_NEWS, list_news)
-
-#l = getListNewsFromJson(remove_stop_word = False)
-
-
