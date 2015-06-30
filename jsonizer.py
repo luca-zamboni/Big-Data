@@ -157,29 +157,6 @@ class WrapNews:
 	def set_cluster_number(self, cluster_number):
 		self.cluster_number = cluster_number
 
-		# global clusters
-		# global array_clusters
-
-		# if len(clusters) == 0:
-		# 	clusters[self.feed_url] = self.cluster_number = 0
-		# 	array_clusters = [[self.get_nid()]]
-
-		# else:
-
-		# 	self.cluster_number = -1;
-		# 	for cluster in clusters:
-		# 		if self.feed_url in cluster:
-		# 			self.cluster_number = clusters[self.feed_url]
-		# 			break
-
-		# 	if self.cluster_number == -1:
-		# 		self.cluster_number = len(clusters)
-		# 		clusters[self.feed_url] = self.cluster_number
-		# 		array_clusters += [[self.get_nid()]]
-
-		# 	else:
-		# 		array_clusters[self.cluster_number] += [self.get_nid()]
-
 	# JSON
 
 	def to_JSON(self):
@@ -284,7 +261,7 @@ class News:
 		global array_clusters
 
 		if len(clusters) == 0:
-			clusters[self.feed_url] = self.cluster_number = 0
+			clusters[self.feed_url] = self.cluster_number = 1
 			array_clusters = [[self.get_nid()]]
 
 		else:
@@ -296,12 +273,12 @@ class News:
 					break
 
 			if self.cluster_number == -1:
-				self.cluster_number = len(clusters)
+				self.cluster_number = len(clusters) + 1
 				clusters[self.feed_url] = self.cluster_number
 				array_clusters += [[self.get_nid()]]
 
 			else:
-				array_clusters[self.cluster_number] += [self.get_nid()]
+				array_clusters[self.cluster_number - 1] += [self.get_nid()]
 
 	# SERIALIZE
 
