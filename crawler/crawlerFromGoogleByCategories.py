@@ -135,9 +135,9 @@ def main():
 
 	if (len(sys.argv) != 2):
 		print("Usage:")
-		print("$ python crawlerFromGoogleByCategories <CATEGORY>")
-		print("E.G. $ python crawlerFromGoogleByCategories Esteri")
-		print("E.G. $ python crawlerFromGoogleByCategories Scienza_e_tecnologia")
+		print("$ python3 crawlerFromGoogleByCategories.py <CATEGORY>")
+		print("E.G. $ python3 crawlerFromGoogleByCategories.py Esteri")
+		print("E.G. $ python3 crawlerFromGoogleByCategories.py Scienza_e_tecnologia")
 		print("Choose one of them: ")
 		for c in categories:
 			print(c.replace(" ", "_"))
