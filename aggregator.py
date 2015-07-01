@@ -335,11 +335,20 @@ def getTopics(n):
 				ret[i][l.split()[0]] = l.split()[1]
 	return ret
 
+def getProb(probs):
+	allP = []
+	for t in probs:
+		t.sort()
+		allP += t
+	return sum(allP) / float(len(allP))
+
 def getGroupsFromLda(topic,news):
-	lowest = getLowestProb(topic)
+	lowest = getLowestProb(topic) * 0.1
 	groups = [[] for t in topic]
+	probs = [[] for t in topic]
 	for nid,text in news:
 		maxProb = 0.0
+		max2p = 0.0
 		maxTopic = 0
 		for i in range(0,len(topic)):
 			p = 1.0
@@ -348,10 +357,34 @@ def getGroupsFromLda(topic,news):
 					p *= float(topic[i][s])
 				else:
 					p*= lowest
+			if p > max2p and p < maxProb:
+				max2p = p
 			if p > maxProb and p != 1.0:
 				maxTopic = i
+				max2p = maxProb
 				maxProb = p
+		print(maxProb,max2p)
+		probs[maxTopic] += [maxProb]	
 		groups[maxTopic] += [nid]
+	prob = getProb(probs)
+	return groups,prob
+
+def degGetLdaGroups(texts):
+
+	for i in range(121,122):
+	
+		clust = i
+		retNum = 15
+
+		os.system("./run-lda.sh " + str(clust) + " " + str(retNum) + "")
+
+		topic = getTopics(clust)
+		groups,prob = getGroupsFromLda(topic,texts)
+
+		#print(i,prob)
+
+		groups = [g for g in groups if len(g) >=1]
+
 	return groups
 
 # MAIN
@@ -382,11 +415,7 @@ def main():
 
 	x.close()
 
-	clust = 12
-
-	retNum = 15
-
-	os.system("time ./run-lda.sh " + str(clust) + " " + str(retNum))
+	
 
 	# TRY TO OPTIMIZE
 	#removeShinglesLowCount()
@@ -402,11 +431,8 @@ def main():
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
-
-	topic = getTopics(clust)
-	groups = getGroupsFromLda(topic,texts)
-
-	groups = [g for g in groups if len(g) >=1]
+	groups = degGetLdaGroups(texts)
+	
 
 	print(groups)
 	print(ts.get_purity_index(js.array_clusters,groups))

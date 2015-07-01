@@ -22,8 +22,6 @@ import scala.collection.mutable
 
 import scopt.OptionParser
 
-import org.apache.log4j.{Level, Logger}
-
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.mllib.clustering.{OnlineLDAOptimizer , EMLDAOptimizer, DistributedLDAModel, LDA}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
@@ -44,7 +42,7 @@ object LDACalc {
       input: Seq[String] = Seq.empty,
       k: Int = 3,
       retNum: Int = 10,
-      maxIterations: Int = 100,
+      maxIterations: Int = 150,
       docConcentration: Double = -1,
       topicConcentration: Double = -1,
       vocabSize: Int = 100000,
@@ -116,7 +114,7 @@ object LDACalc {
     val conf = new SparkConf().setAppName(s"LDAExample with $params")
     val sc = new SparkContext(conf)
 
-    Logger.getRootLogger.setLevel(Level.WARN)
+    //Logger.getRootLogger.setLevel(Level.WARN)
 
     // Load documents, and prepare them for LDA.
     val preprocessStart = System.nanoTime()

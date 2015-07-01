@@ -40,6 +40,7 @@ class MyHTMLParser(HTMLParser):
 		self.parse_news()
 
 	def parse_news(self):
+		self.news.set_source(re.sub("&(#?[xX]?(?:[0-9a-fA-F]+|\w{1,8}));"," ", self.news.get_source()))
 		self.feed(self.news.get_source())
 
 	def handle_starttag(self, tag, attrs):
