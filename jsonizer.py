@@ -454,7 +454,6 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 		create_news_json_file(list_news_from_crawler)
 		elapsed = timeit.default_timer() - start_time
 		print len(list_news_from_crawler), "news have been imported from", JSON_NEWS_PATH
-
 		print "Done in ", elapsed
 
 		return list_news_from_crawler # It's the same as the one stored in the json file
@@ -545,6 +544,29 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 	return list_news_from_json
 
-
+# Remove news which have URL_FIRST_PAGE_NEWS as feed_url
 def remove_news_which_belong_to_first_page(list_news):
 	return filter(lambda n: n.get_feed_url() != URL_FIRST_PAGE_NEWS, list_news)
+
+# Joins two lists of news which belong to different txt files (input_path_1 and input_path_2) in a single json output file
+# which will be stored in output_path.
+def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word = False,):
+
+	l1 = getListNewsFromTxt(input_path_1, remove_stop_word)
+	l2 = getListNewsFromTxt(input_path_2, remove_stop_word)
+
+	last_nid = l1[-1].get_nid()
+
+	for e in l2:
+		e.set_nid(e.get_nid() + last_nid)
+
+	result = l1 + l2
+	create_news_json_file(result, output_path)
+
+	return result
+
+
+# i1 = "crawler/categories/economia.txt"
+# i2 = "crawler/categories/sport.txt"
+# output = "crawler/categories/merged.json"
+# l = mergeFromTxtToJson( i1, i2 , output, False)
