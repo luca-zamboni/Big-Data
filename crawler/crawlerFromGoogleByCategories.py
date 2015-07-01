@@ -8,6 +8,8 @@ import time
 import os.path	# files management and checks
 import threading
 import _thread
+import sys
+
 tempnews = []
 md5 = {}
 
@@ -19,12 +21,15 @@ def remove_tags(raw_html):
   return cleantext
 
 def addToFile(path, testata, title, date, testo):
-	print("Added news in " + path)
+	
+	print(path)
 	with open(path, "a+") as myfile:
 		myfile.write(testata + "\n")
 		myfile.write(title + "\n")
 		myfile.write(date + "\n")
 		myfile.write(testo + "\n")
+
+	print("Added news in " + path)
 
 def insert(category, news, RSS):
 
@@ -72,93 +77,80 @@ def insert(category, news, RSS):
 
 def get_mondo(c, text):
 
-	
-	print(c)
+	while(True):
+		try:
 
-	link = re.findall('href="[^".]*"', re.findall('<a [^>.]*>' + c +'</a>', text)[0])[0][7:-1]
-	url = "https://news.google.it/" + link.replace("amp;", "")
+			link = re.findall('href="[^".]*"', re.findall('<a [^>.]*>' + c +'</a>', text)[0])[0][7:-1]
+			url = "https://news.google.it/" + link.replace("amp;", "")
 
-	response = urllib.request.urlopen(url)
-	data = response.read()
-	text = data.decode('utf-8')
+			response = urllib.request.urlopen(url)
+			data = response.read()
+			text = data.decode('utf-8')
 
-	aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
+			aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
 
-	xmls = []
-	for a in aTags:
+			xmls = []
+			for a in aTags:
 
-		lock = _thread.allocate_lock()
-		lock.acquire()
+				lock = _thread.allocate_lock()
+				lock.acquire()
 
-		links = re.findall('href="[^".]*"', a)
-		url = "https://news.google.it/" + links[0][7:-1]
-		response = urllib.request.urlopen(url)
-		data = response.read()
-		text = data.decode('utf-8')
+				links = re.findall('href="[^".]*"', a)
+				url = "https://news.google.it/" + links[0][7:-1]
+				response = urllib.request.urlopen(url)
+				data = response.read()
+				text = data.decode('utf-8')
 
-		hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
-		tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
-		RSS = "https://" + tmp[7:]
-		
-		response = urllib.request.urlopen(RSS)
-		data = response.read()
-		text = data.decode('utf-8')
+				hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
+				tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
+				RSS = "https://" + tmp[7:]
+				
+				response = urllib.request.urlopen(RSS)
+				data = response.read()
+				text = data.decode('utf-8')
 
-		root = ET.fromstring(text)
+				root = ET.fromstring(text)
 
-		insert( str(c) , root.iter('item'), RSS)
+				insert( str(c) , root.iter('item'), RSS)
 
-		lock.release()
-		time.sleep(10)
+				lock.release()
+				time.sleep(10)
 
-while(True):
-	try:
+		except Exception: 
+			print("Except")
+		time.sleep( 120 )
+
+
+def main():
+
+	categories = {
+		'Esteri': [],
+		'Italia': [],
+		'Economia' : [],
+		'Scienza e tecnologia' : [],
+		'Intrattenimento' : [],
+		'Sport' : [],
+		'Salute' : []
+		}
+
+	if (len(sys.argv) != 2):
+		print("Usage:")
+		print("$ python crawlerFromGoogleByCategories <CATEGORY>")
+		print("E.G. $ python crawlerFromGoogleByCategories Esteri")
+		print("E.G. $ python crawlerFromGoogleByCategories Scienza_e_tecnologia")
+		print("Choose one of them: ")
+		for c in categories:
+			print(c.replace(" ", "_"))
+
+	else:
+
+		print("Dowloading ", sys.argv[1],"...")
+		cat = sys.argv[1].replace("_", " ")
 
 		response = urllib.request.urlopen("https://news.google.it")
 		data = response.read()
 		text = data.decode('utf-8')
 
-		categories = {
-			'Esteri': [],
-			'Italia': [],
-			'Economia' : [],
-			'Scienza e tecnologia' : [],
-			'Intrattenimento' : [],
-			'Sport' : [],
-			'Salute' : []
-			}
+		threading.Thread(target=get_mondo(cat, text)).start()
 
-		for c in categories:
-
-			# start_new_thread(get_mondo, (c,))
-
-			threading.Thread(target=get_mondo(c, text)).start()
-			
-
-
-			# hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
-			# tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
-			# RSS = "https://" + tmp[7:]
-
-			# categories[c] = [RSS]
-
-			# response = urllib.request.urlopen(RSS)
-			# data = response.read()
-			# text = data.decode('utf-8')
-
-			# # print(RSS)
-
-			# # break
-			# root.iter('item')
-
-			# insert( str(c) , root.iter('item'), RSS)
-
-		# break
-
-	except Exception as e:
-
-		print("I/O error", e.errno, " , " , e.strerror)
-		print("Except")
-
-	time.sleep( 120 )
-
+main()
