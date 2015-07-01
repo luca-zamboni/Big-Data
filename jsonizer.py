@@ -10,6 +10,9 @@ import os.path 		# Files management and checks
 import timeit		# Timer
 from HTMLParser import HTMLParser
 
+# Spark
+from pyspark import SparkContext
+
 # Global variables
 # -----------------------------------------------------------------------------
 
@@ -333,6 +336,12 @@ def clean_title(title):
 	title = re.sub('\s+', ' ', title).strip().replace(' ...','')
 	return title
 
+
+def remove_stop_word_from_news(news, stop_words):
+	news.set_title(remove_stop_word_from_string(news.get_title(), stop_words))
+	news.set_body(remove_stop_word_from_string(news.get_body(), stop_words))
+	return news
+
 def remove_stop_word_from_string(string, stop_words):
 	ret = []
 	for ss in string.split():
@@ -387,7 +396,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	if file_exists:
 
-		# Loads stop words into a variable, for performance purposes
+		# # Loads stop words into a variable, for performance purposes
 		if remove_stop_word:
 			stop_words = load_stop_words()
 
@@ -416,12 +425,18 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			nid += 1
 			news = parse_news(url, title, date, source, nid)
 
-			# Check if stop words have to be removed..
-			if remove_stop_word:
-				news.set_title(remove_stop_word_from_string(news.get_title(),stop_words))
-				news.set_body(remove_stop_word_from_string(news.get_body(),stop_words))
+			# # Check if stop words have to be removed..
+			# if remove_stop_word:
+			# 	news.set_title(remove_stop_word_from_string(news.get_title(),stop_words))
+			# 	news.set_body(remove_stop_word_from_string(news.get_body(),stop_words))
 
 			list_news += [news]
+
+		# Check if stop words have to be removed..
+		if remove_stop_word:
+			l = sc.parallelize(list_news)
+			l.flatMap(lambda n: n '''remove_stop_word_from_news(n, stop_words)''')
+			print(l)
 
 	return list_news
 
@@ -565,6 +580,7 @@ def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word
 
 	return result
 
+getListNewsFromJson(remove_stop_word = True)
 
 # i1 = "crawler/categories/economia.txt"
 # i2 = "crawler/categories/sport.txt"
