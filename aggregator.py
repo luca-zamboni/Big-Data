@@ -15,10 +15,11 @@ import numpy as np
 from sklearn import cluster
 import networkx as nx
 import matplotlib.pyplot as plt
+import os
 
 sc = SparkContext(appName="Aggregation")
 
-N_SHINGLES = 5
+N_SHINGLES = 9
 THRESHOLD_SIMILARITY = 0.0
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
@@ -28,7 +29,7 @@ NUM_LINER_FITTING  = 5
 
 FACTOR_CLUSTER = 2
 
-BASE_STR_JOIN = " "
+BASE_STR_JOIN = ""
 
 shingles = []
 shinglesCount = {}
@@ -73,8 +74,8 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	#return s.split()
-	return [s[i:i + n] for i in range(len(s) - n + 1)]
+	return s.split()
+	#return [s[i:i + n] for i in range(len(s) - n + 1)]
 
 def getCloserGroupsFurther(groups,distanceMatrix):
 	closer = (None,None)
@@ -315,6 +316,44 @@ def graph(matrix):
 	nx.draw_random(G)
 	plt.show()
 
+def getLowestProb(topic):
+	l = 1.0
+	for t in topic:
+		for word in t:
+			if float(t[word]) < l:
+				l = float(t[word])
+	return l
+
+def getTopics(n):
+	ret = [{} for m in range(0,n)]
+	i = 0
+	with open("output-lda/output.txt","r") as f:
+		for l in f:
+			if len(l.split()) == 1:
+				i = int(l)
+			else:
+				ret[i][l.split()[0]] = l.split()[1]
+	return ret
+
+def getGroupsFromLda(topic,news):
+	lowest = getLowestProb(topic)
+	groups = [[] for t in topic]
+	for nid,text in news:
+		maxProb = 0.0
+		maxTopic = 0
+		for i in range(0,len(topic)):
+			p = 1.0
+			for s in getShingle(text):
+				if s in topic[i]:
+					p *= float(topic[i][s])
+				else:
+					p*= lowest
+			if p > maxProb and p != 1.0:
+				maxTopic = i
+				maxProb = p
+		groups[maxTopic] += [nid]
+	return groups
+
 # MAIN
 def main():
 
@@ -322,7 +361,7 @@ def main():
 	texts = []
 	matrix = {}
 
-	x = open("folder/newsProva.txt","w")
+	x = open("input-lda/input.txt","w")
 
 	news = js.getListNewsFromJson(remove_stop_word = True)
 
@@ -331,34 +370,48 @@ def main():
 		groups += [[n.get_nid()]]
 
 		s = (n.get_title() + n.get_body()).lower()
+		#s = (n.get_title()).lower()
 
-		print(n.get_title())
-		x.write(s + "\n")
+		#print(getShingle(s))
+		for ss in getShingle(s):
+			x.write(ss + " ")
+		x.write("\n")
 
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
+	x.close()
+
+	clust = 12
+
+	retNum = 15
+
+	os.system("time ./run-lda.sh " + str(clust) + " " + str(retNum))
 
 	# TRY TO OPTIMIZE
 	#removeShinglesLowCount()
 
 	#print(shingles)
 
-	matrix = fillMatrix(texts)
-	permutations = getRandomPermutation()
-	signatureMatrix = getSignatureMatrix(matrix,permutations)
+	#matrix = fillMatrix(texts)
+	#permutations = getRandomPermutation()
+	#signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#graph(matrix)
 
-	groups = getAggregatedWithClustering(signatureMatrix,groups)
+	#groups = getAggregatedWithClustering(signatureMatrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
 
-	print(ts.get_purity_index(js.array_clusters,groups))
+	topic = getTopics(clust)
+	groups = getGroupsFromLda(topic,texts)
+
+	groups = [g for g in groups if len(g) >=1]
 
 	print(groups)
+	print(ts.get_purity_index(js.array_clusters,groups))
 
-	print(len(groups))
+	#print(len(groups))
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":

@@ -43,10 +43,11 @@ object LDACalc {
   private case class Params(
       input: Seq[String] = Seq.empty,
       k: Int = 3,
+      retNum: Int = 10,
       maxIterations: Int = 100,
       docConcentration: Double = -1,
       topicConcentration: Double = -1,
-      vocabSize: Int = 10000,
+      vocabSize: Int = 100000,
       stopwordFile: String = "",
       algorithm: String = "em",
       checkpointDir: Option[String] = None,
@@ -58,8 +59,11 @@ object LDACalc {
     val parser = new OptionParser[Params]("LDAExample") {
       head("LDAExample: an example LDA app for plain text data.")
       opt[Int]("k")
-        .text(s"number of topics. dio porco: ${defaultParams.k}")
+        .text(s"number of topics.: ${defaultParams.k}")
         .action((x, c) => c.copy(k = x))
+      opt[Int]("retNum")
+        .text(s"number of topics.: ${defaultParams.retNum}")
+        .action((x, c) => c.copy(retNum = x))
       opt[Int]("maxIterations")
         .text(s"number of iterations of learning. default: ${defaultParams.maxIterations}")
         .action((x, c) => c.copy(maxIterations = x))
@@ -147,35 +151,35 @@ object LDACalc {
     val ldaModel = lda.run(corpus)
     val elapsed = (System.nanoTime() - startTime) / 1e9
 
-    println(s"Finished training LDA model.  Summary:")
-    println(s"\t Training time: $elapsed sec")
+    //println(s"Finished training LDA model.  Summary:")
+    //println(s"\t Training time: $elapsed sec")
 
     if (ldaModel.isInstanceOf[DistributedLDAModel]) {
       val distLDAModel = ldaModel.asInstanceOf[DistributedLDAModel]
       val avgLogLikelihood = distLDAModel.logLikelihood / actualCorpusSize.toDouble
-      println(s"\t Training data average log likelihood: $avgLogLikelihood")
-      println()
+      //println(s"\t Training data average log likelihood: $avgLogLikelihood")
+      //println()
     }
 
     // Print the topics, showing the top-weighted terms for each topic.
-    val topicIndices = ldaModel.describeTopics(maxTermsPerTopic = 20)
+    val topicIndices = ldaModel.describeTopics(maxTermsPerTopic = params.retNum)
     val topics = topicIndices.map { case (terms, termWeights) =>
       terms.zip(termWeights).map { case (term, weight) => (vocabArray(term.toInt), weight) }
     }
 
     var out = ""
 
-    println(s"${params.k} topics:")
+    //println(s"${params.k} topics:")
     topics.zipWithIndex.foreach { case (topic, i) =>
-      println(s"TOPIC $i")
+     // println(s"TOPIC $i")
       out = out + i + "\n"
       topic.foreach { case (term, weight) =>
-        println(s"$term\t$weight")
+        //println(s"$term\t$weight")
         out = out + term + " " + weight + "\n"
       }
-      println()
+      //println()
     }
-    val pw = new java.io.PrintWriter(new File("../output-lda/output.txt"))
+    val pw = new java.io.PrintWriter(new File("output-lda/output.txt"))
     try pw.write(out) finally pw.close()
     sc.stop()
   }
