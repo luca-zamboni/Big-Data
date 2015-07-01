@@ -333,7 +333,7 @@ def removePuntuaction(s):
 
 def clean_title(title):
 	title = re.sub(' - .*', ' ', title)
-	title = re.sub('\s+', ' ', title).strip().replace(' ...','')
+	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
 
 
