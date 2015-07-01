@@ -28,6 +28,7 @@ import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.mllib.clustering.{OnlineLDAOptimizer , EMLDAOptimizer, DistributedLDAModel, LDA}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
+import java.io._
 
 
 /**
@@ -37,7 +38,7 @@ import org.apache.spark.rdd.RDD
  * }}}
  * If you use it as a template to create your own app, please use `spark-submit` to submit your app.
  */
-object LDAExample {
+object LDACalc {
 
   private case class Params(
       input: Seq[String] = Seq.empty,
@@ -122,14 +123,6 @@ object LDAExample {
     val actualVocabSize = vocabArray.size
     val preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
 
-    println()
-    println(s"Corpus summary:")
-    println(s"\t Training set size: $actualCorpusSize documents")
-    println(s"\t Vocabulary size: $actualVocabSize terms")
-    println(s"\t Training set size: $actualNumTokens tokens")
-    println(s"\t Preprocessing time: $preprocessElapsed sec")
-    println()
-
     // Run LDA.
     val lda = new LDA()
 
@@ -165,18 +158,25 @@ object LDAExample {
     }
 
     // Print the topics, showing the top-weighted terms for each topic.
-    val topicIndices = ldaModel.describeTopics(maxTermsPerTopic = 10)
+    val topicIndices = ldaModel.describeTopics(maxTermsPerTopic = 20)
     val topics = topicIndices.map { case (terms, termWeights) =>
       terms.zip(termWeights).map { case (term, weight) => (vocabArray(term.toInt), weight) }
     }
+
+    var out = ""
+
     println(s"${params.k} topics:")
     topics.zipWithIndex.foreach { case (topic, i) =>
       println(s"TOPIC $i")
+      out = out + i + "\n"
       topic.foreach { case (term, weight) =>
         println(s"$term\t$weight")
+        out = out + term + " " + weight + "\n"
       }
       println()
     }
+    val pw = new java.io.PrintWriter(new File("../output-lda/output.txt"))
+    try pw.write(out) finally pw.close()
     sc.stop()
   }
 

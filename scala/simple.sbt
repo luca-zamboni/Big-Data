@@ -2,7 +2,7 @@ import AssemblyKeys._  // put this at the top of the file
 
 assemblySettings
 
-name := "Simpl"
+name := "LDA"
 
 version := "1.0"
 
