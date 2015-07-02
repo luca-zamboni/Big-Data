@@ -343,7 +343,7 @@ def remove_stop_word_from_news(news, stop_words):
 	news.set_body(remove_stop_word_from_string(news.get_body(), stop_words))
 	return news
 
-def remove_stop_word_from_string(string, stop_words):
+def rmStop(string, stop_words):
 	ret = []
 	for ss in string.split():
 
@@ -435,17 +435,28 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 		# Check if stop words have to be removed..
 		if remove_stop_word:
-			def mymap(n):
-				n.__class__=WrapNews
-				return n
 
 			sc = SparkContext(appName="Aggregation")
-			l = sc.parallelize(list_news)
-			l = l.map(mymap).collect()
-
+			l = sc.parallelize(fromNewsToTuple(list_news))
+			l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
+			list_news = reassemblyNews(list_news,l)
 			
-			print(l)
+			print(list_news)
 
+	return list_news
+
+def fromNewsToTuple(list_news):
+	ret = []
+	for n in list_news:
+		ret += [(n.get_nid(), n.get_title(), n.get_body())]
+	return ret
+
+def reassemblyNews(list_news,tuples):
+	for nid,t,b in tuples:
+		for i in range(0,len(list_news)):
+			if list_news[i].get_nid == nid:
+				list_news[i].set_title(t)
+				list_news[i].set_body(b)
 	return list_news
 
 # It returns an ORDERED list of News() which are stored in GOOGLE_NEWS_PATH.
@@ -494,9 +505,9 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 		# Check if stop words have to be removed..
 		title = news['title']
 		body = news['body']
-		if remove_stop_word:
-			title = remove_stop_word_from_string(title, stop_words)
-			body = remove_stop_word_from_string(body, stop_words)
+		#if remove_stop_word:
+			#title = remove_stop_word_from_string(title, stop_words)
+			#body = remove_stop_word_from_string(body, stop_words)
 
 		n = WrapNews()
 		n.set_nid(int(news['nid']))
