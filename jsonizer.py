@@ -435,8 +435,15 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 		# Check if stop words have to be removed..
 		if remove_stop_word:
+			def mymap(n):
+				n.__class__=WrapNews
+				return n
+
+			sc = SparkContext(appName="Aggregation")
 			l = sc.parallelize(list_news)
-			l.flatMap(lambda n: n '''remove_stop_word_from_news(n, stop_words)''')
+			l = l.map(mymap).collect()
+
+			
 			print(l)
 
 	return list_news
