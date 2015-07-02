@@ -4,7 +4,7 @@ from pyspark import SparkContext
 import itertools
 from random import shuffle
 import sys
-import jsonizer as js
+import jsonizer
 import test_clustering as ts
 from math import sqrt
 from numpy import arange,array,ones,linalg
@@ -397,7 +397,7 @@ def main():
 
 	#x = open("input-lda/input.txt","w")
 
-	news = js.getListNewsFromJson(remove_stop_word = True)
+	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 
 	#for n in news:
 

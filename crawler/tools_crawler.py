@@ -1,12 +1,12 @@
 
 
-path = "bckpreDateTxt.txt"
-out = "bckpreDateTxt_with_date.txt"
+path = "bckpreDate.txt"
+out = "bckpreDate_with_date.txt"
 
 def add_date():
 
 	newsFile = open(path, "r")
-	outFile = open(out, "r")
+	outF = open(out, "w")
 		
 	while True:
 
@@ -20,12 +20,12 @@ def add_date():
 
 		date = "Date"
 
-		out.write(url)
-		out.write(title)
-		out.write(date)
-		out.write(source)
+		outF.write(url+"\n")
+		outF.write(title+"\n")
+		outF.write(date+"\n")
+		outF.write(source+"\n")
 
-	outFile.close()
+	outF.close()
 	newsFile.close()
 
 

@@ -25,7 +25,7 @@ URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
 
 clusters = {} 			# Dictionary for clusters
 array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
-stop_words = []
+# stop_words = []
 
 #jsc = SparkContext(appName="Jsonizor")
 
@@ -346,7 +346,8 @@ def clean_title(title):
 # 	news.set_body(remove_stop_words_from_string(news.get_body(), stop_words))
 # 	return news
 
-def remove_stop_words_from_string(string, stop_words):
+def remove_stop_words_from_string(string,stop_words):
+
 	ret = []
 	for ss in string.split():
 
@@ -360,14 +361,18 @@ def remove_stop_words_from_string(string, stop_words):
 	string = removePuntuaction(string)
 	return string
 
+#dummy = 0
 def remove_stop_words(list_news):
 
-	# Loads stop_words only once
-	global stop_words
-	if stop_words == []:
-		stop_words = load_stop_words()
+	#global dummy
+	#dummy+=1
 
-	jsc = SparkContext(appName="Jsonizor remove stop words")
+	# if stop_words == []:
+	stop_words = load_stop_words()
+
+	print(len(list_news))
+
+	jsc = SparkContext(appName="Jsonizor remove stop words ")
 	l = jsc.parallelize(fromNewsToTuple(list_news))
 	l = l.map(lambda n:(n[0],remove_stop_words_from_string(n[1],stop_words),remove_stop_words_from_string(n[2],stop_words))).collect()
 	list_news = reassemblyNews(list_news,l)
@@ -625,4 +630,5 @@ def define_tuple_title_nid_from_listnews(list_news):
 		ret += [(n.get_title(), n.get_nid())]
 	return ret
 
-getListNewsFromJson(remove_stop_word = True)
+#f = open(STOP_WORDS_PATH, "r")
+#getListNewsFromJson(remove_stop_word = True)
