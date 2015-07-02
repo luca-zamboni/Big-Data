@@ -25,6 +25,7 @@ URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
 
 clusters = {} 			# Dictionary for clusters
 array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+stop_words = []
 
 #jsc = SparkContext(appName="Jsonizor")
 
@@ -340,12 +341,12 @@ def clean_title(title):
 	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
 
-def remove_stop_word_from_news(news, stop_words):
-	news.set_title(remove_stop_word_from_string(news.get_title(), stop_words))
-	news.set_body(remove_stop_word_from_string(news.get_body(), stop_words))
-	return news
+# def remove_stop_word_from_news(news, stop_words):
+# 	news.set_title(remove_stop_words_from_string(news.get_title(), stop_words))
+# 	news.set_body(remove_stop_words_from_string(news.get_body(), stop_words))
+# 	return news
 
-def rmStop(string, stop_words):
+def remove_stop_words_from_string(string, stop_words):
 	ret = []
 	for ss in string.split():
 
@@ -359,11 +360,19 @@ def rmStop(string, stop_words):
 	string = removePuntuaction(string)
 	return string
 
-# Lists the set of sources from which the news are taken
-def get_list_testata(list_news):
-	
-	for news in list_news:
-		print(str(news.get_testata()))
+def remove_stop_words(list_news):
+
+	# Loads stop_words only once
+	global stop_words
+	if stop_words == []:
+		stop_words = load_stop_words()
+
+	jsc = SparkContext(appName="Jsonizor remove stop words")
+	l = jsc.parallelize(fromNewsToTuple(list_news))
+	l = l.map(lambda n:(n[0],remove_stop_words_from_string(n[1],stop_words),remove_stop_words_from_string(n[2],stop_words))).collect()
+	list_news = reassemblyNews(list_news,l)
+	jsc.stop()
+	return list_news
 
 def create_news_json_file(list_news, output = JSON_NEWS_PATH):
 	
@@ -416,17 +425,14 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			news = parse_news(url, title, date, source, nid)
 			list_news += [news]
 
-		# Check if stop words have to be removed..
-		if remove_stop_word:
-			stop_words = load_stop_words()
-			jsc = SparkContext(appName="Jsonizor Stop")
-			l = jsc.parallelize(fromNewsToTuple(list_news))
-			l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
-			list_news = reassemblyNews(list_news,l)
-			jsc.stop()
+		# It is no needed to order the list..
 
 		# Remove duplicates
 		list_news = clean_duplicates(list_news)
+
+		# Check if stop words have to be removed..
+		if remove_stop_word:
+			list_news = remove_stop_words(list_news)
 
 	return list_news
 
@@ -436,14 +442,28 @@ def fromNewsToTuple(list_news):
 		ret += [(n.get_nid(), n.get_title(), n.get_body())]
 	return ret
 
-def reassemblyNews(list_news,tuples):
-	for nid,t,b in tuples:
-		for i in range(0,len(list_news)):
-			print("prova")
-			if list_news[i].get_nid() == nid:
-				list_news[i].set_title(t)
-				list_news[i].set_body(b)
-				break
+def reassemblyNews(list_news, tuples):
+
+	# Sort tuples by nid
+	tuples.sort(key=lambda n: n[0])
+
+	for i in range(0, len(tuples)):
+
+		nid, t, b = tuples[i]
+
+		if list_news[i].get_nid() == nid:
+			list_news[i].set_title(t)
+			list_news[i].set_body(b)
+		else:
+			print("FALSE ASSEMBLY")
+
+	# for nid,t,b in tuples:
+	# 	for i in range(0,len(list_news)):
+	# 		print("prova")
+	# 		if list_news[i].get_nid() == nid:
+	# 			list_news[i].set_title(t)
+	# 			list_news[i].set_body(b)
+	# 			break
 	return list_news
 
 # It returns an ORDERED list of News() which are stored in GOOGLE_NEWS_PATH.
@@ -505,6 +525,9 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 	# Get the intersection
 	nids_news_to_add = list(set(list_nids_from_crawler).difference(set(list_nids_from_json)))
 
+	# Sort
+	list_news_from_json.sort(key=lambda n: n.get_nid())
+
 	# Check if there are news which are stored in the txt file but not stored yet in the json file..
 	if nids_news_to_add != []:
 
@@ -546,19 +569,12 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 		list_news_from_json += news_to_add
 
-	list_news_from_json.sort(key=lambda n: n.get_nid())
+	# Remove duplicates
+	list_news_from_json = clean_duplicates(list_news_from_json)
 
 	# Check if stop words have to be removed..
 	if remove_stop_word:
-		jsc = SparkContext(appName="Jsonizor Stop")
-		stop_words = load_stop_words()
-		l = jsc.parallelize(fromNewsToTuple(list_news_from_json))
-		l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
-		list_news_from_json = reassemblyNews(list_news_from_json,l)
-		jsc.stop()
-
-	# Remove duplicates
-	list_news_from_json = clean_duplicates(list_news_from_json)
+		list_news_from_json = remove_stop_words(list_news_from_json)
 
 	# Remove news which belong to the first page..
 	list_news_from_json = remove_news_which_belong_to_first_page(list_news_from_json)
