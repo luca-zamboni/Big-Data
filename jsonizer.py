@@ -25,6 +25,8 @@ URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
 clusters = {} 			# Dictionary for clusters
 array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
 
+jsc = SparkContext(appName="Aggregation")
+
 # -----------------------------------------------------------------------------
 
 class MyHTMLParser(HTMLParser):
@@ -337,7 +339,6 @@ def clean_title(title):
 	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
 
-
 def remove_stop_word_from_news(news, stop_words):
 	news.set_title(remove_stop_word_from_string(news.get_title(), stop_words))
 	news.set_body(remove_stop_word_from_string(news.get_body(), stop_words))
@@ -356,14 +357,6 @@ def rmStop(string, stop_words):
 	string = " ".join(ret)
 	string = removePuntuaction(string)
 	return string
-
-# Test function
-def check_list_news(list_news):
-	
-	print(len(list_news), "news found.")
-	for news in list_news:
-		if(news.get_description() == "" or news.get_date() == "" or news.get_testata() == "" or news.get_source_url() == ""):
-			print(str(news.get_nid()))
 
 # Lists the set of sources from which the news are taken
 def get_list_testata(list_news):
@@ -397,10 +390,6 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	if file_exists:
 
-		# # Loads stop words into a variable, for performance purposes
-		if remove_stop_word:
-			stop_words = load_stop_words()
-
 		# File which contains all the news taken from the crawler..
 		# Each news is a set of 4 lines: 
 		#	1)	URL
@@ -420,28 +409,21 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			# Check emptyness..
 			if not url or not title or not source: break
 
-			title = clean_title(title)
-
 			# Converts a news into an object News..
 			nid += 1
+			title = clean_title(title)
 			news = parse_news(url, title, date, source, nid)
-
-			# # Check if stop words have to be removed..
-			# if remove_stop_word:
-			# 	news.set_title(remove_stop_word_from_string(news.get_title(),stop_words))
-			# 	news.set_body(remove_stop_word_from_string(news.get_body(),stop_words))
-
 			list_news += [news]
 
 		# Check if stop words have to be removed..
 		if remove_stop_word:
-
-			sc = SparkContext(appName="Aggregation")
-			l = sc.parallelize(fromNewsToTuple(list_news))
+			stop_words = load_stop_words()
+			l = jsc.parallelize(fromNewsToTuple(list_news))
 			l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
 			list_news = reassemblyNews(list_news,l)
-			
-			print(list_news)
+		
+		# Remove duplicates
+		list_news = clean_duplicates(list_news)
 
 	return list_news
 
@@ -454,7 +436,7 @@ def fromNewsToTuple(list_news):
 def reassemblyNews(list_news,tuples):
 	for nid,t,b in tuples:
 		for i in range(0,len(list_news)):
-			if list_news[i].get_nid == nid:
+			if list_news[i].get_nid() ==	 nid:
 				list_news[i].set_title(t)
 				list_news[i].set_body(b)
 	return list_news
@@ -489,32 +471,20 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 		elapsed = timeit.default_timer() - start_time
 		print len(list_news_from_crawler), "news have been imported from", JSON_NEWS_PATH
 		print "Done in ", elapsed
-
 		return list_news_from_crawler # It's the same as the one stored in the json file
 
 	# Retrieve news from JSON_NEWS_PATH..
 	newsFile = open(json_path, 'r')
 	list_news = json.loads(newsFile.read())	# Will be a list of json, need to convert it in WrapNews.
 
-	# Loads stop words into a variable, for performance purposes
-	if remove_stop_word:
-		stop_words = load_stop_words()
-
 	for news in list_news:
-
-		# Check if stop words have to be removed..
-		title = news['title']
-		body = news['body']
-		#if remove_stop_word:
-			#title = remove_stop_word_from_string(title, stop_words)
-			#body = remove_stop_word_from_string(body, stop_words)
 
 		n = WrapNews()
 		n.set_nid(int(news['nid']))
-		n.set_title(title)
+		n.set_title(news['title'])
 		n.set_testata(news['testata'])
 		n.set_date(news['date'])
-		n.set_body(body)
+		n.set_body(news['body'])
 		n.set_source_url(news['source_url'])
 		n.set_image_url(news['image_url'])
 		n.set_cluster_number(int(news['cluster_number']))
@@ -573,6 +543,16 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 	list_news_from_json.sort(key=lambda n: n.get_nid())
 
+	# Check if stop words have to be removed..
+	if remove_stop_word:
+		stop_words = load_stop_words()
+		l = jsc.parallelize(fromNewsToTuple(list_news_from_json))
+		l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
+		list_news_from_json = reassemblyNews(list_news_from_json,l)
+
+	# Remove duplicates
+	list_news_from_json = clean_duplicates(list_news_from_json)
+
 	# Remove news which belong to the first page..
 	list_news_from_json = remove_news_which_belong_to_first_page(list_news_from_json)
 
@@ -599,9 +579,23 @@ def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word
 
 	return result
 
-getListNewsFromJson(remove_stop_word = True)
+# Removes duplicates from a list of news
+def clean_duplicates(list_news):
 
-# i1 = "crawler/categories/economia.txt"
-# i2 = "crawler/categories/sport.txt"
-# output = "crawler/categories/merged.json"
-# l = mergeFromTxtToJson( i1, i2 , output, False)
+	list_with_no_dublicates = []
+	l = jsc.parallelize(define_tuple_title_nid_from_listnews(list_news))
+	no_duplicates = l.map(lambda n: (n[0], n[1])).reduceByKey(lambda nid1, nid2 : nid1).collect()
+	no_duplicates_nids = [nid for title, nid in no_duplicates]
+	for n in list_news:
+		if n.get_nid() in no_duplicates_nids:
+			list_with_no_dublicates += [n]
+	print len(list_news) - len(no_duplicates_nids), "news have been removed as duplicates."
+	return list_with_no_dublicates
+
+# Defines a tuple (title, nid) for each news belong to list_news.
+# Used as lambda function for a map operation in spark.
+def define_tuple_title_nid_from_listnews(list_news):
+	ret = []
+	for n in list_news:
+		ret += [(n.get_title(), n.get_nid())]
+	return ret
