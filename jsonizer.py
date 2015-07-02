@@ -25,9 +25,6 @@ URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
 
 clusters = {} 			# Dictionary for clusters
 array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
-# stop_words = []
-
-#jsc = SparkContext(appName="Jsonizor")
 
 # -----------------------------------------------------------------------------
 
@@ -341,23 +338,9 @@ def clean_title(title):
 	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
 
-# def remove_stop_word_from_news(news, stop_words):
-# 	news.set_title(remove_stop_words_from_string(news.get_title(), stop_words))
-# 	news.set_body(remove_stop_words_from_string(news.get_body(), stop_words))
-# 	return news
-
-
-
-#dummy = 0
 def remove_stop_words(list_news):
 
-	#global dummy
-	#dummy+=1
-
-	# if stop_words == []:
 	stop_words = load_stop_words()
-
-	print(len(list_news))
 
 	def remove_stop_words_from_string(st,stop_words):
 
@@ -371,13 +354,12 @@ def remove_stop_words(list_news):
 				ret += [ss]
 
 		st = " ".join(ret)
-
 		for c in string.punctuation:
 			st = st.replace(c, ' ')
 		st = re.sub('\s+', ' ', st).strip()
 		return st
 
-	jsc = SparkContext(appName="Jsonizor remove stop words ")
+	jsc = SparkContext(appName="Jsonizer: Remove stop words")
 	l = jsc.parallelize(fromNewsToTuple(list_news))
 	l = l.map(lambda n:(n[0],remove_stop_words_from_string(n[1],stop_words),remove_stop_words_from_string(n[2],stop_words))).collect()
 	list_news = reassemblyNews(list_news,l)
@@ -464,16 +446,7 @@ def reassemblyNews(list_news, tuples):
 		if list_news[i].get_nid() == nid:
 			list_news[i].set_title(t)
 			list_news[i].set_body(b)
-		else:
-			print("FALSE ASSEMBLY")
 
-	# for nid,t,b in tuples:
-	# 	for i in range(0,len(list_news)):
-	# 		print("prova")
-	# 		if list_news[i].get_nid() == nid:
-	# 			list_news[i].set_title(t)
-	# 			list_news[i].set_body(b)
-	# 			break
 	return list_news
 
 # It returns an ORDERED list of News() which are stored in GOOGLE_NEWS_PATH.
@@ -616,7 +589,7 @@ def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word
 def clean_duplicates(list_news):
 
 	list_with_no_dublicates = []
-	jsc = SparkContext(appName="Jsonizor duplicates")
+	jsc = SparkContext(appName="Jsonizer: Remove duplicates")
 	l = jsc.parallelize(define_tuple_title_nid_from_listnews(list_news))
 	no_duplicates = l.map(lambda n: (n[0], n[1])).reduceByKey(lambda nid1, nid2 : nid1).collect()
 	no_duplicates_nids = [nid for title, nid in no_duplicates]
