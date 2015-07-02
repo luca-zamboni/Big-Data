@@ -346,20 +346,7 @@ def clean_title(title):
 # 	news.set_body(remove_stop_words_from_string(news.get_body(), stop_words))
 # 	return news
 
-def remove_stop_words_from_string(string,stop_words):
 
-	ret = []
-	for ss in string.split():
-
-		if type(ss) is unicode:
-				ss = unicodedata.normalize('NFKD', ss).encode('ascii','ignore')
-
-		if ss not in stop_words:
-			ret += [ss]
-
-	string = " ".join(ret)
-	string = removePuntuaction(string)
-	return string
 
 #dummy = 0
 def remove_stop_words(list_news):
@@ -371,6 +358,24 @@ def remove_stop_words(list_news):
 	stop_words = load_stop_words()
 
 	print(len(list_news))
+
+	def remove_stop_words_from_string(st,stop_words):
+
+		ret = []
+		for ss in st.split():
+
+			if type(ss) is unicode:
+					ss = unicodedata.normalize('NFKD', ss).encode('ascii','ignore')
+
+			if ss not in stop_words:
+				ret += [ss]
+
+		st = " ".join(ret)
+
+		for c in string.punctuation:
+			st = st.replace(c, ' ')
+		st = re.sub('\s+', ' ', st).strip()
+		return st
 
 	jsc = SparkContext(appName="Jsonizor remove stop words ")
 	l = jsc.parallelize(fromNewsToTuple(list_news))
