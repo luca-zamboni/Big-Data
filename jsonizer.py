@@ -8,6 +8,7 @@ import re 			# Regular Expressions
 import os
 import os.path 		# Files management and checks
 import timeit		# Timer
+import time
 from HTMLParser import HTMLParser
 
 # Spark
@@ -421,7 +422,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			l = jsc.parallelize(fromNewsToTuple(list_news))
 			l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
 			list_news = reassemblyNews(list_news,l)
-		
+
 		# Remove duplicates
 		list_news = clean_duplicates(list_news)
 
@@ -436,7 +437,7 @@ def fromNewsToTuple(list_news):
 def reassemblyNews(list_news,tuples):
 	for nid,t,b in tuples:
 		for i in range(0,len(list_news)):
-			if list_news[i].get_nid() ==	 nid:
+			if list_news[i].get_nid() == nid:
 				list_news[i].set_title(t)
 				list_news[i].set_body(b)
 	return list_news
@@ -466,9 +467,9 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 		# The whole news stored in GOOGLE_NEWS_PATH have to be converted into json ones and stored in JSON_NEWS_PATH
 		print "Converting", source_path, "into", json_path, "..."
-		start_time = timeit.default_timer()
+		start_time = time.time()
 		create_news_json_file(list_news_from_crawler)
-		elapsed = timeit.default_timer() - start_time
+		elapsed = time.time() - start_time
 		print len(list_news_from_crawler), "news have been imported from", JSON_NEWS_PATH
 		print "Done in ", elapsed
 		return list_news_from_crawler # It's the same as the one stored in the json file
