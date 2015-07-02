@@ -26,7 +26,7 @@ URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
 clusters = {} 			# Dictionary for clusters
 array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
 
-jsc = SparkContext(appName="Aggregation")
+#jsc = SparkContext(appName="Jsonizor")
 
 # -----------------------------------------------------------------------------
 
@@ -419,9 +419,11 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 		# Check if stop words have to be removed..
 		if remove_stop_word:
 			stop_words = load_stop_words()
+			jsc = SparkContext(appName="Jsonizor Stop")
 			l = jsc.parallelize(fromNewsToTuple(list_news))
 			l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
 			list_news = reassemblyNews(list_news,l)
+			jsc.stop()
 
 		# Remove duplicates
 		list_news = clean_duplicates(list_news)
@@ -437,9 +439,11 @@ def fromNewsToTuple(list_news):
 def reassemblyNews(list_news,tuples):
 	for nid,t,b in tuples:
 		for i in range(0,len(list_news)):
+			print("prova")
 			if list_news[i].get_nid() == nid:
 				list_news[i].set_title(t)
 				list_news[i].set_body(b)
+				break
 	return list_news
 
 # It returns an ORDERED list of News() which are stored in GOOGLE_NEWS_PATH.
@@ -546,10 +550,12 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 
 	# Check if stop words have to be removed..
 	if remove_stop_word:
+		jsc = SparkContext(appName="Jsonizor Stop")
 		stop_words = load_stop_words()
 		l = jsc.parallelize(fromNewsToTuple(list_news_from_json))
 		l = l.map(lambda n:(n[0],rmStop(n[1],stop_words),rmStop(n[2],stop_words))).collect()
 		list_news_from_json = reassemblyNews(list_news_from_json,l)
+		jsc.stop()
 
 	# Remove duplicates
 	list_news_from_json = clean_duplicates(list_news_from_json)
@@ -584,6 +590,7 @@ def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word
 def clean_duplicates(list_news):
 
 	list_with_no_dublicates = []
+	jsc = SparkContext(appName="Jsonizor duplicates")
 	l = jsc.parallelize(define_tuple_title_nid_from_listnews(list_news))
 	no_duplicates = l.map(lambda n: (n[0], n[1])).reduceByKey(lambda nid1, nid2 : nid1).collect()
 	no_duplicates_nids = [nid for title, nid in no_duplicates]
@@ -591,6 +598,7 @@ def clean_duplicates(list_news):
 		if n.get_nid() in no_duplicates_nids:
 			list_with_no_dublicates += [n]
 	print len(list_news) - len(no_duplicates_nids), "news have been removed as duplicates."
+	jsc.stop()
 	return list_with_no_dublicates
 
 # Defines a tuple (title, nid) for each news belong to list_news.
@@ -600,3 +608,5 @@ def define_tuple_title_nid_from_listnews(list_news):
 	for n in list_news:
 		ret += [(n.get_title(), n.get_nid())]
 	return ret
+
+getListNewsFromJson(remove_stop_word = True)
