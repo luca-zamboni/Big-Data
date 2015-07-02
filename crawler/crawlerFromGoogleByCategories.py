@@ -6,12 +6,7 @@ import hashlib
 import re
 import time
 import os.path	# files management and checks
-import threading
-import _thread
 import sys
-
-tempnews = []
-md5 = {}
 
 FOLDER = "crawler/categories/"
 
@@ -22,7 +17,6 @@ def remove_tags(raw_html):
 
 def addToFile(path, testata, title, date, testo):
 	
-	print(path)
 	with open(path, "a+") as myfile:
 		myfile.write(testata + "\n")
 		myfile.write(title + "\n")
@@ -77,80 +71,64 @@ def insert(category, news, RSS):
 
 def get_mondo(c, text):
 
-	while(True):
-		try:
+	link = re.findall('href="[^".]*"', re.findall('<a [^>.]*>' + c +'</a>', text)[0])[0][7:-1]
+	url = "https://news.google.it/" + link.replace("amp;", "")
 
-			link = re.findall('href="[^".]*"', re.findall('<a [^>.]*>' + c +'</a>', text)[0])[0][7:-1]
-			url = "https://news.google.it/" + link.replace("amp;", "")
+	response = urllib.request.urlopen(url)
+	data = response.read()
+	text = data.decode('utf-8')
 
-			response = urllib.request.urlopen(url)
-			data = response.read()
-			text = data.decode('utf-8')
+	aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
 
-			aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
+	xmls = []
+	for a in aTags:
 
-			xmls = []
-			for a in aTags:
+		links = re.findall('href="[^".]*"', a)
+		url = "https://news.google.it/" + links[0][7:-1]
+		response = urllib.request.urlopen(url)
+		data = response.read()
+		text = data.decode('utf-8')
 
-				lock = _thread.allocate_lock()
-				lock.acquire()
+		hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
+		tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
+		RSS = "https://" + tmp[7:]
+		
+		response = urllib.request.urlopen(RSS)
+		data = response.read()
+		text = data.decode('utf-8')
 
-				links = re.findall('href="[^".]*"', a)
-				url = "https://news.google.it/" + links[0][7:-1]
-				response = urllib.request.urlopen(url)
-				data = response.read()
-				text = data.decode('utf-8')
+		root = ET.fromstring(text)
 
-				hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
-				tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
-				RSS = "https://" + tmp[7:]
-				
-				response = urllib.request.urlopen(RSS)
-				data = response.read()
-				text = data.decode('utf-8')
+		insert( str(c) , root.iter('item'), RSS)
 
-				root = ET.fromstring(text)
-
-				insert( str(c) , root.iter('item'), RSS)
-
-				lock.release()
-				time.sleep(10)
-
-		except Exception: 
-			print("Except")
-		time.sleep( 120 )
+	time.sleep(10)
 
 
 def main():
 
-	categories = {
-		'Esteri': [],
-		'Italia': [],
-		'Economia' : [],
-		'Scienza e tecnologia' : [],
-		'Intrattenimento' : [],
-		'Sport' : [],
-		'Salute' : []
-		}
+	# categories = {
+	# 	'Esteri': [],
+	# 	'Italia': [],
+	# 	'Economia' : [],
+	# 	'Scienza e tecnologia' : [],
+	# 	'Intrattenimento' : [],
+	# 	'Sport' : [],
+	# 	'Salute' : []
+	# 	}
 
-	if (len(sys.argv) != 2):
-		print("Usage:")
-		print("$ python3 crawlerFromGoogleByCategories.py <CATEGORY>")
-		print("E.G. $ python3 crawlerFromGoogleByCategories.py Esteri")
-		print("E.G. $ python3 crawlerFromGoogleByCategories.py Scienza_e_tecnologia")
-		print("Choose one of them: ")
-		for c in categories:
-			print(c.replace(" ", "_"))
+	categories = [ 'Esteri', 'Italia', 'Economia' , 'Scienza e tecnologia' , 'Intrattenimento' , 'Sport' , 'Salute' ]
 
-	else:
+	while(True):
+		try:
 
-		print("Dowloading ", sys.argv[1],"...")
-		cat = sys.argv[1].replace("_", " ")
+			response = urllib.request.urlopen("https://news.google.it")
+			data = response.read()
+			text = data.decode('utf-8')
+			for c in categories:
+				get_mondo(c, text)
 
-		response = urllib.request.urlopen("https://news.google.it")
-		data = response.read()
-		text = data.decode('utf-8')
-
-		threading.Thread(target=get_mondo(cat, text)).start()
+		except Exception: 
+			print("Except")
+		time.sleep(120)
 
 main()
