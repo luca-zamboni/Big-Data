@@ -395,26 +395,26 @@ def main():
 	texts = []
 	matrix = {}
 
-	#x = open("input-lda/input.txt","w")
+	x = open("input-lda/input.txt","w")
 
 	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 
-	#for n in news:
+	for n in news:
 
-	#	groups += [[n.get_nid()]]
+		groups += [[n.get_nid()]]
 
-	#	s = (n.get_title() + n.get_body()).lower()
+		s = (n.get_title() + n.get_body()).lower()
 		#s = (n.get_title()).lower()
 
 		#print(getShingle(s))
-		#for ss in getShingle(s):
-		#	x.write(ss + " ")
-		#x.write("\n")
+		for ss in getShingle(s):
+			x.write(ss + " ")
+		x.write("\n")
 
 		#addGlobalShingle(s)
-	#	texts = texts + [(n.get_nid(),s)]
+		texts = texts + [(n.get_nid(),s)]
 
-	#x.close()
+	x.close()
 
 	
 
@@ -432,7 +432,7 @@ def main():
 	#groups = getAggregatedWithClustering(signatureMatrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
-	#groups = degGetLdaGroups(texts)
+	groups = degGetLdaGroups(texts)
 	
 
 	#print(groups)
