@@ -278,8 +278,8 @@ class News:
 
 		if category != None:
 
-			self.cluster_number = categories.index(category) + 1
-			array_clusters[self.cluster_number - 1] += [self.nid]
+			self.cluster_number = categories.index(category)
+			array_clusters[self.cluster_number] += [self.nid]
 
 		elif category == None and self.feed_url != "":
 
@@ -289,7 +289,7 @@ class News:
 					break
 
 				if self.cluster_number == -1:
-					self.cluster_number = len(clusters) + 1
+					self.cluster_number = len(clusters)
 					clusters[self.feed_url] = self.cluster_number
 					array_clusters += [[self.nid]]
 
@@ -394,7 +394,7 @@ def create_news_json_file(list_news, output = JSON_NEWS_PATH):
 # Each news have 4 lines: url, title, date, source.
 # source_path is the path of the txt file as results of the Crawler.py
 # remove_stop_word is a flag that tells whether the stop words have to be removed from the news or not.
-def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, category = None, start_nid = 1):
+def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, category = None, start_nid = 0):
 
 	nid = start_nid
 	list_news = []
@@ -432,7 +432,7 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, ca
 		newsFile.close()
 
 		# Remove duplicates
-		list_news = clean_duplicates(list_news)
+		list_news = clean_duplicates(list_news, category)
 
 		# Check if stop words have to be removed..
 		if remove_stop_word:
@@ -465,7 +465,7 @@ def reassemblyNews(list_news, tuples):
 def getListNewsFromTxt(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	# Return value: list of News()
-	list_news = parse_news_file(source_path = source_path, remove_stop_word = remove_stop_word, category = None, start_nid = 1)
+	list_news = parse_news_file(source_path = source_path, remove_stop_word = remove_stop_word, category = None, start_nid = 0)
 	list_news.sort(key=lambda n: n.get_nid())
 	return list_news
 
@@ -598,19 +598,29 @@ def mergeFromTxtToJson(input_path_1, input_path_2, output_path, remove_stop_word
 	return result
 
 # Removes duplicates from a list of news
-def clean_duplicates(list_news):
+def clean_duplicates(list_news, category = None):
 
-	list_with_no_dublicates = []
+	list_with_no_duplicates = []
 	jsc = SparkContext(appName="Jsonizer: Remove duplicates")
 	l = jsc.parallelize(define_tuple_title_nid_from_listnews(list_news))
 	no_duplicates = l.map(lambda n: (n[0], n[1])).reduceByKey(lambda nid1, nid2 : nid1).collect()
+	jsc.stop()
+
 	no_duplicates_nids = [nid for title, nid in no_duplicates]
 	for n in list_news:
 		if n.get_nid() in no_duplicates_nids:
-			list_with_no_dublicates += [n]
-	print len(list_news) - len(no_duplicates_nids), "news have been removed as duplicates."
-	jsc.stop()
-	return list_with_no_dublicates
+			list_with_no_duplicates += [n]
+
+
+	number_of_duplicates = len(list_news) - len(no_duplicates_nids)
+	print number_of_duplicates, "news have been removed as duplicates."
+
+	# Remove duplicates also from clusters..
+	if category != None and number_of_duplicates > 0:
+		array_clusters[categories.index(category)] = list(set(array_clusters[categories.index(category)]).intersection(set(no_duplicates_nids)))
+		array_clusters[categories.index(category)].sort()
+
+	return list_with_no_duplicates
 
 # Defines a tuple (title, nid) for each news belong to list_news.
 # Used as lambda function for a map operation in spark.
@@ -624,11 +634,16 @@ def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "craw
 
 	list_news = []
 	source_paths = []
-	for c in categories:
-		source_paths += [CATEGORIES_FOLDER + c.lower().replace(" ", "_") + ".txt"]
 
+	for c in categories:
+		path = CATEGORIES_FOLDER + c.lower().replace(" ", "_") + ".txt"
+		if check_if_file_exists(path):
+			source_paths += [path]
+
+	start_nid = 0
 	for i in range(0, len(source_paths)):
-		start_nid = len(list_news) + 1
+		if list_news != []:
+			start_nid = list_news[-1].get_nid() + 1
 		list_news += parse_news_file(source_paths[i], remove_stop_word, categories[i], start_nid)
 
 	print "Merging categories sources into", output_json_path, "..."
@@ -638,4 +653,3 @@ def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "craw
 	print len(list_news), "news have been merged."
 	print "Done in ", elapsed
 	return list_news
-
