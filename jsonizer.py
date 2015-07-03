@@ -394,7 +394,7 @@ def create_news_json_file(list_news, output = JSON_NEWS_PATH):
 # Each news have 4 lines: url, title, date, source.
 # source_path is the path of the txt file as results of the Crawler.py
 # remove_stop_word is a flag that tells whether the stop words have to be removed from the news or not.
-def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, category = None, start_nid = 0):
+def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, category = None, start_nid = 1):
 
 	nid = start_nid
 	list_news = []
@@ -423,10 +423,10 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, ca
 			if not url or not title or not source: break
 
 			# Converts a news into an object News..
-			nid += 1
 			title = clean_title(title)
 			news = parse_news(url, title, date, source, nid, category)
 			list_news += [news]
+			nid += 1
 
 		# It is no needed to order the list..
 		newsFile.close()
@@ -465,7 +465,7 @@ def reassemblyNews(list_news, tuples):
 def getListNewsFromTxt(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	# Return value: list of News()
-	list_news = parse_news_file(source_path = source_path, remove_stop_word = remove_stop_word, category = None, start_nid = 0)
+	list_news = parse_news_file(source_path = source_path, remove_stop_word = remove_stop_word, category = None, start_nid = 1)
 	list_news.sort(key=lambda n: n.get_nid())
 	return list_news
 
