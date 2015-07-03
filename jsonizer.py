@@ -620,7 +620,7 @@ def define_tuple_title_nid_from_listnews(list_news):
 		ret += [(n.get_title(), n.get_nid())]
 	return ret
 
-def getNewsFromTxtByCategories(remove_stop_word = False, output_json_path = "crawler/categories/merge.json"):
+def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "crawler/categories/merge.json"):
 
 	list_news = []
 	source_paths = []

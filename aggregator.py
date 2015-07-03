@@ -364,7 +364,7 @@ def getGroupsFromLda(topic,news):
 				maxTopic = i
 				max2p = maxProb
 				maxProb = p
-		print(maxProb,max2p)
+		#print(maxProb,max2p)
 		probs[maxTopic] += [maxProb]	
 		groups[maxTopic] += [nid]
 	prob = getProb(probs)
@@ -372,11 +372,14 @@ def getGroupsFromLda(topic,news):
 
 def degGetLdaGroups(texts):
 
-	for i in range(121,122):
+
+
+	for i in range(7,8):
 	
 		clust = i
-		retNum = 15
+		retNum = 30
 
+		print("Starting LDA with clusters n:" + str(i))
 		os.system("./run-lda.sh " + str(clust) + " " + str(retNum) + "")
 
 		topic = getTopics(clust)
@@ -397,7 +400,8 @@ def main():
 
 	x = open("input-lda/input.txt","w")
 
-	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
+	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
+	news = jsonizer.getNewsFromTxtByCategories()
 
 	for n in news:
 
@@ -435,8 +439,9 @@ def main():
 	groups = degGetLdaGroups(texts)
 	
 
-	#print(groups)
-	#print(ts.get_purity_index(js.array_clusters,groups))
+	print(groups)
+	print(jsonizer.array_clusters)
+	print(ts.get_purity_index(jsonizer.array_clusters,groups))
 
 	#print(len(groups))
 
