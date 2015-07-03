@@ -20,11 +20,15 @@ from pyspark import SparkContext
 GOOGLE_NEWS_PATH 	= "newsG.txt"
 JSON_NEWS_PATH 	= "newsG.json"
 STOP_WORDS_PATH 	= "stopword.txt"
-
 URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
+CATEGORIES_FOLDER = "crawler/categories/"
+categories = [ 'Esteri', 'Italia', 'Economia' , 'Scienza e tecnologia' , 'Intrattenimento' , 'Sport' , 'Salute' ]
 
-clusters = {} 			# Dictionary for clusters
-array_clusters = [[]] 	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+stop_words = []			# Contains words: [ 'a', 'b', 'c', ... ]
+
+clusters = {} 								# Dictionary for clusters { string => number }
+array_clusters = [[] for i in categories]	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+
 
 # -----------------------------------------------------------------------------
 
@@ -182,7 +186,6 @@ class News:
 		self.description = description
 		self.image_url = image_url
 		self.source_url = source_url
-		self.set_cluster_number()
 
 	# NEWS - ID
 
@@ -261,30 +264,34 @@ class News:
 	def get_cluster_number(self):
 		return self.cluster_number
 
-	def set_cluster_number(self):
+	def set_cluster_number(self, category = None):
 
 		global clusters
 		global array_clusters
 
-		if len(clusters) == 0:
-			clusters[self.feed_url] = self.cluster_number = 1
-			array_clusters = [[self.get_nid()]]
+		# Default value
+		self.cluster_number = -1
 
-		else:
+		# HOTFIX
+		if category == None and self.feed_url != "" and clusters == {}:
+			array_clusters = [] # Reset array_clusters
 
-			self.cluster_number = -1;
+		if category != None:
+
+			self.cluster_number = categories.index(category) + 1
+			array_clusters[self.cluster_number - 1] += [self.nid]
+
+		elif category == None and self.feed_url != "":
+
 			for cluster in clusters:
 				if self.feed_url in cluster:
 					self.cluster_number = clusters[self.feed_url]
 					break
 
-			if self.cluster_number == -1:
-				self.cluster_number = len(clusters) + 1
-				clusters[self.feed_url] = self.cluster_number
-				array_clusters += [[self.get_nid()]]
-
-			else:
-				array_clusters[self.cluster_number - 1] += [self.get_nid()]
+				if self.cluster_number == -1:
+					self.cluster_number = len(clusters) + 1
+					clusters[self.feed_url] = self.cluster_number
+					array_clusters += [[self.nid]]
 
 	# SERIALIZE
 
@@ -313,17 +320,18 @@ def check_if_file_exists(path, msg = ""):
 	return True
 
 def load_stop_words():
-	stop_words = []
+	global stop_words
 	f = open(STOP_WORDS_PATH, "r")
 	line = f.readline()
 	while line:
 	    stop_words += [line.rstrip('\n')]
 	    line = f.readline()
 	f.close()
-	return stop_words
+	# return stop_words
 
-def parse_news(url, title, date, source, nid):
+def parse_news(url, title, date, source, nid, category = None):
 	news = News(url, title, date, source, nid)
+	news.set_cluster_number(category)
 	parser = MyHTMLParser(news)
 	return news.wrap_news();
 
@@ -340,7 +348,9 @@ def clean_title(title):
 
 def remove_stop_words(list_news):
 
-	stop_words = load_stop_words()
+	global stop_words
+	if stop_words == []:
+		load_stop_words()
 
 	def remove_stop_words_from_string(st,stop_words):
 
@@ -384,9 +394,9 @@ def create_news_json_file(list_news, output = JSON_NEWS_PATH):
 # Each news have 4 lines: url, title, date, source.
 # source_path is the path of the txt file as results of the Crawler.py
 # remove_stop_word is a flag that tells whether the stop words have to be removed from the news or not.
-def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
+def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, category = None, start_nid = 0):
 
-	nid = 0
+	nid = start_nid
 	list_news = []
 	file_exists = check_if_file_exists(source_path)
 
@@ -399,7 +409,8 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 		#	3)	Date
 		#	4)	HTML source code
 		newsFile = open(source_path, "r")
-		
+		print "Parsing news in", source_path
+
 		while True:
 
 			# Read lines about a single news..
@@ -414,10 +425,11 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 			# Converts a news into an object News..
 			nid += 1
 			title = clean_title(title)
-			news = parse_news(url, title, date, source, nid)
+			news = parse_news(url, title, date, source, nid, category)
 			list_news += [news]
 
 		# It is no needed to order the list..
+		newsFile.close()
 
 		# Remove duplicates
 		list_news = clean_duplicates(list_news)
@@ -453,7 +465,7 @@ def reassemblyNews(list_news, tuples):
 def getListNewsFromTxt(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False):
 
 	# Return value: list of News()
-	list_news = parse_news_file(remove_stop_word = remove_stop_word)
+	list_news = parse_news_file(source_path = source_path, remove_stop_word = remove_stop_word, category = None, start_nid = 0)
 	list_news.sort(key=lambda n: n.get_nid())
 	return list_news
 
@@ -495,7 +507,7 @@ def getListNewsFromJson(json_path = JSON_NEWS_PATH, source_path = GOOGLE_NEWS_PA
 		n.set_body(news['body'])
 		n.set_source_url(news['source_url'])
 		n.set_image_url(news['image_url'])
-		n.set_cluster_number(int(news['cluster_number']))
+		n.set_cluster_number(int(news['cluster_number'])) # da cambiare
 		n.set_feed_url(news['feed_url'])
 		list_news_from_json += [n]
 
@@ -608,5 +620,22 @@ def define_tuple_title_nid_from_listnews(list_news):
 		ret += [(n.get_title(), n.get_nid())]
 	return ret
 
-#f = open(STOP_WORDS_PATH, "r")
-#getListNewsFromJson(remove_stop_word = True)
+def getNewsFromTxtByCategories(remove_stop_word = False, output_json_path = "crawler/categories/merge.json"):
+
+	list_news = []
+	source_paths = []
+	for c in categories:
+		source_paths += [CATEGORIES_FOLDER + c.lower().replace(" ", "_") + ".txt"]
+
+	for i in range(0, len(source_paths)):
+		start_nid = len(list_news) + 1
+		list_news += parse_news_file(source_paths[i], remove_stop_word, categories[i], start_nid)
+
+	print "Merging categories sources into", output_json_path, "..."
+	start_time = time.time()
+	create_news_json_file(list_news, output_json_path)
+	elapsed = time.time() - start_time
+	print len(list_news), "news have been merged."
+	print "Done in ", elapsed
+	return list_news
+
