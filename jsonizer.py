@@ -278,8 +278,8 @@ class News:
 
 		if category != None:
 
-			self.cluster_number = categories.index(category) + 1
-			array_clusters[self.cluster_number - 1] += [self.nid]
+			self.cluster_number = categories.index(category)
+			array_clusters[self.cluster_number] += [self.nid]
 
 		elif category == None and self.feed_url != "":
 
@@ -289,7 +289,7 @@ class News:
 					break
 
 				if self.cluster_number == -1:
-					self.cluster_number = len(clusters) + 1
+					self.cluster_number = len(clusters)
 					clusters[self.feed_url] = self.cluster_number
 					array_clusters += [[self.nid]]
 
@@ -400,8 +400,6 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, ca
 	list_news = []
 	file_exists = check_if_file_exists(source_path)
 
-	print("inizio id da ", nid)
-
 	if file_exists:
 
 		# File which contains all the news taken from the crawler..
@@ -410,7 +408,6 @@ def parse_news_file(source_path = GOOGLE_NEWS_PATH, remove_stop_word = False, ca
 		#	2)	Title
 		#	3)	Date
 		#	4)	HTML source code
-		nid += 1
 		newsFile = open(source_path, "r")
 		print "Parsing news in", source_path
 
@@ -637,13 +634,16 @@ def getNewsFromTxtByCategories(remove_stop_word = False, output_json_path = "cra
 
 	list_news = []
 	source_paths = []
+
 	for c in categories:
-		source_paths += [CATEGORIES_FOLDER + c.lower().replace(" ", "_") + ".txt"]
+		path = CATEGORIES_FOLDER + c.lower().replace(" ", "_") + ".txt"
+		if check_if_file_exists(path):
+			source_paths += [path]
 
 	start_nid = 0
 	for i in range(0, len(source_paths)):
 		if list_news != []:
-			start_nid = list_news[-1].get_nid()
+			start_nid = list_news[-1].get_nid() + 1
 		list_news += parse_news_file(source_paths[i], remove_stop_word, categories[i], start_nid)
 
 	print "Merging categories sources into", output_json_path, "..."
@@ -653,6 +653,3 @@ def getNewsFromTxtByCategories(remove_stop_word = False, output_json_path = "cra
 	print len(list_news), "news have been merged."
 	print "Done in ", elapsed
 	return list_news
-
-getNewsFromTxtByCategories()
-print array_clusters
