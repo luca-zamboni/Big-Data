@@ -42,7 +42,7 @@ object LDACalc {
       input: Seq[String] = Seq.empty,
       k: Int = 3,
       retNum: Int = 10,
-      maxIterations: Int = 150,
+      maxIterations: Int = 250,
       docConcentration: Double = -1,
       topicConcentration: Double = -1,
       vocabSize: Int = 100000,

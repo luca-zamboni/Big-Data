@@ -30,7 +30,7 @@ NUM_LINER_FITTING  = 5
 
 FACTOR_CLUSTER = 2
 
-BASE_STR_JOIN = ""
+BASE_STR_JOIN = " "
 
 shingles = []
 shinglesCount = {}
@@ -122,7 +122,7 @@ def getCloserGroupsMean(groups,distanceMatrix):
 		av = 0
 		for nid1 in g1:
 			for nid2 in g2:
-				av += distanceMatrix[nid1][nid2] 
+				av += distanceMatrix[nid1-1][nid2-1] 
 				#print(distanceMatrix[nid1][nid2])
 
 		av = av / (len(g1) * len(g2))
@@ -137,6 +137,7 @@ def getCloserGroupsMean(groups,distanceMatrix):
 def getAggregatedWithClustering(signatureMatrix,groups):
 
 	# Instantiating distance matrix
+	print(len(signatureMatrix))
 	distanceMatrix = [[] for i in range(0,len(signatureMatrix))]
 	for i in range(0,len(distanceMatrix)):
 		distanceMatrix[i] = [1.0 for y in range(0,len(signatureMatrix))]
@@ -145,7 +146,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1][nid2] =( 1.0 - sim) * (1.0 - sim)
+		distanceMatrix[nid1-1][nid2-1] =( 1.0 - sim) * (1.0 - sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
@@ -183,37 +184,6 @@ def clusterKMeanSaprk(matrix):
 		for n in m:
 			clu += [clusters.predict(np.array(n))]
 
-		'''y += [WSSSE]
-		x += [kc+0.0]
-
-		#print(kc)
-
-		if kc > NUM_LINER_FITTING+10 :
-
-			controlY = y.pop(0)
-			controlX = x.pop(0)
-			slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
-
-			diff = controlY - (controlX*slope+intercept)
-
-			altreDiff = 0
-
-			for i in range(0,len(x)):
-				altreDiff += abs((x[i]*slope+intercept) - y[i])
-
-			print(diff,altreDiff,controlX,diff/altreDiff)
-
-			#line = map(lambda xi: xi*slope+intercept, x)
-			#plot(x,line,'r-',x,y,'o')
-			#show()'''
-
-
-	'''slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
-
-	line = map(lambda xi: xi*slope+intercept, x)
-	plot(x,line,'r-',x,y,'o')
-	show()'''
-
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
 		ret[clu[i]] += [i]
@@ -226,7 +196,7 @@ def getKmeanCluster(matrix):
 	getDistanceMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(1,3):
+	for kc in range(1,23):
 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
 		clu = k_means.predict(m)
@@ -260,9 +230,9 @@ def fillMatrix(texts):
 		sh = getShingleList(s.split())
 		matrix[nid] = []
 		for shi in shingles:
-			count += sh.count(shi)
+			count = sh.count(shi) * 1.0
 			if shi in sh:
-				matrix[nid] += [1]
+				matrix[nid] += [count / len(sh)]
 			else:
 				matrix[nid] += [0]
 	return matrix
@@ -364,15 +334,13 @@ def getGroupsFromLda(topic,news):
 				maxTopic = i
 				max2p = maxProb
 				maxProb = p
-		#print(maxProb,max2p)
+		print(nid,maxProb,max2p)
 		probs[maxTopic] += [maxProb]	
 		groups[maxTopic] += [nid]
 	prob = getProb(probs)
 	return groups,prob
 
 def degGetLdaGroups(texts):
-
-
 
 	for i in range(7,8):
 	
@@ -400,8 +368,8 @@ def main():
 
 	x = open("input-lda/input.txt","w")
 
-	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
-	news = jsonizer.getNewsFromTxtByCategories()
+	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
+	#news = jsonizer.getNewsFromTxtByCategories()
 
 	for n in news:
 
@@ -415,7 +383,7 @@ def main():
 			x.write(ss + " ")
 		x.write("\n")
 
-		#addGlobalShingle(s)
+		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
 	x.close()
@@ -427,20 +395,21 @@ def main():
 
 	#print(shingles)
 
-	#matrix = fillMatrix(texts)
+	matrix = fillMatrix(texts)
 	#permutations = getRandomPermutation()
 	#signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#graph(matrix)
 
-	#groups = getAggregatedWithClustering(signatureMatrix,groups)
+	#groups = getAggregatedWithClustering(matrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
-	groups = degGetLdaGroups(texts)
+	#groups = degGetLdaGroups(texts)
 	
+	#print(matrix)
+	#print(shinglesCount)
 
 	print(groups)
-	print(jsonizer.array_clusters)
 	print(ts.get_purity_index(jsonizer.array_clusters,groups))
 
 	#print(len(groups))
