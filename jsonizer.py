@@ -288,10 +288,10 @@ class News:
 					self.cluster_number = clusters[self.feed_url]
 					break
 
-				if self.cluster_number == -1:
-					self.cluster_number = len(clusters)
-					clusters[self.feed_url] = self.cluster_number
-					array_clusters += [[self.nid]]
+			if self.cluster_number == -1:
+				self.cluster_number = len(clusters)
+				clusters[self.feed_url] = self.cluster_number
+				array_clusters += [[self.nid]]
 
 	# SERIALIZE
 
@@ -653,3 +653,5 @@ def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "craw
 	print len(list_news), "news have been merged."
 	print "Done in ", elapsed
 	return list_news
+
+getListNewsFromJson()
