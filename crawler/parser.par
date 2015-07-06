@@ -7,7 +7,17 @@ AGI - Agenzia Giornalistica Italia
 TGCOM	class	wrapperArticle	class	title
 Il Sole 24 Ore	class	body	class	title
 ANSA.it	itemprop	articleBody	class	header-news
-Reuters Italia	
+Reuters Italia
 Quotidiano.net	class	description	class	titleBig
 Borsa Italiana	class	content-article	class	titlenewsdet
 Adnkronos	class	innerFull	class	title
+La Stampa	itemprop	articleBody	class	ls-articolo
+Intelligonews	class	content	class	title
+Il Fatto Quotidiano	class	article-body	itemprop	headline
+Finanzaonline.com	class	field-items	
+Palermomania.it
+Goal.com	itemprop	article-body	class	leading
+Il Secolo XIX	id	testo-articolo
+Corriere dello Sport.it	class	main-article-content	class	main-article-header 
+Leonardo.it	class	articleBody	class 	article__photo
+Corriere Quotidiano
