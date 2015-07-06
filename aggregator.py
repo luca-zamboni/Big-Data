@@ -21,10 +21,10 @@ import os
 sc = None
 
 N_SHINGLES = 9
-THRESHOLD_SIMILARITY = 0.0
+THRESHOLD_SIMILARITY = 0.999
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
-THRESHOLD_COUNT = 2
+THRESHOLD_COUNT = 10
 
 NUM_LINER_FITTING  = 5
 
@@ -146,8 +146,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1][nid2] = (1.0 - sim)
-		#print(sim)
+		distanceMatrix[nid1][nid2] = (1.0 - sim) * (1.0 - sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
@@ -191,11 +190,12 @@ def clusterKMeanSaprk(matrix):
 	return ret
 
 def getKmeanCluster(matrix):
+
+
 	m = transformInReamMatrix(matrix)
-	getDistanceMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(1,23):
+	for kc in range(7,8):
 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
 		clu = k_means.predict(m)
@@ -203,7 +203,7 @@ def getKmeanCluster(matrix):
 		for i in range(0,len(clu)):
 			ret[clu[i]] += [i]
 		print("\n Clus:" + str(kc))
-		print(ts.get_purity_index(js.array_clusters,ret))
+		print(ts.get_purity_index(jsonizer.array_clusters,ret))
 
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
@@ -263,11 +263,12 @@ def getSignatureMatrix(matrix,permutations):
 	return signatureMatrix
 
 ### REMOVE shingles with count < n
-def removeShinglesLowCount(n = THRESHOLD_COUNT):
+def removeShinglesHighCount(n = THRESHOLD_COUNT):
 	global shingles
 	global shinglesCount
 	for sh in shinglesCount:
-		if shinglesCount[sh] < n:
+		if shinglesCount[sh] > n:
+			print(sh)
 			shingles.remove(sh)
 
 def getNewsById(nid,news):
@@ -366,8 +367,8 @@ def main():
 
 	#x = open("input-lda/input.txt","w")
 
-	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
-	#news = jsonizer.getNewsFromTxtByCategories()
+	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
+	news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
 	for n in news:
 
@@ -389,7 +390,7 @@ def main():
 	
 
 	# TRY TO OPTIMIZE
-	#removeShinglesLowCount()
+	#removeShinglesHighCount()
 
 	#print(shingles)
 
@@ -399,16 +400,16 @@ def main():
 
 	#graph(matrix)
 
-	groups = getAggregatedWithClustering(matrix,groups)
-	#groups = getKmeanCluster(matrix)
+	#groups = getAggregatedWithClustering(matrix,groups)
+	groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
 	#groups = degGetLdaGroups(texts)
 	
-	#print(matrix)
+	#print(transformInReamMatrix(matrix))
 	#print(shinglesCount)
 
 	print(groups)
-	print(jsonizer.array_clusters)
+	#print(jsonizer.array_clusters)
 	print(ts.get_purity_index(jsonizer.array_clusters,groups))
 
 	#print(len(groups))
