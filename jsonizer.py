@@ -286,6 +286,7 @@ class News:
 			for cluster in clusters:
 				if self.feed_url in cluster:
 					self.cluster_number = clusters[self.feed_url]
+					array_clusters[self.cluster_number] += [self.nid]
 					break
 
 			if self.cluster_number == -1:
@@ -635,7 +636,7 @@ def define_tuple_title_nid_from_listnews(list_news):
 		ret += [(n.get_title(), n.get_nid())]
 	return ret
 
-def getNewsFromTxtByCategories(remove_stop_word = False, output_json_path = "crawler/categories/merge.json"):
+def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "crawler/categories/merge.json"):
 
 	list_news = []
 	source_paths = []

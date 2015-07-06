@@ -30,7 +30,7 @@ NUM_LINER_FITTING  = 5
 
 FACTOR_CLUSTER = 2
 
-BASE_STR_JOIN = ""
+BASE_STR_JOIN = " "
 
 shingles = []
 shinglesCount = {}
@@ -64,7 +64,7 @@ def jaccardForSignature(l1,l2):
 	andL = 0.0
 	orL = 0.0
 	for i in range(0,len(l1)):
-		if l1[i] == l2[i]:
+		if l1[i] >= 1 and l2[i] >= 1:
 			andL += 1
 	return andL/len(l1)
 
@@ -122,6 +122,7 @@ def getCloserGroupsMean(groups,distanceMatrix):
 		av = 0
 		for nid1 in g1:
 			for nid2 in g2:
+				#print(nid1,nid2)
 				av += distanceMatrix[nid1][nid2] 
 				#print(distanceMatrix[nid1][nid2])
 
@@ -145,7 +146,8 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1][nid2] =( 1.0 - sim) * (1.0 - sim)
+		distanceMatrix[nid1][nid2] = (1.0 - sim)
+		#print(sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
@@ -183,50 +185,17 @@ def clusterKMeanSaprk(matrix):
 		for n in m:
 			clu += [clusters.predict(np.array(n))]
 
-		'''y += [WSSSE]
-		x += [kc+0.0]
-
-		#print(kc)
-
-		if kc > NUM_LINER_FITTING+10 :
-
-			controlY = y.pop(0)
-			controlX = x.pop(0)
-			slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
-
-			diff = controlY - (controlX*slope+intercept)
-
-			altreDiff = 0
-
-			for i in range(0,len(x)):
-				altreDiff += abs((x[i]*slope+intercept) - y[i])
-
-			print(diff,altreDiff,controlX,diff/altreDiff)
-
-			#line = map(lambda xi: xi*slope+intercept, x)
-			#plot(x,line,'r-',x,y,'o')
-			#show()'''
-
-
-	'''slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
-
-	line = map(lambda xi: xi*slope+intercept, x)
-	plot(x,line,'r-',x,y,'o')
-	show()'''
-
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
 		ret[clu[i]] += [i]
 	return ret
-
-	
 
 def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
 	getDistanceMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(1,3):
+	for kc in range(1,23):
 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
 		clu = k_means.predict(m)
@@ -260,7 +229,6 @@ def fillMatrix(texts):
 		sh = getShingleList(s.split())
 		matrix[nid] = []
 		for shi in shingles:
-			count += sh.count(shi)
 			if shi in sh:
 				matrix[nid] += [1]
 			else:
@@ -285,7 +253,7 @@ def getSignatureMatrix(matrix,permutations):
 	for n in matrix:
 		for p in permutations:
 			for cell in p:
-				if matrix[n][cell] == 1:
+				if matrix[n][cell] >= 1:
 					if n in signatureMatrix:
 						signatureMatrix[n] += [cell]
 					else:
@@ -364,7 +332,7 @@ def getGroupsFromLda(topic,news):
 				maxTopic = i
 				max2p = maxProb
 				maxProb = p
-		print(maxProb,max2p)
+		print(nid,maxProb,max2p)
 		probs[maxTopic] += [maxProb]	
 		groups[maxTopic] += [nid]
 	prob = getProb(probs)
@@ -372,11 +340,12 @@ def getGroupsFromLda(topic,news):
 
 def degGetLdaGroups(texts):
 
-	for i in range(121,122):
+	for i in range(2,3):
 	
 		clust = i
-		retNum = 15
+		retNum = 30
 
+		print("Starting LDA with clusters n:" + str(i))
 		os.system("./run-lda.sh " + str(clust) + " " + str(retNum) + "")
 
 		topic = getTopics(clust)
@@ -395,26 +364,27 @@ def main():
 	texts = []
 	matrix = {}
 
-	x = open("input-lda/input.txt","w")
+	#x = open("input-lda/input.txt","w")
 
 	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
-
+	#news = jsonizer.getNewsFromTxtByCategories()
+	#news = jsonizer.test()
 	for n in news:
 
 		groups += [[n.get_nid()]]
 
 		s = (n.get_title() + n.get_body()).lower()
-		#s = (n.get_title()).lower()
+		s = (n.get_title()).lower()
 
 		#print(getShingle(s))
-		for ss in getShingle(s):
-			x.write(ss + " ")
-		x.write("\n")
+		#for ss in getShingle(s):
+		#	x.write(ss + " ")
+		#x.write("\n")
 
-		#addGlobalShingle(s)
+		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
-	x.close()
+	#x.close()
 
 	
 
@@ -423,20 +393,23 @@ def main():
 
 	#print(shingles)
 
-	#matrix = fillMatrix(texts)
-	#permutations = getRandomPermutation()
-	#signatureMatrix = getSignatureMatrix(matrix,permutations)
+	matrix = fillMatrix(texts)
+	permutations = getRandomPermutation()
+	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#graph(matrix)
 
-	#groups = getAggregatedWithClustering(signatureMatrix,groups)
+	groups = getAggregatedWithClustering(matrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
-	groups = degGetLdaGroups(texts)
+	#groups = degGetLdaGroups(texts)
 	
+	#print(matrix)
+	#print(shinglesCount)
 
-	#print(groups)
-	#print(ts.get_purity_index(js.array_clusters,groups))
+	print(groups)
+	print(jsonizer.array_clusters)
+	print(ts.get_purity_index(jsonizer.array_clusters,groups))
 
 	#print(len(groups))
 

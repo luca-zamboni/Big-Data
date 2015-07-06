@@ -100,6 +100,7 @@ def get_mondo(c, text):
 		root = ET.fromstring(text)
 
 		insert( str(c) , root.iter('item'), RSS)
+		time.sleep(5)
 
 	time.sleep(10)
 
@@ -126,6 +127,7 @@ def main():
 			text = data.decode('utf-8')
 			for c in categories:
 				get_mondo(c, text)
+				time.sleep(20)
 
 		except Exception: 
 			print("Except")
