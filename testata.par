@@ -1,0 +1,237 @@
+      1 06blog.it (Blog)
+      1 0 news have been removed as duplicates.
+      1 195 news have been removed as duplicates.
+      1 Agenzia Nova (Abbonamento)
+      1 Agrpress
+      1 AllSongs (Blog)
+      1 Alto Adige
+      1 ANSAmed
+      1 Antimafia Duemila
+      1 ArezzoWeb.it
+      1 Assodigitale
+      1 Babylonpost
+      1 BitCity
+      1 Blasting News
+      1 Blog News U
+      1 BlogSicilia.it (Blog)
+      1 Bluewin
+      1 Borsa e dintorni
+      1 BorsaInside
+      1 Business Online
+      1 Caffeina Magazine
+      1 CalcioMercato Juve
+      1 CataniaToday
+      1 cervelliamo
+      1 CheDonna.it
+      1 Cinque Quotidiano
+      1 Computer World Italia
+      1 Corriere di Roma News
+      1 Cronache Laiche
+      1 DaringToDo
+      1 Diregiovani
+      1 Disabili.com
+      1 Dottor Salute
+      1 Droppergen.net (Blog)
+      1 Ecoseven
+      1   File "/home/luca/Desktop/Uni/MiningAndBig/Big-Data/jsonizer.py", line 336, in get_list_testata
+      1   File "/home/luca/Desktop/Uni/MiningAndBig/Big-Data/jsonizer.py", line 664, in <module>
+      1 Finanza.com
+      1     get_list_testata(l);
+      1 Giornale di Puglia
+      1 Giornale La Voce
+      1 Giornalettismo
+      1 Globalist.it
+      1 Gossip News
+      1 Help Consumatori
+      1 i-dome.com
+      1 IL FOGLIETTONE
+      1 Il Friuli
+      1 ilgiornaleditalia
+      1 Il Granchio - Notizie Anzio e Nettuno
+      1 Il Messaggero (Blog)
+      1 Il Post
+      1 Il Resto del Carlino (Blog)
+      1 Il Secolo d'Italia
+      1 IMGpress
+      1 Impronta Unika
+      1 IN DIES
+      1 InterNapoli.it
+      1 In Terris
+      1 iPhoneItalia - Il blog italiano sull'Apple iPhone
+      1 Italia 24 News
+      1 Italia Post
+      1 ItaSportPress (Blog)
+      1 ITespresso.it
+      1 L'Espresso
+      1 Lettera43
+      1 Liguria Notizie
+      1 Liguria Oggi
+      1 L'Impronta L'Aquila
+      1 L'Occhio Che
+      1 Mai Dire Calcio
+      1 mentelocale.it
+      1 Meteo Web
+      1 Morningstar
+      1 N24G
+      1 Napoli Calcio Live
+      1 NapoliToday
+      1 News24web
+      1 News Notizie Flash
+      1 NewTuscia
+      1 next
+      1 NextMe
+      1 OptiMagazine
+      1 Outune.net
+      1 Parsing news in newsG.txt
+      1 Partito Democratico
+      1 PianetaCellulare.it
+      1 Pianetadonna
+      1 Piazza Armerina
+      1 PinkDNA
+      1 Pionero - Digital Innovation
+      1 Primocanale
+      1     print(str(news.get_testata()))
+      1 PuntoCellulare.it
+      1 PUPIA
+      1 Quotidianamente (Blog)
+      1 Quotidianodiragusa.it
+      1 Quotidiano Piemontese (Registrazione) (Blog)
+      1 Radio Colonna
+      1 RADIO DEEJAY (Blog)
+      1 Retesport
+      1 Roma Capitale News
+      1 Roma Fanpage
+      1 Salernonotizie.it (Comunicati Stampa)
+      1 Sampdoria News 24
+      1 Sardegna Oggi
+      1 SoloGossip.it
+      1 SosTariffe
+      1 SpazioJuve
+      1 Spondasud News
+      1 SportEconomy
+      1 Sputnik Italia
+      1 StabiaChannel.it (Comunicati Stampa)
+      1 Startmag Web magazine (Blog)
+      1 Teatro Naturale
+      1 Tech Fanpage
+      1 TecnoAndroid
+      1 TerzoBinario.it
+      1 Today
+      1 Tom's Hardware
+      1 TorinoToday
+      1 Traceback (most recent call last):
+      1 Trentino Corriere Alpi
+      1 TV Sorrisi e Canzoni
+      1 TvZap
+      1 UnicodeEncodeError: 'ascii' codec can't encode character u'\xe8' in position 7: ordinal not in range(128)
+      1 Velvet Body Italia (Blog)
+      1 Velvet Music Italia (Blog)
+      1 Vesuvio Live
+      1 Viola News
+      1 Virgin Radio
+      1 WebMasterPoint.org
+      1 Webnews
+      1 www.Mauxa.com
+      2 100x100 Napoli
+      2 24hlive
+      2 aciclicoMagazine
+      2 AGG Globalpress
+      2 Articolotre
+      2 ASRomaChannel.eu
+      2 AsRomaLive.it
+      2 Benessere - Guidone.it
+      2 businesspeople.it
+      2 Calciomercato.it
+      2 Calciomercatonews.com
+      2 CalcioWeb
+      2 Data manager online
+      2 DazebaoNews
+      2 Emerge il Futuro
+      2 Fanpage
+      2 Fantagazzetta
+      2 Fidelity News
+      2 FIRSTonline
+      2 ForzaRoma.info
+      2 Giornale di Brescia
+      2 Il Mattino
+      2 ilVelino/AGV NEWS
+      2 InfoOggi
+      2 La Voce d'Italia
+      2 Live Sicilia
+      2 Magazine delle donne
+      2 Momento-sera
+      2 Notizie Free
+      2 Online-News
+      2 Overpress.it
+      2 Panorama
+      2 Pontile News
+      2 Romait
+      2 RomaToday
+      2 Stop and Goal
+      2 Teleborsa
+      2 Tendenze online
+      2 Tiscali
+      2 TodaySport.it
+      2 TuttoPerLei.it
+      2 Veb
+      2 zz7
+      3 Affaritaliani.it
+      3 askanews
+      3 Calcio e Finanza
+      3 Calcio News 24
+      3 Corriere Adriatico
+      3 Farmacia.it
+      3 Giornale di Sicilia
+      3 Il Gazzettino
+      3 Il Tempo
+      3 Investire Oggi
+      3 La Nazione
+      3 La Prealpina
+      3 La Prima Pagina
+      3 L'Huffington Post
+      3 L'Unione Sarda
+      3 MTV.IT
+      3 NanoPress
+      3 RSI.ch Informazione
+      3 Trend-online.com
+      3 TUTTO mercato WEB
+      3 Ultime Notizie Flash
+      4 Calcioblog.it (Blog)
+      4 LAROMA24
+      4 Milano Finanza
+      4 Rai Sport
+      5 ContattoNews.it
+      5 Tuttosport
+      5 Yahoo Eurosport IT
+      6 Centro Meteo Italiano
+      6 DirettaNews.it
+      6 La Gazzetta dello Sport
+      6 LaPresse
+      6 Si24 - Il vostro sito quotidiano
+      7 Blitz quotidiano
+      7 euronews
+      7 il Giornale
+      7 Il Sussidiario.net
+      7 Voce Nuova Tv
+      8 Corriere Quotidiano
+      8 Leonardo.it
+      9 Corriere dello Sport.it
+      9 Il Secolo XIX
+     10 Goal.com
+     11 Palermomania.it
+     13 Finanzaonline.com
+     19 Il Fatto Quotidiano
+     21 Intelligonews
+     21 La Stampa
+     22 Adnkronos
+     23 Borsa Italiana
+     24 Quotidiano.net
+     24 Reuters Italia
+     28 ANSA.it
+     28 Il Sole 24 Ore
+     29 TGCOM
+     30 AGI - Agenzia Giornalistica Italia
+     31 Rai News
+     39 La Repubblica
+     40 Il Messaggero
+     42 Corriere della Sera
