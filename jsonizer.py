@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import json     	# JSON
-# import codecs 		# For encoding and decoding of json files
 import unicodedata 	# For encoding and decoding of json files
 import string 		# Strings
 import re 			# Regular Expressions
@@ -9,6 +8,7 @@ import os
 import os.path 		# Files management and checks
 import timeit		# Timer
 import time
+# import parserino	# parserino.py
 from HTMLParser import HTMLParser
 
 # Spark
@@ -69,6 +69,12 @@ class MyHTMLParser(HTMLParser):
 
 			if tag == 'img' and tag_name == "src" and self.count_a == 1:
 				self.news.set_image_url(value)
+
+			if tag == 'a' and tag_name == "href":
+				p = re.compile("url=(.*)")
+				match = p.findall(value)
+				if match != []:
+					self.news.set_source_url(match[0])
 
 	def handle_data(self, data):
 
@@ -661,4 +667,4 @@ def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "craw
 	return list_news
 
 l = getListNewsFromJson()
-get_list_testata(l);
+# get_list_testata(l);
