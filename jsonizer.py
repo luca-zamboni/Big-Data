@@ -329,6 +329,11 @@ def load_stop_words():
 	f.close()
 	# return stop_words
 
+# Lists the set of sources from which the news are taken
+def get_list_testata(list_news):
+	for news in list_news:
+		print(str(news.get_testata()))
+
 def parse_news(url, title, date, source, nid, category = None):
 	news = News(url, title, date, source, nid)
 	news.set_cluster_number(category)
@@ -654,4 +659,5 @@ def getNewsFromTxtByCategories(remove_stop_word = False, output_json_path = "cra
 	print "Done in ", elapsed
 	return list_news
 
-getListNewsFromJson()
+l = getListNewsFromJson()
+get_list_testata(l);
