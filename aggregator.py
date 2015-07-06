@@ -64,7 +64,7 @@ def jaccardForSignature(l1,l2):
 	andL = 0.0
 	orL = 0.0
 	for i in range(0,len(l1)):
-		if l1[i] == l2[i]:
+		if l1[i] > 1 and l2[i] > 1:
 			andL += 1
 	return andL/len(l1)
 
@@ -122,7 +122,8 @@ def getCloserGroupsMean(groups,distanceMatrix):
 		av = 0
 		for nid1 in g1:
 			for nid2 in g2:
-				av += distanceMatrix[nid1-1][nid2-1] 
+				#print(nid1,nid2)
+				av += distanceMatrix[nid1][nid2] 
 				#print(distanceMatrix[nid1][nid2])
 
 		av = av / (len(g1) * len(g2))
@@ -146,7 +147,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1-1][nid2-1] =( 1.0 - sim) * (1.0 - sim)
+		distanceMatrix[nid1][nid2] =(1.0 - sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
@@ -342,7 +343,7 @@ def getGroupsFromLda(topic,news):
 
 def degGetLdaGroups(texts):
 
-	for i in range(7,8):
+	for i in range(2,3):
 	
 		clust = i
 		retNum = 30
@@ -368,9 +369,9 @@ def main():
 
 	x = open("input-lda/input.txt","w")
 
-	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
-	#news = jsonizer.getNewsFromTxtByCategories()
-
+	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
+	news = jsonizer.getNewsFromTxtByCategories()
+	#news = jsonizer.test()
 	for n in news:
 
 		groups += [[n.get_nid()]]
@@ -395,7 +396,7 @@ def main():
 
 	#print(shingles)
 
-	matrix = fillMatrix(texts)
+	#matrix = fillMatrix(texts)
 	#permutations = getRandomPermutation()
 	#signatureMatrix = getSignatureMatrix(matrix,permutations)
 
@@ -404,7 +405,7 @@ def main():
 	#groups = getAggregatedWithClustering(matrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
-	#groups = degGetLdaGroups(texts)
+	groups = degGetLdaGroups(texts)
 	
 	#print(matrix)
 	#print(shinglesCount)

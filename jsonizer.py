@@ -654,4 +654,30 @@ def getNewsFromTxtByCategories(remove_stop_word = True, output_json_path = "craw
 	print "Done in ", elapsed
 	return list_news
 
-getListNewsFromJson()
+#getListNewsFromJson()
+
+def test():
+
+
+	json_path = "crawler/categories/merge.json"
+	newsFile = open(json_path, 'r')
+	list_news = json.loads(newsFile.read())	# Will be a list of json, need to convert it in WrapNews.
+	list_news_from_json = []
+
+	for news in list_news:
+
+		n = WrapNews()
+		n.set_nid(int(news['nid']))
+		n.set_title(news['title'])
+		n.set_testata(news['testata'])
+		n.set_date(news['date'])
+		n.set_body(news['body'])
+		n.set_source_url(news['source_url'])
+		n.set_image_url(news['image_url'])
+		n.set_cluster_number(int(news['cluster_number'])) # da cambiare
+		n.set_feed_url(news['feed_url'])
+		list_news_from_json += [n]
+
+	newsFile.close()
+
+	return list_news_from_json
