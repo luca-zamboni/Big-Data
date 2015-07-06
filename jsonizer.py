@@ -286,6 +286,7 @@ class News:
 			for cluster in clusters:
 				if self.feed_url in cluster:
 					self.cluster_number = clusters[self.feed_url]
+					array_clusters[self.cluster_number] += [self.nid]
 					break
 
 			if self.cluster_number == -1:

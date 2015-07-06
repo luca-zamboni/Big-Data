@@ -64,7 +64,7 @@ def jaccardForSignature(l1,l2):
 	andL = 0.0
 	orL = 0.0
 	for i in range(0,len(l1)):
-		if l1[i] > 1 and l2[i] > 1:
+		if l1[i] >= 1 and l2[i] >= 1:
 			andL += 1
 	return andL/len(l1)
 
@@ -138,7 +138,6 @@ def getCloserGroupsMean(groups,distanceMatrix):
 def getAggregatedWithClustering(signatureMatrix,groups):
 
 	# Instantiating distance matrix
-	print(len(signatureMatrix))
 	distanceMatrix = [[] for i in range(0,len(signatureMatrix))]
 	for i in range(0,len(distanceMatrix)):
 		distanceMatrix[i] = [1.0 for y in range(0,len(signatureMatrix))]
@@ -147,7 +146,8 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1][nid2] =(1.0 - sim)
+		distanceMatrix[nid1][nid2] = (1.0 - sim)
+		#print(sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
@@ -190,8 +190,6 @@ def clusterKMeanSaprk(matrix):
 		ret[clu[i]] += [i]
 	return ret
 
-	
-
 def getKmeanCluster(matrix):
 	m = transformInReamMatrix(matrix)
 	getDistanceMatrix(matrix)
@@ -231,9 +229,8 @@ def fillMatrix(texts):
 		sh = getShingleList(s.split())
 		matrix[nid] = []
 		for shi in shingles:
-			count = sh.count(shi) * 1.0
 			if shi in sh:
-				matrix[nid] += [count / len(sh)]
+				matrix[nid] += [1]
 			else:
 				matrix[nid] += [0]
 	return matrix
@@ -256,7 +253,7 @@ def getSignatureMatrix(matrix,permutations):
 	for n in matrix:
 		for p in permutations:
 			for cell in p:
-				if matrix[n][cell] == 1:
+				if matrix[n][cell] >= 1:
 					if n in signatureMatrix:
 						signatureMatrix[n] += [cell]
 					else:
@@ -367,27 +364,27 @@ def main():
 	texts = []
 	matrix = {}
 
-	x = open("input-lda/input.txt","w")
+	#x = open("input-lda/input.txt","w")
 
-	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
-	news = jsonizer.getNewsFromTxtByCategories()
+	news = jsonizer.getListNewsFromJson(remove_stop_word = True)
+	#news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
 	for n in news:
 
 		groups += [[n.get_nid()]]
 
 		s = (n.get_title() + n.get_body()).lower()
-		#s = (n.get_title()).lower()
+		s = (n.get_title()).lower()
 
 		#print(getShingle(s))
-		for ss in getShingle(s):
-			x.write(ss + " ")
-		x.write("\n")
+		#for ss in getShingle(s):
+		#	x.write(ss + " ")
+		#x.write("\n")
 
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
-	x.close()
+	#x.close()
 
 	
 
@@ -396,21 +393,22 @@ def main():
 
 	#print(shingles)
 
-	#matrix = fillMatrix(texts)
-	#permutations = getRandomPermutation()
-	#signatureMatrix = getSignatureMatrix(matrix,permutations)
+	matrix = fillMatrix(texts)
+	permutations = getRandomPermutation()
+	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#graph(matrix)
 
-	#groups = getAggregatedWithClustering(matrix,groups)
+	groups = getAggregatedWithClustering(matrix,groups)
 	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
-	groups = degGetLdaGroups(texts)
+	#groups = degGetLdaGroups(texts)
 	
 	#print(matrix)
 	#print(shinglesCount)
 
 	print(groups)
+	print(jsonizer.array_clusters)
 	print(ts.get_purity_index(jsonizer.array_clusters,groups))
 
 	#print(len(groups))
