@@ -106,6 +106,7 @@ def insert(news, feed_url):
 
 				print("Ottenuto titolo buono da testata")
 
+				bla = title
 
 				title = str(parsed_title)
 
@@ -114,11 +115,15 @@ def insert(news, feed_url):
 				title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 				title = title.rstrip('\t').rstrip('\n')
 
-				news.set_title(title)
+
+				# if news.get_testata() == "Corriere della Sera":
+				# 	news.set_title(title.encode('iso-8859-1'))
+				# else:
+				# 	news.set_title(title)
 
 				f = open(JSON_OUTPUT_PATH, 'a')
 				f.write("\n\n\n")
-				f.write(news.get_title())
+				f.write("\n\n" + news.get_testata() + "\nOrigin:\n" + bla + "\nParsed:\n" + news.get_title())
 				f.close()
 
 			# if parsed_body != "":
