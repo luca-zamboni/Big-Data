@@ -5,7 +5,7 @@ import xml
 import hashlib
 import re
 import time
-import os.path	# files management and checks
+import os.path		# files management and checks
 import sys
 
 FOLDER = "crawler/categories/"
@@ -34,15 +34,33 @@ def insert(category, news, RSS):
 		title = n.find('title').text
 		title = remove_tags(re.sub('[^A-Za-z0-9\.èòùàù-]+', ' ', title).rstrip('\n'))
 		title = title.strip()
+
 		date = n.find('pubDate').text
-		testo = n.find('description').text
 
-		if testo is not None and remove_tags(testo).strip().rstrip('\n') != "":
+		body = n.find('description').text
 
-			testo = testo.strip().rstrip('\n')
+		if body is not None and remove_tags(body).strip().rstrip('\n') != "":
+
+			body = body.strip().rstrip('\n')
+
+			# Parses url testata
+			p = re.compile("url=(.*^\")\">")
+			match = p.findall(body)
+			if match != []:
+				print("Downloading ", match)
+				response = urllib.request.urlopen(match)
+				data = response.read()
+				text = data.decode('utf-8')
+
+				print(text)
+
+
+
+
+
 
 			if not os.path.exists(path):
-				addToFile(path, RSS, title, date, testo)
+				addToFile(path, RSS, title, date, body)
 				
 			else:
 
@@ -53,8 +71,8 @@ def insert(category, news, RSS):
 					testataF = newsFile.readline().rstrip('\n')
 					titleF = newsFile.readline().rstrip('\n')
 					dateF = newsFile.readline().rstrip('\n')
-					testoF = newsFile.readline().rstrip('\n')
-					if not testataF or not titleF or not dateF or not testoF: break
+					bodyF = newsFile.readline().rstrip('\n')
+					if not testataF or not titleF or not dateF or not bodyF: break
 					tempnews += [(titleF,testataF, dateF)]
 
 				newsFile.close();
@@ -66,12 +84,12 @@ def insert(category, news, RSS):
 						break;
 
 				if not found:
-					addToFile(path, RSS, title, date, testo)
+					addToFile(path, RSS, title, date, body)
 
 
-def get_mondo(c, text):
+def get_news_by_category(category, text):
 
-	link = re.findall('href="[^".]*"', re.findall('<a [^>.]*>' + c +'</a>', text)[0])[0][7:-1]
+	link = re.findall('href="[^".]*"', re.findall('<a [^>.]*>' + category +'</a>', text)[0])[0][7:-1]
 	url = "https://news.google.it/" + link.replace("amp;", "")
 
 	response = urllib.request.urlopen(url)
@@ -99,23 +117,13 @@ def get_mondo(c, text):
 
 		root = ET.fromstring(text)
 
-		insert( str(c) , root.iter('item'), RSS)
+		insert( str(category) , root.iter('item'), RSS)
 		time.sleep(5)
 
 	time.sleep(10)
 
 
 def main():
-
-	# categories = {
-	# 	'Esteri': [],
-	# 	'Italia': [],
-	# 	'Economia' : [],
-	# 	'Scienza e tecnologia' : [],
-	# 	'Intrattenimento' : [],
-	# 	'Sport' : [],
-	# 	'Salute' : []
-	# 	}
 
 	categories = [ 'Esteri', 'Italia', 'Economia' , 'Scienza e tecnologia' , 'Intrattenimento' , 'Sport' , 'Salute' ]
 
@@ -125,8 +133,8 @@ def main():
 			response = urllib.request.urlopen("https://news.google.it")
 			data = response.read()
 			text = data.decode('utf-8')
-			for c in categories:
-				get_mondo(c, text)
+			for category in categories:
+				get_news_by_category(category, text)
 				time.sleep(20)
 
 		except Exception: 

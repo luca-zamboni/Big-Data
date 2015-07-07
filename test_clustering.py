@@ -74,7 +74,7 @@ def get_purity_index(ground, clustering):
 	#print "Purity: ", purity
 	#print "F-measure: ", f_measure
 
-	return purity,f_measure
+	return purity, f_measure
 
 # The maximum matching measure ensures that only one cluster can match with a given partition, unlike purity, where two different clusters may share the same majority partition.
 # def get_maximum_matching_index(ground, clustering):
