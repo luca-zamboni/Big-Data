@@ -21,3 +21,7 @@ Il Secolo XIX	id	testo-articolo
 Corriere dello Sport.it	class	main-article-content	class	main-article-header 
 Leonardo.it	class	articleBody	class 	article__photo
 Corriere Quotidiano
+Voce Nuova Tv	class	post	class	title
+Il Sussidiario.net	itemprop	articleBody	itemprop	headline
+il Giornale	class	field-items	class	entry-title
+euronews	id	articleTranscript	id	title-wrap-new
