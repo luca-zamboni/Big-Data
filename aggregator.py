@@ -17,14 +17,13 @@ import matplotlib.pyplot as plt
 import os
 from loadnews import loadNews
 
-#sc = SparkContext(appName="Aggregation")
 sc = None
 
-N_SHINGLES = 9
+N_SHINGLES = 5
 THRESHOLD_SIMILARITY = 0.999
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
-THRESHOLD_COUNT = 10
+THRESHOLD_COUNT = 2
 
 NUM_LINER_FITTING  = 5
 
@@ -151,7 +150,7 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	dist = 0
 	# MERGE GROUPS till aggregation
 	while dist < THRESHOLD_AGGREGATION and len(groups) > 1:
-		dist,(g1,g2) = getCloserGroupsMean(groups,distanceMatrix)
+		dist,(g1,g2) = getCloserGroupsCloser(groups,distanceMatrix)
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
@@ -159,14 +158,14 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 
 	return groups
 
-def transformInReamMatrix(matrix):
+def transformInRealMatrix(matrix):
 	ret = [[] for i in range(0,len(matrix))]
 	for i in matrix:
 		ret[i] += matrix[i]
 	return ret
 
-def clusterKMeanSaprk(matrix):
-	m = transformInReamMatrix(matrix)
+def clusterKMeanSpark(matrix):
+	m = transformInRealMatrix(matrix)
 	parsedData = sc.parallelize(m)
 	y = []
 	x = []
@@ -191,11 +190,10 @@ def clusterKMeanSaprk(matrix):
 
 def getKmeanCluster(matrix):
 
-
-	m = transformInReamMatrix(matrix)
+	m = transformInRealMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(7,8):
+	for kc in range(3,4):
 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
 		clu = k_means.predict(m)
@@ -203,7 +201,6 @@ def getKmeanCluster(matrix):
 		for i in range(0,len(clu)):
 			ret[clu[i]] += [i]
 		print("\n Clus:" + str(kc))
-		print(ts.get_purity_index(jsonizer.array_clusters,ret))
 
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
@@ -231,8 +228,10 @@ def fillMatrix(texts):
 		for shi in shingles:
 			if shi in sh:
 				matrix[nid] += [1]
+				#matrix[nid] += [sh.count(shi)]
 			else:
 				matrix[nid] += [0]
+
 	return matrix
 
 
@@ -263,13 +262,24 @@ def getSignatureMatrix(matrix,permutations):
 	return signatureMatrix
 
 ### REMOVE shingles with count < n
-def removeShinglesHighCount(n = THRESHOLD_COUNT):
+def removeShinglesLowCount(matrix,n = THRESHOLD_COUNT):
 	global shingles
-	global shinglesCount
-	for sh in shinglesCount:
-		if shinglesCount[sh] > n:
-			print(sh)
-			shingles.remove(sh)
+	l = len(shingles)
+	temp = []
+	for i in range(0,l):
+		count = 0
+		for k in matrix:
+			if matrix[k][i] >= 1:
+				count += 1
+
+		if count <= n :
+			temp += [i]
+
+	for j in temp[::-1]:
+		for k in matrix:
+			del matrix[k][j]
+		del shingles[j]
+
 
 def getNewsById(nid,news):
 	for n in news:
@@ -365,12 +375,16 @@ def main():
 	texts = []
 	matrix = {}
 
-	#x = open("input-lda/input.txt","w")
+	x = open("input-lda/input.txt","w")
 
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 	#news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
-	news = loadNews()
+	news,clusters = loadNews()
+	list_clusters = [c[1] for c in clusters.items()]
+
+	print(list_clusters)
+
 	for n in news:
 
 		groups += [[n.get_nid()]]
@@ -378,40 +392,39 @@ def main():
 		s = (n.get_title() + n.get_body()).lower()
 		s = (n.get_title()).lower()
 
+		#print(n.get_body())
+
 		#print(getShingle(s))
-		#for ss in getShingle(s):
-		#	x.write(ss + " ")
-		#x.write("\n")
+		for ss in getShingle(s):
+			x.write(ss + " ")
+		x.write("\n")
 
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
-	#x.close()
+	x.close()
 
-	
-
-	# TRY TO OPTIMIZE
-	#removeShinglesHighCount()
 
 	#print(shingles)
 
 	matrix = fillMatrix(texts)
+	removeShinglesLowCount(matrix)
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 
 	#graph(matrix)
 
-	groups = getAggregatedWithClustering(matrix,groups)
-	#groups = getKmeanCluster(matrix)
-	#groups = clusterKMeanSaprk(signatureMatrix)
+	#groups = getAggregatedWithClustering(matrix,groups)
+	groups = getKmeanCluster(matrix)
+	#groups = clusterKMeanSpark(signatureMatrix)
 	#groups = degGetLdaGroups(texts)
 	
-	#print(transformInReamMatrix(matrix))
+	print(transformInRealMatrix(matrix))
 	#print(shinglesCount)
 
 	print(groups)
-	#print(jsonizer.array_clusters)
-	#print(ts.get_purity_index(jsonizer.array_clusters,groups))
+	#print(ts.get_purity_index(list_clusters,groups))
+	print(jaccardForSignature(matrix[1],matrix[4]))
 
 	#print(len(groups))
 
