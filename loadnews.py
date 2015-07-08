@@ -25,6 +25,10 @@ def remove_stop_words(list_news):
 	if stop_words == []:
 		load_stop_words()
 
+	def removeNumbers(s):
+		s = re.sub('[0-9]', ' ', s)
+		return s
+
 	def removePuntuaction(s):
 		for c in string.punctuation:
 			s = s.replace(c, ' ')
@@ -32,6 +36,10 @@ def remove_stop_words(list_news):
 		return s
 
 	def remove_stop_words_from_string(st,stop_words):
+
+		for c in string.punctuation:
+			st = st.replace(c, ' ')
+		st = re.sub('\s+', ' ', st).strip()
 
 		ret = []
 		for ss in st.split():
@@ -43,11 +51,8 @@ def remove_stop_words(list_news):
 				ret += [ss]
 
 		st = " ".join(ret)
-		for c in string.punctuation:
-			st = st.replace(c, ' ')
-		st = re.sub('\s+', ' ', st).strip()
 
-
+		st = removeNumbers(st)
 
 		return st
 
@@ -89,28 +94,36 @@ def loadNews(remove_stop_word = True):
 
 	nid = 0
 
+	clusters = {}
+
 	for news in list_json_news:
-	 	n = WrapNews()
- 		#n.set_nid(int(news['nid']))
- 		n.set_nid(nid)
- 		n.set_title(news['title'].lower())
- 		n.set_testata(news['testata'])
- 		n.set_date(news['date'])
- 		n.set_body(news['body'].lower())
- 		n.set_source_url(news['source_url'])
- 		n.set_image_url(news['image_url'])
- 		#n.set_cluster_number(int(news['cluster_number'])) # da cambiare
+
+		n = WrapNews()
+		#n.set_nid(int(news['nid']))
+		n.set_nid(nid)
+		n.set_title(news['title'].lower())
+		n.set_testata(news['testata'])
+		n.set_date(news['date'])
+		n.set_body(news['body'].lower())
+		n.set_source_url(news['source_url'])
+		n.set_image_url(news['image_url'])
  		n.set_feed_url(news['feed_url'])
  		list_news += [n]
 
+ 		if news['feed_url'] in clusters:
+ 			clusters[news['feed_url']] += [n.get_nid()]
+ 		else:
+ 			clusters[news['feed_url']] = [n.get_nid()]
+
  		nid += 1
+
 
  	
  	remove_stop_words(list_news)
 
  	newsFile.close()
 
- 	return list_news
+ 	return list_news,clusters
 
  	#for n in list_news:
  		#print(n.get_body())
