@@ -12,27 +12,18 @@ import parserino
 
 tempnews = []
 tags = {}
+nid = 0
 
 GOOGLE_NEWS_PATH = "newsG.txt"
 PARSE_TAGS_PATH = "crawler/parser.par"
-JSON_OUTPUT_PATH = "crawler/output.txt"
-
-def remove_tags(raw_html):
-  cleanr = re.compile('<.*?>')
-  cleantext = re.sub(cleanr,' ', raw_html)
-  return cleantext
-
-def addToFile(testata, title, date, testo):
-	print("Added news from " + testata)
-	with open(GOOGLE_NEWS_PATH, "a+") as myfile:
-		myfile.write(testata + "\n")
-		myfile.write(title + "\n")
-		myfile.write(date + "\n")
-		myfile.write(testo + "\n")
+JSON_OUTPUT_PATH = "crawler/output.json"
 
 def load_parse_tags():
 
 	global tags
+
+	if tags != {}:
+		return;
 
 	f = open(PARSE_TAGS_PATH, "r")
 	line = f.readline()
@@ -56,111 +47,160 @@ def load_parse_tags():
 			tags[testata] = {
 				"attrtype_body": attrtype_body,
 				"attrtype_body_val": attrtype_body_val,
-				"attrtype_title": "qualcosadiimpossibile",
-				"attrtype_title_val": "qualcosadiimpossibile"
+				"attrtype_title": "",
+				"attrtype_title_val": ""
 			}
 
 	f.close()
-			
+
 load_parse_tags()
 
-# def took_only_body_from_html(html_text, t):
+def remove_tags(raw_html):
+  cleanr = re.compile('<.*?>')
+  cleantext = re.sub(cleanr,' ', raw_html)
+  return cleantext
 
-# 	try:
+# def addToFile(testata, title, date, testo):
+# 	print("Added news from " + testata)
+# 	with open(GOOGLE_NEWS_PATH, "a+") as myfile:
+# 		myfile.write(testata + "\n")
+# 		myfile.write(title + "\n")
+# 		myfile.write(date + "\n")
+# 		myfile.write(testo + "\n")
 
-# 		f = open(PARSE_TAGS_PATH, "r")
-# 		line = f.readline()
-# 		while True:
+def store_news_in_file(news):
 
-# 			line = f.readline().strip("\n")
-# 			if line == "":
-# 				break
-# 			line = line.split('\t')
-# 			if len(line) == 5:
-# 				testata, attrtype_body, attrtype_body_val, attrtype_title, attrtype_title_val  = line
-# 				if(t == testata):
-# 					print("beccato", t)
-# 					break
+	global nid
 
-# 	except Exception as e:
-# 		print("Except:",e)
-
-def realInsert(news):
-	source_testata = urllib.request.urlopen(news.get_testata_url()).read()
 	try:
-		source_testata = source_testata.decode('utf-8')
+
+		if os.path.exists(JSON_OUTPUT_PATH):
+
+			# Open in read and truncate the last row which contains ]}
+			# and add a new one with }, so a new {news.to_JSON} can be added.
+			newsFile = open(JSON_OUTPUT_PATH, 'r+')
+			newsFile.seek(0, os.SEEK_END)
+			pos = newsFile.tell() - 1
+			while pos > 0 and newsFile.read(1) != "\n":
+			    pos -= 1
+			    newsFile.seek(pos, os.SEEK_SET)
+
+			if pos > 0:
+			    newsFile.seek(pos, os.SEEK_SET)
+			    newsFile.truncate()
+
+			newsFile.write('\n},')
+
+		else:
+
+			newsFile = open(JSON_OUTPUT_PATH, 'w')
+
+		# No matter what, write the news..
+		newsFile.write(news.to_JSON())
+		newsFile.write(']')
+		newsFile.close()
+		nid += 1
+		return True
+
 	except Exception as e:
-		source_testata = source_testata.decode('latin1')
+		print(e)
+		return False
+
+def dowload_testata_from_source(url):
+
+	try:
+		print("Downloading: ", url)
+		source_testata = urllib.request.urlopen(url).read()
+	except Exception as e:
+		return ""
+
+	try:
+		return source_testata.decode('utf-8')
+	except Exception as e:
+		pass
+
+	try:
+		return source_testata.decode('latin1')
+	except Exception as e:
+		pass
+
+	return ""
+
+def get_testata_source_and_write_on_file(news):
 
 	if news.get_testata() in tags:
 
-		body = news.get_body()
-		title = news.get_title()
+		source = dowload_testata_from_source(news.get_testata_url())
 
-		parser_source_html = parserino.ParserSource(source_testata, tags[news.get_testata()])
-		parsed_title, parsed_body = parser_source_html.parse()
+		# Check if the download is successful
+		if source != "":
 
-		if parsed_title != "":
+			print("Ho una source bellissima")
 
-			title = parsed_title
+			body = news.get_body()
+			title = news.get_title()
+
+			try:
+				
+				parser_source_html = parserino.ParserSource(source, tags[news.get_testata()])
+				parsed_title, parsed_body = parser_source_html.parse()
+			except Exception as e:
+				print("Exception in get_testata_source_and_write_on_file():", e)
+				parsed_title, parsed_body = "", ""
+				pass
+
+			if parsed_title != "":
+				print("Ho aggiornato il titolo")
+				title = parsed_title
+				
+			if parsed_body != "":
+				print("Ho aggiornato il body")
+				body = parsed_body
+
+			# # Clean title and body
+			# title = re.sub(' - .*', ' ', title)
+			# title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
+			# title = title.rstrip('\t').rstrip('\n')
+			news.set_title(title)
+
+			# body = re.sub(' - .*', ' ', body)
+			# body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
+			# body = body.rstrip('\t').rstrip('\n')
+			news.set_body(body)
 			
-		if parsed_body != "":
+			return store_news_in_file(news)
 
-			body = parsed_body
+	print("NON ho una source bellissima")
 
-		#print(news.get_testata())
+	return False
 
-		#if news.get_testata() == "Adnkronos":
-			#print(body)
+def parse_list_news_from_google(news, feed_url):
 
-
-		# Clean title and body
-		title = re.sub(' - .*', ' ', title)
-		title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
-		title = title.rstrip('\t').rstrip('\n')
-		news.set_title(title)
-
-		body = re.sub(' - .*', ' ', body)
-		body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
-		body = body.rstrip('\t').rstrip('\n')
-		news.set_body(body)
-
-		newsFile = open(JSON_OUTPUT_PATH, "r+")
-		newsFile.seek(0, os.SEEK_END)
-		pos = newsFile.tell() - 1
-		while pos > 0 and newsFile.read(1) != "\n":
-		    pos -= 1
-		    newsFile.seek(pos, os.SEEK_SET)
-
-		if pos > 0:
-		    newsFile.seek(pos, os.SEEK_SET)
-		    newsFile.truncate()
-
-		newsFile.write('\n},')
-		count = len([news])
-		for news in [news]:
-			newsFile.write(str(news.to_JSON()))
-			count -= 1
-			if(count > 0):
-				newsFile.write(',')
-		newsFile.write(']')
-		newsFile.close()
-
-		print(news.get_testata())
-
-def insert(news, feed_url):
-
-	nid = 0
 	for n in news:
-
-		nid += 1
+		
 		title = n.find('title').text
 		date = n.find('pubDate').text
 		body = n.find('description').text
 		news = jsonizer.News(nid = nid, title = title, date = date, body = body, feed_url = feed_url)
 		parser = parserino.ParserNews(news)
+		
+		# Testata url is successfully parsed
+		if parser.parse():
 
-		realInsert(news)
+			# Try to get and store the body of the news given testata_url
+			try:
+
+				if get_testata_source_and_write_on_file(news):
+					print("Hey, successfully parsed, and store! :)")
+				else:
+					print("Hey, something went wrong! Unable to parse or store", news.get_testata_url(), "! :(")
+					print("I am trying to store the news as it is..")
+
+			
+			except Exception as e:
+				print("Exception in parse_list_news_from_google():", e)
+				print("Unable to parse or store the following news:", title)
+				pass
 
 			# if parsed_body != "":
 
@@ -258,42 +298,45 @@ def insert(news, feed_url):
 		# 			addToFile(RSS, title, date, testo)
 
 def main():
+
 	while(True):
-		# try:
 
-		feed = []
-		load_parse_tags()
+		try:
 
-		response = urllib.request.urlopen("https://news.google.it")
-		data = response.read()
-		text = data.decode('utf-8')
+			feed = []
+			xmls = []
 
-		aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
+			if tags == {}:
+				load_parse_tags()
 
-		xmls = []
-		for a in aTags:
-
-			links = re.findall('href="[^".]*"', a)
-			url = "https://news.google.it/" + links[0][7:-1]
-			response = urllib.request.urlopen(url)
+			response = urllib.request.urlopen("https://news.google.it")
 			data = response.read()
 			text = data.decode('utf-8')
-
-			hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
-			tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
-			RSS = "https://" + tmp[7:]
+			aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
 			
-			response = urllib.request.urlopen(RSS)
-			data = response.read()
-			text = data.decode('utf-8')
+			for a in aTags:
 
-			root = ET.fromstring(text)
-			insert(root.iter('item'), RSS)
-			# time.sleep(10)
+				links = re.findall('href="[^".]*"', a)
+				url = "https://news.google.it/" + links[0][7:-1]
+				response = urllib.request.urlopen(url)
+				data = response.read()
+				text = data.decode('utf-8')
 
-		# except Exception as e:
-		# 	print("Except:",e)
-		time.sleep( 120 )
+				hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
+				tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
+				RSS = "https://" + tmp[7:]
+				
+				response = urllib.request.urlopen(RSS)
+				data = response.read()
+				text = data.decode('utf-8')
+
+				root = ET.fromstring(text)
+				parse_list_news_from_google(root.iter('item'), RSS)
+				# time.sleep(10)
+
+		except Exception as e:
+			print("Except:",e)
+		# time.sleep( 120 )
 
 
 if __name__ == "__main__":

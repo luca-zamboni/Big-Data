@@ -15,17 +15,11 @@ import time
 # Global variables
 # -----------------------------------------------------------------------------
 
-GOOGLE_NEWS_PATH 	= "newsG.txt"
-JSON_NEWS_PATH 	= "newsG.json"
-STOP_WORDS_PATH 	= "stopword.txt"
-URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
-CATEGORIES_FOLDER = "crawler/categories/"
-categories = [ 'Esteri', 'Italia', 'Economia' , 'Scienza e tecnologia' , 'Intrattenimento' , 'Sport' , 'Salute' ]
-
-stop_words = []			# Contains words: [ 'a', 'b', 'c', ... ]
-
-clusters = {} 								# Dictionary for clusters { string => number }
-array_clusters = [[] for i in categories]	# Array of clusters (e.g. [[1],[2,3,4,5,6],[7,8,9,10]])
+# GOOGLE_NEWS_PATH 	= "newsG.txt"
+# JSON_NEWS_PATH 	= "newsG.json"
+# STOP_WORDS_PATH 	= "stopword.txt"
+# URL_FIRST_PAGE_NEWS = "https://news.google.it/news?pz=1&cf=all&ned=it&hl=it"
+# CATEGORIES_FOLDER = "crawler/categories/"
 
 # -----------------------------------------------------------------------------
 
@@ -183,8 +177,6 @@ class News:
 	def set_feed_url(self, feed_url):
 		self.feed_url = feed_url
 
-	# -----
-
 	# IMAGE URL
 		
 	def get_image_url(self):
@@ -208,34 +200,6 @@ class News:
 
 	def set_cluster_number(self, cluster_number):
 		self.cluster_number = cluster_number
-
-		# global clusters
-		# global array_clusters
-
-		# # Default value
-		# self.cluster_number = -1
-
-		# # HOTFIX
-		# if category == None and self.feed_url != "" and clusters == {}:
-		# 	array_clusters = [] # Reset array_clusters
-
-		# if category != None:
-
-		# 	self.cluster_number = categories.index(category)
-		# 	array_clusters[self.cluster_number] += [self.nid]
-
-		# elif category == None and self.feed_url != "":
-
-		# 	for cluster in clusters:
-		# 		if self.feed_url in cluster:
-		# 			self.cluster_number = clusters[self.feed_url]
-		# 			array_clusters[self.cluster_number] += [self.nid]
-		# 			break
-
-		# 	if self.cluster_number == -1:
-		# 		self.cluster_number = len(clusters)
-		# 		clusters[self.feed_url] = self.cluster_number
-		# 		array_clusters += [[self.nid]]
 
 	# SERIALIZE
 

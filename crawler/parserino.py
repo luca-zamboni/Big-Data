@@ -3,13 +3,12 @@
 import re
 from html.parser import HTMLParser
 
-# Global variables
-# -----------------------------------------------------------------------------
 
-PARSE_TAGS_PATH = "parse.txt"
-
-# -----------------------------------------------------------------------------
-
+# ParserNews is used to set:
+#	- image_url
+#	- testata_url
+#	- testata
+# The parse() method returns True or False
 class ParserNews(HTMLParser):
 
 	def __init__(self, news):
@@ -19,11 +18,15 @@ class ParserNews(HTMLParser):
 		self.current_tag = ""
 		self.looking_for_testata = False
 		self.news = news
-		self.parse_news()
 
-	def parse_news(self):
-		self.news.set_body(re.sub("&(#?[xX]?(?:[0-9a-fA-F]+|\w{1,8}));"," ", self.news.get_body()))
-		self.feed(self.news.get_body())
+	def parse(self):
+		try:
+			self.news.set_body(re.sub("&(#?[xX]?(?:[0-9a-fA-F]+|\w{1,8}));"," ", self.news.get_body()))
+			self.feed(self.news.get_body())
+			return True
+		except Exception as e:
+			print("Exception in ParserNews:", e)
+			return False
 
 	def handle_starttag(self, tag, attrs):
 
@@ -54,9 +57,12 @@ class ParserNews(HTMLParser):
 		if self.current_tag == "font":
 			if self.looking_for_testata:
 				self.news.set_testata(data)
-				#print("DATA",data)
 				self.looking_for_testata = False
 
+# ParserSource is used to get:
+#	- title
+#	- body
+# The parse() method returns (self.title, self.body) or ("","")
 class ParserSource(HTMLParser):
 
 	def __init__(self, source_html, hash_tags):
@@ -73,36 +79,21 @@ class ParserSource(HTMLParser):
 		self.inside_body = False
 		self.tag_body = ""
 
+		self.countTitle = 0
+		self.countBody = 0
+
+		self.scriptB = False
+		self.scriptT = False
+
 	def parse(self):
 
-
-		source = str(self.source_html)
-		self.feed(source)
-
-		# try:
-		# 	print("try")
-		# 	source = self.source_html#.decode('utf-8')
-		# 	self.feed(source)
-		# 	print("try")
-			
-		# except Exception as e:
-		# 	print("catch")
-		# 	try:
-		# 		print("catch-try")
-		# 		source = self.source_html
-		# 		self.feed(source)
-		# 		print("catch-try")
-		# 	except Exception as exp:
-		# 		print("catch-catch")
-
-		# 		source = self.source_html.decode().encode('utf-8')
-		# 		# source = self.source_html.decode('ascii')
-		# 		self.feed(source)
-		# 		print("catch-catch")
-		# 	print("catch")
-
-		# self.feed(self.source_html)
-		return (self.title, self.body)
+		try:
+			source = str(self.source_html)
+			self.feed(source)
+			return (self.title, self.body)
+		except Exception as e:
+			print("Exception in ParserSource:", e)
+			return ("","")
 
 	def handle_starttag(self, tag, attrs):
 
@@ -110,11 +101,6 @@ class ParserSource(HTMLParser):
 
 			is_body = False
 			is_title = False
-
-			self.countTitle = 0
-			self.countBody = 0
-			self.scriptB = False
-			self.scriptT = False
 
 			if value != None:
 
@@ -132,10 +118,10 @@ class ParserSource(HTMLParser):
 				self.inside_body = True
 				self.tag_body = tag
 
-			if self.inside_title and tag_name == self.hash_tags['attrtype_body']:
+			if self.inside_title and tag == self.tag_title:
 				self.countTitle += 1
 
-			if self.inside_body and tag_name == self.hash_tags['attrtype_title']:
+			if self.inside_body and tag == self.tag_body:
 				self.countBody += 1
 
 			if tag == "script" and self.inside_body:
@@ -145,7 +131,6 @@ class ParserSource(HTMLParser):
 			if tag == "script" and self.inside_title:
 				self.scriptT = True
 				self.inside_title = False
-
 
 	def handle_endtag(self, tag):
 
@@ -171,8 +156,6 @@ class ParserSource(HTMLParser):
 
 		if self.inside_title:
 			self.title += data
-			#print(data)
 
-		if self.inside_body  and self.hash_tags['attrtype_title'] == "qualcosadiimpossibile" :
+		if self.inside_body:
 			self.body += data
-			#print(data)
