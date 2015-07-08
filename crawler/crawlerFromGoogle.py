@@ -51,6 +51,14 @@ def load_parse_tags():
 				"attrtype_title": attrtype_title,
 				"attrtype_title_val": attrtype_title_val
 			}
+		if len(line) == 3:
+			testata, attrtype_body, attrtype_body_val = line
+			tags[testata] = {
+				"attrtype_body": attrtype_body,
+				"attrtype_body_val": attrtype_body_val,
+				"attrtype_title": "qualcosadiimpossibile",
+				"attrtype_title_val": "qualcosadiimpossibile"
+			}
 
 	f.close()
 			
@@ -90,12 +98,10 @@ def insert(news, feed_url):
 		parser = parserino.ParserNews(news)
 
 		source_testata = urllib.request.urlopen(news.get_testata_url()).read()
-
 		try:
 			source_testata = source_testata.decode('utf-8')
 		except Exception as e:
-			print(e)
-			pass
+			source_testata = source_testata.decode('latin1')
 
 		if news.get_testata() in tags:
 
@@ -104,27 +110,51 @@ def insert(news, feed_url):
 
 			if parsed_title != "":
 
-				print("Ottenuto titolo buono da testata")
+				title = parsed_title
+				
+			if parsed_body != "":
 
-				bla = title
+				body = parsed_body
 
-				title = str(parsed_title)
+			#print(news.get_testata())
 
-				# Clean title and body
-				title = re.sub(' - .*', ' ', title)
-				title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
-				title = title.rstrip('\t').rstrip('\n')
+			#if news.get_testata() == "Adnkronos":
+				#print(body)
 
 
-				# if news.get_testata() == "Corriere della Sera":
-				# 	news.set_title(title.encode('iso-8859-1'))
-				# else:
-				# 	news.set_title(title)
+			# Clean title and body
+			title = re.sub(' - .*', ' ', title)
+			title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
+			title = title.rstrip('\t').rstrip('\n')
+			news.set_title(title)
 
-				f = open(JSON_OUTPUT_PATH, 'a')
-				f.write("\n\n\n")
-				f.write("\n\n" + news.get_testata() + "\nOrigin:\n" + bla + "\nParsed:\n" + news.get_title())
-				f.close()
+			body = re.sub(' - .*', ' ', body)
+			body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
+			body = body.rstrip('\t').rstrip('\n')
+			news.set_body(body)
+
+			newsFile = open(JSON_OUTPUT_PATH, "r+")
+			newsFile.seek(0, os.SEEK_END)
+			pos = newsFile.tell() - 1
+			while pos > 0 and newsFile.read(1) != "\n":
+			    pos -= 1
+			    newsFile.seek(pos, os.SEEK_SET)
+
+			if pos > 0:
+			    newsFile.seek(pos, os.SEEK_SET)
+			    newsFile.truncate()
+
+			newsFile.write('\n},')
+			count = len([news])
+			for news in [news]:
+				newsFile.write(str(news.to_JSON()))
+				count -= 1
+				if(count > 0):
+					newsFile.write(',')
+			newsFile.write(']')
+			newsFile.close()
+
+			print(news.get_testata())
 
 			# if parsed_body != "":
 
