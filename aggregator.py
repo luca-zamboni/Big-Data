@@ -4,7 +4,6 @@ from pyspark import SparkContext
 import itertools
 from random import shuffle
 import sys
-import jsonizer
 import test_clustering as ts
 from math import sqrt
 from numpy import arange,array,ones,linalg
@@ -16,6 +15,7 @@ from sklearn import cluster
 import networkx as nx
 import matplotlib.pyplot as plt
 import os
+from loadnews import loadNews
 
 #sc = SparkContext(appName="Aggregation")
 sc = None
@@ -368,8 +368,9 @@ def main():
 	#x = open("input-lda/input.txt","w")
 
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
-	news = jsonizer.getNewsFromTxtByCategories()
+	#news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
+	news = loadNews()
 	for n in news:
 
 		groups += [[n.get_nid()]]
@@ -400,8 +401,8 @@ def main():
 
 	#graph(matrix)
 
-	#groups = getAggregatedWithClustering(matrix,groups)
-	groups = getKmeanCluster(matrix)
+	groups = getAggregatedWithClustering(matrix,groups)
+	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSaprk(signatureMatrix)
 	#groups = degGetLdaGroups(texts)
 	
@@ -410,7 +411,7 @@ def main():
 
 	print(groups)
 	#print(jsonizer.array_clusters)
-	print(ts.get_purity_index(jsonizer.array_clusters,groups))
+	#print(ts.get_purity_index(jsonizer.array_clusters,groups))
 
 	#print(len(groups))
 
