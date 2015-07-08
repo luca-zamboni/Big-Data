@@ -62,7 +62,7 @@ def load_parse_tags():
 
 	f.close()
 			
-	
+load_parse_tags()
 
 # def took_only_body_from_html(html_text, t):
 
@@ -85,6 +85,69 @@ def load_parse_tags():
 # 	except Exception as e:
 # 		print("Except:",e)
 
+def realInsert(news):
+	source_testata = urllib.request.urlopen(news.get_testata_url()).read()
+	try:
+		source_testata = source_testata.decode('utf-8')
+	except Exception as e:
+		source_testata = source_testata.decode('latin1')
+
+	if news.get_testata() in tags:
+
+		body = news.get_body()
+		title = news.get_title()
+
+		parser_source_html = parserino.ParserSource(source_testata, tags[news.get_testata()])
+		parsed_title, parsed_body = parser_source_html.parse()
+
+		if parsed_title != "":
+
+			title = parsed_title
+			
+		if parsed_body != "":
+
+			body = parsed_body
+
+		#print(news.get_testata())
+
+		#if news.get_testata() == "Adnkronos":
+			#print(body)
+
+
+		# Clean title and body
+		title = re.sub(' - .*', ' ', title)
+		title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
+		title = title.rstrip('\t').rstrip('\n')
+		news.set_title(title)
+
+		body = re.sub(' - .*', ' ', body)
+		body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
+		body = body.rstrip('\t').rstrip('\n')
+		news.set_body(body)
+
+		newsFile = open(JSON_OUTPUT_PATH, "r+")
+		newsFile.seek(0, os.SEEK_END)
+		pos = newsFile.tell() - 1
+		while pos > 0 and newsFile.read(1) != "\n":
+		    pos -= 1
+		    newsFile.seek(pos, os.SEEK_SET)
+
+		if pos > 0:
+		    newsFile.seek(pos, os.SEEK_SET)
+		    newsFile.truncate()
+
+		newsFile.write('\n},')
+		count = len([news])
+		for news in [news]:
+			newsFile.write(str(news.to_JSON()))
+			count -= 1
+			if(count > 0):
+				newsFile.write(',')
+		newsFile.write(']')
+		newsFile.close()
+
+		print(news.get_testata())
+
 def insert(news, feed_url):
 
 	nid = 0
@@ -97,64 +160,7 @@ def insert(news, feed_url):
 		news = jsonizer.News(nid = nid, title = title, date = date, body = body, feed_url = feed_url)
 		parser = parserino.ParserNews(news)
 
-		source_testata = urllib.request.urlopen(news.get_testata_url()).read()
-		try:
-			source_testata = source_testata.decode('utf-8')
-		except Exception as e:
-			source_testata = source_testata.decode('latin1')
-
-		if news.get_testata() in tags:
-
-			parser_source_html = parserino.ParserSource(source_testata, tags[news.get_testata()])
-			parsed_title, parsed_body = parser_source_html.parse()
-
-			if parsed_title != "":
-
-				title = parsed_title
-				
-			if parsed_body != "":
-
-				body = parsed_body
-
-			#print(news.get_testata())
-
-			#if news.get_testata() == "Adnkronos":
-				#print(body)
-
-
-			# Clean title and body
-			title = re.sub(' - .*', ' ', title)
-			title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
-			title = title.rstrip('\t').rstrip('\n')
-			news.set_title(title)
-
-			body = re.sub(' - .*', ' ', body)
-			body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
-			body = body.rstrip('\t').rstrip('\n')
-			news.set_body(body)
-
-			newsFile = open(JSON_OUTPUT_PATH, "r+")
-			newsFile.seek(0, os.SEEK_END)
-			pos = newsFile.tell() - 1
-			while pos > 0 and newsFile.read(1) != "\n":
-			    pos -= 1
-			    newsFile.seek(pos, os.SEEK_SET)
-
-			if pos > 0:
-			    newsFile.seek(pos, os.SEEK_SET)
-			    newsFile.truncate()
-
-			newsFile.write('\n},')
-			count = len([news])
-			for news in [news]:
-				newsFile.write(str(news.to_JSON()))
-				count -= 1
-				if(count > 0):
-					newsFile.write(',')
-			newsFile.write(']')
-			newsFile.close()
-
-			print(news.get_testata())
+		realInsert(news)
 
 			# if parsed_body != "":
 
@@ -251,39 +257,44 @@ def insert(news, feed_url):
 		# 		if not found:
 		# 			addToFile(RSS, title, date, testo)
 
-while(True):
-	# try:
+def main():
+	while(True):
+		# try:
 
-	feed = []
-	load_parse_tags()
+		feed = []
+		load_parse_tags()
 
-	response = urllib.request.urlopen("https://news.google.it")
-	data = response.read()
-	text = data.decode('utf-8')
-
-	aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
-
-	xmls = []
-	for a in aTags:
-
-		links = re.findall('href="[^".]*"', a)
-		url = "https://news.google.it/" + links[0][7:-1]
-		response = urllib.request.urlopen(url)
+		response = urllib.request.urlopen("https://news.google.it")
 		data = response.read()
 		text = data.decode('utf-8')
 
-		hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
-		tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
-		RSS = "https://" + tmp[7:]
-		
-		response = urllib.request.urlopen(RSS)
-		data = response.read()
-		text = data.decode('utf-8')
+		aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
 
-		root = ET.fromstring(text)
-		insert(root.iter('item'), RSS)
-		# time.sleep(10)
+		xmls = []
+		for a in aTags:
 
-	# except Exception as e:
-	# 	print("Except:",e)
-	time.sleep( 120 )
+			links = re.findall('href="[^".]*"', a)
+			url = "https://news.google.it/" + links[0][7:-1]
+			response = urllib.request.urlopen(url)
+			data = response.read()
+			text = data.decode('utf-8')
+
+			hrefRSS = re.findall('<a .*>.*RSS<\/a>', text)
+			tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
+			RSS = "https://" + tmp[7:]
+			
+			response = urllib.request.urlopen(RSS)
+			data = response.read()
+			text = data.decode('utf-8')
+
+			root = ET.fromstring(text)
+			insert(root.iter('item'), RSS)
+			# time.sleep(10)
+
+		# except Exception as e:
+		# 	print("Except:",e)
+		time.sleep( 120 )
+
+
+if __name__ == "__main__":
+	main()
