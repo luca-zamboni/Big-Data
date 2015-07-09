@@ -333,7 +333,7 @@ def main():
 
 				root = ET.fromstring(text)
 				parse_list_news_from_google(root.iter('item'), RSS)
-				# time.sleep(10)
+				time.sleep(1)
 
 		except Exception as e:
 			print("Except:",e)

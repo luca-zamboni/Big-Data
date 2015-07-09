@@ -124,23 +124,23 @@ class ParserSource(HTMLParser):
 			if self.inside_body and tag == self.tag_body:
 				self.countBody += 1
 
-			if tag == "script" and self.inside_body:
-				self.scriptB = True
-				self.inside_body = False
+		if (tag == "script" or tag == "style" or tag == "metadata") and self.inside_body:
+			self.scriptB = True
+			# self.inside_body = False
 
-			if tag == "script" and self.inside_title:
-				self.scriptT = True
-				self.inside_title = False
+		if (tag == "script" or tag == "style" or tag == "metadata") and self.inside_title:
+			self.scriptT = True
+			# self.inside_title = False
 
 	def handle_endtag(self, tag):
 
-		if tag == "script" and self.scriptB:
+		if (tag == "script" or tag == "style" or tag == "metadata") and self.scriptB:
 			self.scriptB = False
-			self.inside_body = True
+			# self.inside_body = True
 
-		if tag == "script" and self.scriptT:
+		if (tag == "script" or tag == "style" or tag == "metadata") and self.scriptT:
 			self.scriptT = False
-			self.inside_title = True
+			# self.inside_title = True
 
 		if tag == self.tag_title and self.inside_title:
 			self.countTitle -= 1
@@ -154,8 +154,11 @@ class ParserSource(HTMLParser):
 
 	def handle_data(self, data):
 
-		if self.inside_title:
+		data = data.rstrip("\t")
+		data = data.rstrip("\n")
+
+		if data != "" and self.inside_title and not self.scriptT:
 			self.title += data
 
-		if self.inside_body:
+		if data != "" and self.inside_body and not self.scriptB:
 			self.body += data
