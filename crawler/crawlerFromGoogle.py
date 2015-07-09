@@ -9,6 +9,7 @@ import time
 import os.path	# files management and checks
 import jsonizer
 import parserino
+from socket import timeout
 
 tempnews = []
 tags = {}
@@ -103,9 +104,11 @@ def store_news_in_file(news):
 
 def dowload_testata_from_source(url):
 
+	#url = "http://www.corriere.it/tecnologia/15_giugno_30/roaming-c-l-accordo-sull-abolizione-taglio-costi-30-aprile-2016-95fe375a-1ef7-11e5-be56-a3991da50b56.shtml"
+
 	try:
 		print("Downloading: ", url)
-		source_testata = urllib.request.urlopen(url).read()
+		source_testata = urllib.request.urlopen(url,timeout=10).read()
 	except Exception as e:
 		print("Exception in dowload_testata_from_source():", e)
 		return ""
@@ -140,7 +143,7 @@ def get_testata_source_and_write_on_file(news):
 			title = news.get_title()	
 
 			try:
-				
+				#news.set_testata("Corriere della Sera")
 				parser_source_html = parserino.ParserSource(source, tags[news.get_testata()])
 				parsed_title, parsed_body = parser_source_html.parse()
 			except Exception as e:
