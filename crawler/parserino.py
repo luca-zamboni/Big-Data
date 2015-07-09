@@ -104,10 +104,11 @@ class ParserSource(HTMLParser):
 
 	def handle_starttag(self, tag, attrs):
 
-		for tag_name, value in attrs:
 
-			is_body = False
-			is_title = False
+		is_body = False
+		is_title = False
+
+		for tag_name, value in attrs:
 
 			if value != None:
 
@@ -175,16 +176,7 @@ def remove_tags(raw_html):
   cleantext = re.sub(cleanr,' ', raw_html)
   return cleantext
 
-def clean_source(string):
-	string = re.sub(' - .*', ' ', string)
-	string = re.sub('[\'\\\"]', '', string)
-	string.rstrip('- ').rstrip(' -')
-	string = re.sub('\s+', ' ', string).strip().replace(' ...',' ')
-	string = string.rstrip('\t').rstrip('\n')
-	return string
-
 def clean_accenti(string):
 	for search, replace in accenti:
 	    string = string.replace(search, replace)
-
 	return string
