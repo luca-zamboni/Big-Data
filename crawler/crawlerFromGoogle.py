@@ -163,10 +163,36 @@ def get_testata_source_and_write_on_file(news):
 	else:
 
 		print("Non posso scaricare")
-
-	print(news.get_body())
 	
 	return store_news_in_file(news)
+
+def parse_news_from_google(news):
+
+	parser = parserino.ParserNews(news)
+		
+	# Testata url is successfully parsed
+	if parser.parse():
+
+		print(news.get_testata_url())
+		print("News ha un titolo e body corto, provo a scaricare..")
+
+		# Try to get and store the body of the news given testata_url
+		try:
+
+			if get_testata_source_and_write_on_file(news):
+
+				print("Hey, successfully parsed, and store! :)")
+				return True
+			else:
+
+				return False
+		
+		except Exception as e:
+			print("Exception in parse_list_news_from_google():", e)
+			print("Unable to parse or store the following news:", title)
+			pass
+
+	return False
 
 def parse_list_news_from_google(news, feed_url):
 
@@ -176,27 +202,10 @@ def parse_list_news_from_google(news, feed_url):
 		date = n.find('pubDate').text
 		body = n.find('description').text
 		news = jsonizer.News(nid = nid, title = title, date = date, body = body, feed_url = feed_url)
-		parser = parserino.ParserNews(news)
+
+		parse_news_from_google(news)
+
 		
-		# Testata url is successfully parsed
-		if parser.parse():
-
-			print(news.get_testata_url())
-			print("News ha un titolo e body corto, provo a scaricare..")
-
-			# Try to get and store the body of the news given testata_url
-			try:
-
-				if get_testata_source_and_write_on_file(news):
-					print("Hey, successfully parsed, and store! :)")
-				else:
-					print("Hey, something went wrong! Unable to parse or store", news.get_testata_url(), "! :(")
-					print("I am trying to store the news as it is..")
-			
-			except Exception as e:
-				print("Exception in parse_list_news_from_google():", e)
-				print("Unable to parse or store the following news:", title)
-				pass
 
 			# if parsed_body != "":
 

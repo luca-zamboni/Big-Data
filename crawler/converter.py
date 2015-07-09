@@ -1,5 +1,5 @@
 
-from crawlerFromGoogle import get_testata_source_and_write_on_file
+from crawlerFromGoogle import parse_news_from_google
 import jsonizer
 import parserino
 
@@ -15,13 +15,7 @@ while True:
 	if not url or not title or not source: break
 
 	news = jsonizer.News(nid = nid, title = title, date = date, body = source, feed_url = url)
-	parser = parserino.ParserNews(news)
-
-	get_testata_source_and_write_on_file(news)
-	
-	print("News parsata :" + str(nid))
-	
-
-	nid+=1
-
-	
+	if parse_news_from_google(news):
+		print("TRUE")
+		print("News parsata :" + str(nid))
+		nid+=1
