@@ -78,10 +78,10 @@ def load_parse_tags():
 
 def clean_string(string):
 	# string = re.sub(' - .*', ' ', string)
-	string = re.sub('[\'\\\"]', '', string)
+	string = re.sub('[\\\""]', '', string)
 	string = re.sub('\'', ' ', string)
 	# string.rstrip('- ').rstrip(' -')
-	string = re.sub('\s+', ' ', string).strip().replace(' ...',' ')
+	string = re.sub('\s+', ' ', string).replace(' ...',' ')
 	string = string.rstrip('\t').rstrip('\n')
 	return string
 
@@ -133,7 +133,7 @@ def store_news_in_file(news):
 def dowload_testata_from_source(url):
 
 	# url = "http://www.corrieredellosport.it/news/calcio/calcio-mercato/2015/07/08-2262837/cr7_al_psg_libera_ibra_al_milan"
-	
+
 	try:
 		print("Downloading: ", url)
 		source_testata = urllib.request.urlopen(url, timeout = 10).read()
