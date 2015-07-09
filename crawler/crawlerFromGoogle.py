@@ -128,6 +128,7 @@ def dowload_testata_from_source(url):
 
 def get_testata_source_and_write_on_file(news):
 
+	print(news.get_testata())
 	if news.get_testata() in tags:
 
 		source = dowload_testata_from_source(news.get_testata_url())
@@ -158,14 +159,14 @@ def get_testata_source_and_write_on_file(news):
 				body = parsed_body
 
 			# # Clean title and body
-			# title = re.sub(' - .*', ' ', title)
-			# title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
-			# title = title.rstrip('\t').rstrip('\n')
+			title = re.sub(' - .*', ' ', title)
+			title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
+			title = title.rstrip('\t').rstrip('\n')
 			news.set_title(title)
 
-			# body = re.sub(' - .*', ' ', body)
-			# body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
-			# body = body.rstrip('\t').rstrip('\n')
+			body = re.sub(' - .*', ' ', body)
+			body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
+			body = body.rstrip('\t').rstrip('\n')
 			news.set_body(body)
 			
 			return store_news_in_file(news)

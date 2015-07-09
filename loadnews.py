@@ -37,9 +37,7 @@ def remove_stop_words(list_news):
 
 	def remove_stop_words_from_string(st,stop_words):
 
-		for c in string.punctuation:
-			st = st.replace(c, ' ')
-		st = re.sub('\s+', ' ', st).strip()
+		st = removePuntuaction(st)
 
 		ret = []
 		for ss in st.split():
@@ -53,6 +51,8 @@ def remove_stop_words(list_news):
 		st = " ".join(ret)
 
 		st = removeNumbers(st)
+		st = re.sub("\t"," ",st)
+		st = re.sub("  *"," ",st)
 
 		return st
 

@@ -3,6 +3,7 @@ from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
 import itertools
 from random import shuffle
+import random
 import sys
 import test_clustering as ts
 from math import sqrt
@@ -19,11 +20,11 @@ from loadnews import loadNews
 
 sc = None
 
-N_SHINGLES = 5
+N_SHINGLES = 6
 THRESHOLD_SIMILARITY = 0.999
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
-THRESHOLD_COUNT = 2
+THRESHOLD_COUNT = 3
 
 NUM_LINER_FITTING  = 5
 
@@ -126,6 +127,25 @@ def getCloserGroupsMean(groups,distanceMatrix):
 				#print(distanceMatrix[nid1][nid2])
 
 		av = av / (len(g1) * len(g2))
+		smoothing = 1 #- 1.0/(len(g1) * len(g2))
+		if av * smoothing < dist:
+
+			closer = (g1,g2)
+			dist = av
+
+	return dist,closer
+
+def getCloserGroupsRandom(groups,distanceMatrix):
+	closer = (None,None)
+	dist = 9.0
+	# Search closer groups
+	for g1,g2 in list(itertools.combinations(groups,2)):
+		av = 0
+
+		nid1 = random.choice(g1)
+		nid2 = random.choice(g2)
+		av = distanceMatrix[nid1][nid2] 
+
 		if av < dist:
 
 			closer = (g1,g2)
@@ -145,12 +165,12 @@ def getAggregatedWithClustering(signatureMatrix,groups):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1][nid2] = (1.0 - sim) * (1.0 - sim)
+		distanceMatrix[nid1][nid2] = (1.0 - sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
 	while dist < THRESHOLD_AGGREGATION and len(groups) > 1:
-		dist,(g1,g2) = getCloserGroupsCloser(groups,distanceMatrix)
+		dist,(g1,g2) = getCloserGroupsMean(groups,distanceMatrix)
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
@@ -239,6 +259,7 @@ def fillMatrix(texts):
 def getRandomPermutation():
 	permutation = []
 	n = len(shingles)
+	print(n)
 	for j in range(0,N_PERM):
 		x = [[i] for i in range(0,n)]
 		shuffle(x)	### <<<<<<<<<<< SLOWWWWWWWWWWWWWWWWWWWWWW
@@ -375,7 +396,7 @@ def main():
 	texts = []
 	matrix = {}
 
-	x = open("input-lda/input.txt","w")
+	#x = open("input-lda/input.txt","w")
 
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 	#news = jsonizer.getNewsFromTxtByCategories()
@@ -395,14 +416,14 @@ def main():
 		#print(n.get_body())
 
 		#print(getShingle(s))
-		for ss in getShingle(s):
-			x.write(ss + " ")
-		x.write("\n")
+		#for ss in getShingle(s):
+		#	x.write(ss + " ")
+		#x.write("\n")
 
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
-	x.close()
+	#x.close()
 
 
 	#print(shingles)
@@ -411,20 +432,21 @@ def main():
 	removeShinglesLowCount(matrix)
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
+	#print(shingles)
+	#print(signatureMatrix)
 
 	#graph(matrix)
 
-	#groups = getAggregatedWithClustering(matrix,groups)
-	groups = getKmeanCluster(matrix)
+	groups = getAggregatedWithClustering(matrix,groups)
+	#groups = getKmeanCluster(matrix)
 	#groups = clusterKMeanSpark(signatureMatrix)
 	#groups = degGetLdaGroups(texts)
 	
-	print(transformInRealMatrix(matrix))
+	#print(transformInRealMatrix(matrix))
 	#print(shinglesCount)
 
 	print(groups)
 	#print(ts.get_purity_index(list_clusters,groups))
-	print(jaccardForSignature(matrix[1],matrix[4]))
 
 	#print(len(groups))
 

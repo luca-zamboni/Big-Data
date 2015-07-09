@@ -1,5 +1,5 @@
 
-from crawlerFromGoogle import realInsert
+from crawlerFromGoogle import get_testata_source_and_write_on_file
 import jsonizer
 import parserino
 
@@ -17,7 +17,7 @@ while True:
 	news = jsonizer.News(nid = nid, title = title, date = date, body = source, feed_url = url)
 	parser = parserino.ParserNews(news)
 
-	realInsert(news)
+	get_testata_source_and_write_on_file(news)
 	
 	print("News parsata :" + str(nid))
 	
