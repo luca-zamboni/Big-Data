@@ -3,6 +3,7 @@
 import re
 from html.parser import HTMLParser
 
+accenti = [('&agrave;', 'à'),('&egrave;', 'è'),('&igrave;', 'ì'),('&ograve;', 'ò'),('&ugrave;', 'ù')]
 
 # ParserNews is used to set:
 #	- image_url
@@ -34,6 +35,8 @@ class ParserNews(HTMLParser):
 		
 		if tag == 'a':
 			self.count_a += 1
+		elif tag == 'font':
+			self.count_font += 1
 		elif tag == 'td':
 			self.count_font = 0
 
@@ -58,6 +61,8 @@ class ParserNews(HTMLParser):
 			if self.looking_for_testata:
 				self.news.set_testata(data)
 				self.looking_for_testata = False
+			elif self.count_font == 4:
+				self.news.set_body(data)
 
 # ParserSource is used to get:
 #	- title
@@ -89,6 +94,8 @@ class ParserSource(HTMLParser):
 
 		try:
 			source = str(self.source_html)
+			source = clean_accenti(source)
+
 			self.feed(source)
 			return (self.title, self.body)
 		except Exception as e:
@@ -162,3 +169,22 @@ class ParserSource(HTMLParser):
 
 		if data != "" and self.inside_body and not self.scriptB:
 			self.body += data
+
+def remove_tags(raw_html):
+  cleanr = re.compile('<.*?>')
+  cleantext = re.sub(cleanr,' ', raw_html)
+  return cleantext
+
+def clean_source(string):
+	string = re.sub(' - .*', ' ', string)
+	string = re.sub('[\'\\\"]', '', string)
+	string.rstrip('- ').rstrip(' -')
+	string = re.sub('\s+', ' ', string).strip().replace(' ...',' ')
+	string = string.rstrip('\t').rstrip('\n')
+	return string
+
+def clean_accenti(string):
+	for search, replace in accenti:
+	    string = string.replace(search, replace)
+
+	return string

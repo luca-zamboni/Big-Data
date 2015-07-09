@@ -55,11 +55,6 @@ def load_parse_tags():
 
 load_parse_tags()
 
-def remove_tags(raw_html):
-  cleanr = re.compile('<.*?>')
-  cleantext = re.sub(cleanr,' ', raw_html)
-  return cleantext
-
 # def addToFile(testata, title, date, testo):
 # 	print("Added news from " + testata)
 # 	with open(GOOGLE_NEWS_PATH, "a+") as myfile:
@@ -112,23 +107,26 @@ def dowload_testata_from_source(url):
 		print("Downloading: ", url)
 		source_testata = urllib.request.urlopen(url).read()
 	except Exception as e:
+		print("Exception in dowload_testata_from_source():", e)
 		return ""
 
 	try:
+		print("Try to decode in utf-8")
 		return source_testata.decode('utf-8')
 	except Exception as e:
 		pass
 
 	try:
+		print("Try to decode in latin-1")
 		return source_testata.decode('latin1')
 	except Exception as e:
 		pass
 
+	print("Can't decode!")
 	return ""
 
 def get_testata_source_and_write_on_file(news):
 
-	print(news.get_testata())
 	if news.get_testata() in tags:
 
 		source = dowload_testata_from_source(news.get_testata_url())
@@ -136,10 +134,10 @@ def get_testata_source_and_write_on_file(news):
 		# Check if the download is successful
 		if source != "":
 
-			print("Ho una source bellissima")
+			print("Download source testata riuscito.")
 
 			body = news.get_body()
-			title = news.get_title()
+			title = news.get_title()	
 
 			try:
 				
@@ -158,22 +156,17 @@ def get_testata_source_and_write_on_file(news):
 				print("Ho aggiornato il body")
 				body = parsed_body
 
-			# # Clean title and body
-			title = re.sub(' - .*', ' ', title)
-			title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
-			title = title.rstrip('\t').rstrip('\n')
-			news.set_title(title)
+			# Clean title and body
+			news.set_title(parserino.clean_source(title))
+			news.set_body(parserino.clean_source(body))
+	
+	else:
 
-			body = re.sub(' - .*', ' ', body)
-			body = re.sub('\s+', ' ', body).strip().replace(' ...',' ')
-			body = body.rstrip('\t').rstrip('\n')
-			news.set_body(body)
-			
-			return store_news_in_file(news)
+		print("Non posso scaricare")
 
-	print("NON ho una source bellissima")
-
-	return False
+	print(news.get_body())
+	
+	return store_news_in_file(news)
 
 def parse_list_news_from_google(news, feed_url):
 
@@ -188,6 +181,9 @@ def parse_list_news_from_google(news, feed_url):
 		# Testata url is successfully parsed
 		if parser.parse():
 
+			print(news.get_testata_url())
+			print("News ha un titolo e body corto, provo a scaricare..")
+
 			# Try to get and store the body of the news given testata_url
 			try:
 
@@ -196,7 +192,6 @@ def parse_list_news_from_google(news, feed_url):
 				else:
 					print("Hey, something went wrong! Unable to parse or store", news.get_testata_url(), "! :(")
 					print("I am trying to store the news as it is..")
-
 			
 			except Exception as e:
 				print("Exception in parse_list_news_from_google():", e)
