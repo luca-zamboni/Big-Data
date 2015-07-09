@@ -79,6 +79,7 @@ def load_parse_tags():
 def clean_string(string):
 	# string = re.sub(' - .*', ' ', string)
 	string = re.sub('[\'\\\"]', '', string)
+	string = re.sub('\'', ' ', string)
 	# string.rstrip('- ').rstrip(' -')
 	string = re.sub('\s+', ' ', string).strip().replace(' ...',' ')
 	string = string.rstrip('\t').rstrip('\n')
@@ -131,7 +132,7 @@ def store_news_in_file(news):
 
 def dowload_testata_from_source(url):
 
-	# url = "http://economia.ilmessaggero.it/flashnews/la_riforma_della_scuola_amp_egrave_legge/1454975.shtml"
+	# url = "http://www.corrieredellosport.it/news/calcio/calcio-mercato/2015/07/08-2262837/cr7_al_psg_libera_ibra_al_milan"
 	
 	try:
 		print("Downloading: ", url)
@@ -157,6 +158,8 @@ def dowload_testata_from_source(url):
 
 def get_testata_source_and_write_on_file(news):
 
+	print(news.get_testata())
+
 	if news.get_testata() in tags:
 
 		source = dowload_testata_from_source(news.get_testata_url())
@@ -170,7 +173,7 @@ def get_testata_source_and_write_on_file(news):
 			title = news.get_title()	
 
 			try:
-				# news.set_testata("Il Messaggero")
+				# news.set_testata("Corriere dello Sport.it")
 				parser_source_html = parserino.ParserSource(source, tags[news.get_testata()])
 				parsed_title, parsed_body = parser_source_html.parse()
 			except Exception as e:
@@ -190,6 +193,7 @@ def get_testata_source_and_write_on_file(news):
 			title = clean_string(title)
 			title = remove_sentences_to_ignore(str(title))
 			news.set_title(title)
+			body = str(body)
 			body = clean_string(body)
 			body = remove_sentences_to_ignore(str(body))
 			news.set_body(body)
@@ -206,6 +210,11 @@ def parse_news_from_google(news):
 		
 	# Testata url is successfully parsed
 	if parser.parse():
+
+		# DEBUG
+		# if news.get_testata() != "La Stampa":
+		# 	return False
+
 
 		print(news.get_testata_url())
 		print("News ha un titolo e body corto, provo a scaricare..")
