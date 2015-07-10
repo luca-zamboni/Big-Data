@@ -22,7 +22,7 @@ sc = None
 
 N_SHINGLES = 7
 THRESHOLD_SIMILARITY = 0.999
-THRESHOLD_DEAGGREGATION = 0.0
+THRESHOLD_DEAGGREGATION = 0.0000
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
 THRESHOLD_COUNT = 2
@@ -37,6 +37,9 @@ shingles = []
 shinglesCount = {}
 
 distanceMatrix = []
+
+def asd(s):
+	print(s)
 
 # Jaccard Similarity of 2 strings
 def jaccard(list1,list2):
@@ -61,7 +64,7 @@ def jaccardForList(l1,l2):
 		return 0.0
 	return andL/orL
 
-def jaccardForSignature(l1,l2):
+def jcSig(l1,l2):
 	andL = 0.0
 	orL = 0.0
 	for i in range(0,len(l1)):
@@ -165,7 +168,7 @@ def getAggregatedWithClustering(signatureMatrix,groups,list_clusters):
 	# print(signatureMatrix)
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
-		sim = jaccardForSignature(l1,l2)
+		sim = jcSig(l1,l2)
 		distanceMatrix[nid1][nid2] = (1.0 - sim)
 
 	dist = 0
@@ -175,8 +178,8 @@ def getAggregatedWithClustering(signatureMatrix,groups,list_clusters):
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
-		#print(dist,groups)
-		print(ts.get_purity_index(list_clusters,groups)[1],groups)
+		print(dist,groups)
+		#print(dist,ts.get_purity_index(list_clusters,groups))
 
 	return groups
 
@@ -186,13 +189,13 @@ def transformInRealMatrix(matrix):
 		ret[i] += matrix[i]
 	return ret
 
-def clusterKMeanSpark(matrix):
+def clusterKMeanSpark(matrix,k):
 	m = transformInRealMatrix(matrix)
 	sc = SparkContext(appName="Jsonizer: Remove stop words")
 	parsedData = sc.parallelize(m)
 	y = []
 	x = []
-	clustersControl = range(17,18)
+	clustersControl = range(k,k+1)
 	for kc in clustersControl:
 		clusters = KMeans.train(parsedData, kc, maxIterations=50000,runs=200, initializationMode="k-means||",epsilon=0.0001)
 		clu = []
@@ -260,8 +263,8 @@ def fillMatrix(texts):
 		matrix[nid] = []
 		for shi in shingles:
 			if shi in sh:
-				#matrix[nid] += [1]
-				matrix[nid] += [sh.count(shi)]
+				matrix[nid] += [1]
+				#matrix[nid] += [sh.count(shi)]
 			else:
 				matrix[nid] += [0]
 
@@ -401,19 +404,128 @@ def degGetLdaGroups(texts):
 
 	return groups
 
-def disassembler(matrix,groups):
+def isAFalse(g,matrix):
+	#maxZeroooosJaccardiano = 0
+	#maxZeroooosNid = None
+	#maxZeroooosNid2 = None
+	#for nid1 in g:
+	#	tempMaxZerosNid2 = None
+	#	tempZerossJaccardiano = 0
+	#	for nid2 in g:
+	#		if jcSig(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
+	#			tempMaxZerosNid2 = nid2
+	#			tempZerossJaccardiano += 1
+
+	#	if tempZerossJaccardiano > maxZeroooosJaccardiano:
+	#		maxZeroooosJaccardiano = tempZerossJaccardiano
+	#		maxZeroooosNid = nid1
+	#		maxZeroooosNid2 = tempMaxZerosNid2
+			#if maxZeroooosJaccardiano >= 1:
+			#	asd((True,maxZeroooosNid,maxZeroooosNid2))
+			#	return True,maxZeroooosNid,maxZeroooosNid2
+
+		#print(nid1,maxZeroooosNid,maxZeroooosJaccardiano)
+
+	#print(maxZeroooosNid,maxZeroooosJaccardiano)
+	#if maxZeroooosJaccardiano > 0:
+	#	return True,maxZeroooosNid,maxZeroooosNid2
+
+
+	for nid1,nid2 in list(itertools.combinations(g,2)):
+		if jcSig(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
+			return True,nid1,nid2
+
+	return False,0,0
+
+def splittalo(g,matrix):
+	b,n1,n2 = isAFalse(g,matrix)
+	if b:
+		g1 = [n1]
+		g2 = [n2]
+		for nid in g:
+			if nid != n1 and nid != n2:
+				sim1 = 0.0
+				sim2 = 0.0
+				for tmp in g1:
+					sim1 += jcSig(matrix[n1],matrix[nid])
+				for tmp in g1:
+					sim2 += jcSig(matrix[n2],matrix[nid])
+
+
+				if sim1 / len(g1) > sim2 / len(g2):
+					g1 += [nid]
+				else:
+					g2 += [nid]
+
+		ret = []
+		if isAFalse(g1,matrix)[0]:
+			ret += splittalo(g1,matrix)
+		else:
+			ret += [g1]
+		if isAFalse(g2,matrix)[0]:
+			ret += splittalo(g2,matrix)
+		else:
+			ret += [g2]
+
+		return ret
+
+	return [g]
+		
+
+def dissassemblalo(matrix,groups):
+
+	toDisassemble = []
 	
-	for g in groups:
-		split = False
-		for nid1,nid2 in list(itertools.combinations(g,2)):
-			if jaccardForSignature(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
-				g1=[]
-				g2=[]
-				print(nid1,nid2)
+	for i in range(0,len(groups)):
+		g = groups[i]
+
+		if isAFalse(g,matrix)[0]:
+			newG = splittalo(g,matrix)
+			del groups[i]
+			groups += newG
 
 	return groups
 
+def getCommonWord(group,matrix):
+	#ret = [0.0 for cell in matrix[0]]
+	ret = []
+	for i in range(0,len(matrix[0])):
+		tmp = 0.0
+		for nid in group:
+			tmp += matrix[nid][i]
 
+		ret += [tmp]
+	
+	ret = sorted(range(len(ret)), key=lambda i: ret[i])[-4:]
+	return ret
+
+def getSimilar(groups,matrix):
+	mass = 0
+	ret1 = None
+	ret2 = None
+	for g1,g2 in list(itertools.combinations(groups,2)):
+		words1 = set(getCommonWord(g1,matrix))
+		words2 = set(getCommonWord(g2,matrix))
+		tmp = len(words1 & words2)
+		if mass < tmp:
+			mass = tmp
+			ret1 = g1
+			ret2 = g2
+	return mass,ret1,ret2
+
+
+def clusteringByWord(groups,matrix):
+
+	sim,g1,g2 = getSimilar(groups,matrix)
+	while sim > 1:
+		sim,g1,g2 = getSimilar(groups,matrix)
+		if sim > 1:
+			groups.remove(g1)
+			groups.remove(g2)
+			groups += [g1+g2]
+			print(len(groups))
+
+	return groups
 
 # MAIN
 def main():
@@ -430,13 +542,20 @@ def main():
 	news,clusters = loadNews()
 	list_clusters = [c[1] for c in clusters.items()]
 
-	print(len(list_clusters),list_clusters)
+	#print("Numer of google cluters " + str(len(list_clusters)))
+
+	#print(len(list_clusters),list_clusters)
 
 	for n in news:
 
-		groups += [[n.get_nid()]]
+		groups += [n.get_nid()]
 
-		s = (n.get_title() + n.get_body()).lower()
+		#s = (n.get_title() + n.get_body()).lower()
+		s = ""
+		for i in range(0,1):
+			s += (n.get_title()).lower() + " "
+		#s += " " + n.get_body()
+
 
 		#print(n.get_body())
 
@@ -452,32 +571,53 @@ def main():
 
 
 	#print(len(shingles))
-
+	print("Filling Matrix")
 	matrix = fillMatrix(texts)
-	removeShinglesLowCount(matrix)
-	permutations = getRandomPermutation()
-	signatureMatrix = getSignatureMatrix(matrix,permutations)
+	#removeShinglesLowCount(matrix)
+	#permutations = getRandomPermutation()
+	#signatureMatrix = getSignatureMatrix(matrix,permutations)
 	#print(shingles)
 	#print(matrix)
 
 	#graph(matrix)
 
+	groups = [groups]
+
+	#
+	#for i in range(0,len(groups)):
+		#groups
+
+	print("Disassembling")
+	groups = dissassemblalo(matrix,groups)
+
+	print("Riaggregating ")
+	groups = clusteringByWord(groups,matrix)
 	#groups = getAggregatedWithClustering(matrix,groups,list_clusters)
+	#print(groups)
+
 	#groups = getKmeanCluster(matrix)
-	groups = clusterKMeanSpark(signatureMatrix)
 	#groups = degGetLdaGroups(texts)
+
+	#for i in range(23,40):
+		#groups = clusterKMeanSpark(signatureMatrix,i)
+		#print(groups)
 	
-	#groups = disassembler(matrix,groups)
+		#groups = dissassemblalo(matrix,groups)
 
 	#print(transformInRealMatrix(matrix))
 	#print(shinglesCount)
 
-	print(groups)
-	print(ts.get_purity_index(list_clusters,groups))
+		#print(groups)
+		#a,fsc = ts.get_purity_index(list_clusters,groups)
+		#print(i,a,fsc)
+		#if a > 0.9:
+			#print(i)
+			#print(groups)
 
-	#print(texts[36])
-	
-	#print(len(groups))
+			#print(a,fsc)
+			#print("---------------------------------")
+
+	print(groups)
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":

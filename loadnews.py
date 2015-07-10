@@ -82,6 +82,11 @@ def reassemblyNews(list_news, tuples):
  			list_news[i].set_title(t)
  			list_news[i].set_body(b)
 
+def clean_title(title):
+	title = re.sub(' - .*', ' ', title)
+	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
+	return title
+
 # 	return list_news
 
 def loadNews(remove_stop_word = True):
@@ -103,7 +108,7 @@ def loadNews(remove_stop_word = True):
 		n = WrapNews()
 		#n.set_nid(int(news['nid']))
 		n.set_nid(nid)
-		n.set_title(news['title'].lower())
+		n.set_title(clean_title(news['title'].lower()))
 		n.set_testata(news['testata'])
 		n.set_date(news['date'])
 		n.set_body(news['body'].lower())
@@ -111,7 +116,7 @@ def loadNews(remove_stop_word = True):
 		n.set_image_url(news['image_url'])
  		n.set_feed_url(news['feed_url'])
 
- 		if len(news['body'].lower()) > 500 :
+ 		if len(news['body'].lower()) > 1 :
 	 		list_news += [n]
 
 	 		#print(nid,int(news['nid']))
@@ -124,6 +129,8 @@ def loadNews(remove_stop_word = True):
 	 		nid += 1
 
 	 	nnnid += 1
+
+	print("Number of news " + str((nid+1)))
 
 
  	
