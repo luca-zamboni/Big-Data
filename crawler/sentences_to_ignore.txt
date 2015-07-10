@@ -5,14 +5,18 @@ Il Sole 24 Ore	\d+Avanti
 Il Sole 24 Ore	Il Sole 24 Ore Quotidiano politico economico
 Quotidiano.net	Articolo successivo:
 Quotidiano.net	StrumentiINVIASTAMPA
-La Stampa	FOCUS
+La Stampa	La Stampa con te dove e quando vuoi
 Il Messaggero	PER APPROFONDIRE
 Il Messaggero	DIVENTA FAN DEL MESSAGGERO
 Il Messaggero	CONDIVIDI
 TGCOM	Invia un commento
 ANSA.it	RIPRODUZIONE RISERVATA Copyright ANSA
 ANSA.it	ChiudiPubblicità
+La Repubblica	Riproduzione riservata
 La Repubblica	TagsArgomenti:
 La Repubblica	I COMMENTI DEI LETTORI
 La Repubblica	Fai di Repubblica la tua homepage
 La Repubblica	I più letti I più condivisi
+Corriere dello Sport.it	Potrebbero interessarti
+Corriere dello Sport.it	Notizie Ultimora
+Corriere dello Sport.it	Leggi larticolo
