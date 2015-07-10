@@ -2,6 +2,7 @@ Il Sole 24 Ore	Clicca per Condividere
 Il Sole 24 Ore	TAG: 
 Il Sole 24 Ore	RIPRODUZIONE RISERVATA
 Il Sole 24 Ore	\d+Avanti
+Il Sole 24 Ore	Il Sole 24 Ore Quotidiano politico economico
 Quotidiano.net	Articolo successivo:
 Quotidiano.net	StrumentiINVIASTAMPA
 La Stampa	FOCUS

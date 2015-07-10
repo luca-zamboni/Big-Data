@@ -20,8 +20,9 @@ from loadnews import loadNews
 
 sc = None
 
-N_SHINGLES = 6
+N_SHINGLES = 7
 THRESHOLD_SIMILARITY = 0.999
+THRESHOLD_DEAGGREGATION = 0.0
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
 THRESHOLD_COUNT = 2
@@ -75,8 +76,8 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	#return s.split()
-	return [s[i:i + n] for i in range(len(s) - n + 1)]
+	return s.split()
+	#return [s[i:i + n] for i in range(len(s) - n + 1)]
 
 def getCloserGroupsFurther(groups,distanceMatrix):
 	closer = (None,None)
@@ -165,12 +166,12 @@ def getAggregatedWithClustering(signatureMatrix,groups,list_clusters):
 	# Generation distance matrix
 	for (nid1,l1),(nid2,l2) in list(itertools.combinations(signatureMatrix.items(),2)):
 		sim = jaccardForSignature(l1,l2)
-		distanceMatrix[nid1][nid2] = (1.0 - sim*sim)
+		distanceMatrix[nid1][nid2] = (1.0 - sim)
 
 	dist = 0
 	# MERGE GROUPS till aggregation
 	while dist < THRESHOLD_AGGREGATION and len(groups) > 1:
-		dist,(g1,g2) = getCloserGroupsCloser(groups,distanceMatrix)
+		dist,(g1,g2) = getCloserGroupsMean(groups,distanceMatrix)
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
@@ -191,9 +192,9 @@ def clusterKMeanSpark(matrix):
 	parsedData = sc.parallelize(m)
 	y = []
 	x = []
-	clustersControl = range(7,8)
+	clustersControl = range(17,18)
 	for kc in clustersControl:
-		clusters = KMeans.train(parsedData, kc, maxIterations=100000,runs=200, initializationMode="k-means||",epsilon=0.0001)
+		clusters = KMeans.train(parsedData, kc, maxIterations=50000,runs=200, initializationMode="k-means||",epsilon=0.0001)
 		clu = []
 
 		def error(point,clust):
@@ -204,6 +205,15 @@ def clusterKMeanSpark(matrix):
 		WSSSE = parsedData.map(lambda point: error(point,clusters)).reduce(lambda x, y: x + y)
 		for n in m:
 			clu += [clusters.predict(np.array(n))]
+
+		x += [kc]
+		y += [WSSSE]
+
+		#print(kc,WSSSE)
+
+	#plt.plot(x,y)
+	#plt.ylabel('some numbers')
+	#plt.show()
 
 	ret = [[] for i in range(0,max(clu)+1)]
 	for i in range(0,len(clu)):
@@ -216,7 +226,7 @@ def getKmeanCluster(matrix):
 	m = transformInRealMatrix(matrix)
 	score = 0
 	oldscore = 0
-	for kc in range(6,7):
+	for kc in range(19,20):
 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
 		k_means.fit(m)
 		clu = k_means.predict(m)
@@ -250,8 +260,8 @@ def fillMatrix(texts):
 		matrix[nid] = []
 		for shi in shingles:
 			if shi in sh:
-				matrix[nid] += [1]
-				#matrix[nid] += [sh.count(shi)]
+				#matrix[nid] += [1]
+				matrix[nid] += [sh.count(shi)]
 			else:
 				matrix[nid] += [0]
 
@@ -262,7 +272,6 @@ def fillMatrix(texts):
 def getRandomPermutation():
 	permutation = []
 	n = len(shingles)
-	print(n)
 	for j in range(0,N_PERM):
 		x = [[i] for i in range(0,n)]
 		shuffle(x)	### <<<<<<<<<<< SLOWWWWWWWWWWWWWWWWWWWWWW
@@ -392,6 +401,20 @@ def degGetLdaGroups(texts):
 
 	return groups
 
+def disassembler(matrix,groups):
+	
+	for g in groups:
+		split = False
+		for nid1,nid2 in list(itertools.combinations(g,2)):
+			if jaccardForSignature(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
+				g1=[]
+				g2=[]
+				print(nid1,nid2)
+
+	return groups
+
+
+
 # MAIN
 def main():
 
@@ -399,7 +422,7 @@ def main():
 	texts = []
 	matrix = {}
 
-	x = open("input-lda/input.txt","w")
+	#x = open("input-lda/input.txt","w")
 
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 	#news = jsonizer.getNewsFromTxtByCategories()
@@ -407,32 +430,31 @@ def main():
 	news,clusters = loadNews()
 	list_clusters = [c[1] for c in clusters.items()]
 
-	print(list_clusters)
+	print(len(list_clusters),list_clusters)
 
 	for n in news:
 
 		groups += [[n.get_nid()]]
 
 		s = (n.get_title() + n.get_body()).lower()
-		s = (n.get_title()).lower()
 
 		#print(n.get_body())
 
 		#print(getShingle(s))
-		for ss in getShingle(s):
-			x.write(ss + " ")
-		x.write("\n")
+		#for ss in getShingle(s):
+		#	x.write(ss + " ")
+		#x.write("\n")
 
 		addGlobalShingle(s)
 		texts = texts + [(n.get_nid(),s)]
 
-	x.close()
+	#x.close()
 
 
-	#print(shingles)
+	#print(len(shingles))
 
 	matrix = fillMatrix(texts)
-	#removeShinglesLowCount(matrix)
+	removeShinglesLowCount(matrix)
 	permutations = getRandomPermutation()
 	signatureMatrix = getSignatureMatrix(matrix,permutations)
 	#print(shingles)
@@ -445,12 +467,16 @@ def main():
 	groups = clusterKMeanSpark(signatureMatrix)
 	#groups = degGetLdaGroups(texts)
 	
+	#groups = disassembler(matrix,groups)
+
 	#print(transformInRealMatrix(matrix))
 	#print(shinglesCount)
 
 	print(groups)
 	print(ts.get_purity_index(list_clusters,groups))
 
+	#print(texts[36])
+	
 	#print(len(groups))
 
 # CHIAMATA AL MEIN

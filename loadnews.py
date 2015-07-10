@@ -96,6 +96,8 @@ def loadNews(remove_stop_word = True):
 
 	clusters = {}
 
+	nnnid = 0
+
 	for news in list_json_news:
 
 		n = WrapNews()
@@ -108,14 +110,20 @@ def loadNews(remove_stop_word = True):
 		n.set_source_url(news['source_url'])
 		n.set_image_url(news['image_url'])
  		n.set_feed_url(news['feed_url'])
- 		list_news += [n]
 
- 		if news['feed_url'] in clusters:
- 			clusters[news['feed_url']] += [n.get_nid()]
- 		else:
- 			clusters[news['feed_url']] = [n.get_nid()]
+ 		if len(news['body'].lower()) > 500 :
+	 		list_news += [n]
 
- 		nid += 1
+	 		#print(nid,int(news['nid']))
+
+	 		if news['feed_url'] in clusters:
+	 			clusters[news['feed_url']] += [n.get_nid()]
+	 		else:
+	 			clusters[news['feed_url']] = [n.get_nid()]
+
+	 		nid += 1
+
+	 	nnnid += 1
 
 
  	
