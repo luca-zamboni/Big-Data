@@ -12,11 +12,13 @@ from pylab import plot,show
 from scipy import stats
 import time
 import numpy as np
-from sklearn import cluster
-import networkx as nx
+# from sklearn import cluster
+# import networkx as nx
 import matplotlib.pyplot as plt
 import os
 from loadnews import loadNews
+from loadnews import load_stop_words
+import rake
 
 sc = None
 
@@ -37,6 +39,8 @@ shingles = []
 shinglesCount = {}
 
 distanceMatrix = []
+
+STOP_WORDS_PATH 	= "stopword.txt"
 
 def asd(s):
 	print(s)
@@ -224,24 +228,24 @@ def clusterKMeanSpark(matrix,k):
 	sc.stop()
 	return ret
 
-def getKmeanCluster(matrix):
+# def getKmeanCluster(matrix):
 
-	m = transformInRealMatrix(matrix)
-	score = 0
-	oldscore = 0
-	for kc in range(19,20):
-		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
-		k_means.fit(m)
-		clu = k_means.predict(m)
-		ret = [[] for i in range(0,max(clu)+1)]
-		for i in range(0,len(clu)):
-			ret[clu[i]] += [i]
-		print("\n Clus:" + str(kc))
+# 	m = transformInRealMatrix(matrix)
+# 	score = 0
+# 	oldscore = 0
+# 	for kc in range(19,20):
+# 		k_means = cluster.KMeans(n_clusters=kc, n_init=len(shingles))
+# 		k_means.fit(m)
+# 		clu = k_means.predict(m)
+# 		ret = [[] for i in range(0,max(clu)+1)]
+# 		for i in range(0,len(clu)):
+# 			ret[clu[i]] += [i]
+# 		print("\n Clus:" + str(kc))
 
-	ret = [[] for i in range(0,max(clu)+1)]
-	for i in range(0,len(clu)):
-		ret[clu[i]] += [i]
-	return ret
+# 	ret = [[] for i in range(0,max(clu)+1)]
+# 	for i in range(0,len(clu)):
+# 		ret[clu[i]] += [i]
+# 	return ret
 	
 def addGlobalShingle(st):
 	global shingles
@@ -539,21 +543,37 @@ def main():
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 	#news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
-	news,clusters = loadNews()
+	news,clusters = loadNews(False)
 	list_clusters = [c[1] for c in clusters.items()]
 
 	#print("Numer of google cluters " + str(len(list_clusters)))
 
 	#print(len(list_clusters),list_clusters)
 
+	Rake = rake.Rake(STOP_WORDS_PATH)
+
 	for n in news:
 
 		groups += [n.get_nid()]
 
 		#s = (n.get_title() + n.get_body()).lower()
-		s = ""
-		for i in range(0,1):
-			s += (n.get_title()).lower() + " "
+		
+		#for i in range(0,1):
+		# print("----")
+		try:
+			# print(n.get_body())
+			print(n.get_body())
+			print("\n")
+			s = Rake.run(n.get_body().lower());
+			print s
+			return
+		except Exception as e:
+			print(e)
+			pass
+	
+	return
+
+			# s += (n.get_title()).lower() + " "
 		#s += " " + n.get_body()
 
 
@@ -564,8 +584,8 @@ def main():
 		#	x.write(ss + " ")
 		#x.write("\n")
 
-		addGlobalShingle(s)
-		texts = texts + [(n.get_nid(),s)]
+	addGlobalShingle(s)
+	texts = texts + [(n.get_nid(),s)]
 
 	#x.close()
 
