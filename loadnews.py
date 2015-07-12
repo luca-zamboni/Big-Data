@@ -18,6 +18,7 @@ def load_stop_words():
 	    stop_words += [line.rstrip('\n')]
 	    line = f.readline()
 	f.close()
+	return stop_words
 
 def remove_stop_words(list_news):
 
@@ -133,8 +134,8 @@ def loadNews(remove_stop_word = True):
 	print("Number of news " + str((nid+1)))
 
 
- 	
- 	remove_stop_words(list_news)
+ 	if remove_stop_word:
+ 		remove_stop_words(list_news)
 
  	newsFile.close()
 
