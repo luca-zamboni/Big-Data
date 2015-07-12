@@ -88,6 +88,7 @@ def clean_string(string):
 	string = string.replace(' ...','')
 	string = string.replace('\t','')
 	string = string.replace('\n','')
+
 	string = ' '.join(string.split())
 	return string
 
@@ -220,7 +221,18 @@ def get_testata_source_and_write_on_file(news):
 		title = clean_string(str(title))
 		title = remove_sentences_to_ignore(str(title))
 		title = title.replace(news.get_testata(),'')
+		title = title.replace(' - ', ' ')
+		title = title.replace('- ', ' ')
+		title = title.replace(' -', ' ')
+		title = title.replace('-', ' ')
+		title = ' '.join(title.split())
 		news.set_title(title)
+
+
+		to_remove = "Storia dell'articolo Chiudi Questo articolo è stato pubblicato il \d+ \w+ \d+ alle ore \d+:\d+."
+		body = re.sub(to_remove, '', body)
+		to_remove = "L\'ultima modifica è del \d \w \d alle ore \d:\d."
+		body = re.sub(to_remove, '', body)
 
 		body = clean_string(str(body))
 		body = remove_sentences_to_ignore(str(body))
