@@ -1,0 +1,27 @@
+Testata	ATTRTXT	TXT	ATTRTITLE	TITLE
+Corriere della Sera	class	chapter	class	article-subtitle
+Il Messaggero	id	testo1	class	titolo
+La Repubblica	class	body-text	itemprop	headline
+Rai News	class	text	class	title
+AGI - Agenzia Giornalistica Italia
+TGCOM	class	wrapperArticle	class	title
+Il Sole 24 Ore	class	body	class	title
+ANSA.it	itemprop	articleBody	class	header-news
+Reuters Italia
+Quotidiano.net	class	description	class	titleBig
+Borsa Italiana	class	content-article	class	titlenewsdet
+Adnkronos	class	innerFull
+La Stampa	itemprop	articleBody	class	ls-articolo
+Intelligonews	class	content	class	title
+Il Fatto Quotidiano	class	article-body	itemprop	headline
+Finanzaonline.com	class	field-items
+Palermomania.it
+Goal.com	itemprop	article-body	class	leading
+Il Secolo XIX	id	testo-articolo
+Corriere dello Sport.it	class	main-article-content	class	main-article-header
+Leonardo.it	class	articleBody	class	article__photo
+Corriere Quotidiano
+Voce Nuova Tv	class	post	class	title
+Il Sussidiario.net	itemprop	articleBody	itemprop	headline
+il Giornale	class	field-items	class	entry-title
+euronews	id	articleTranscript	id	title-wrap-new
