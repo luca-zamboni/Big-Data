@@ -10,6 +10,7 @@ import os.path	# files management and checks
 import jsonizer
 import parserino
 from socket import timeout
+from polyglot.text import Text
 
 tempnews = []
 tags = {}
@@ -90,6 +91,14 @@ def remove_sentences_to_ignore(body):
 		body = re.sub(s+'.*', ' ', body)
 	return body
 
+def get_keyword_from_string(string):
+	text = Text(string)
+	ret = ""
+	for entity in text.entities:
+		# entity.tag, entity = e
+		ret = ret + " " + str(entity[0])
+	return ret
+
 load_parse_tags()
 
 def store_news_in_file(news):
@@ -132,7 +141,7 @@ def store_news_in_file(news):
 
 def dowload_testata_from_source(url):
 
-	# url = "http://www.corrieredellosport.it/news/calcio/calcio-mercato/2015/07/08-2262837/cr7_al_psg_libera_ibra_al_milan"
+	# url = "http://economia.ilmessaggero.it/economia_e_finanza/grecia-tsipras-default-fmi/1438685.shtml"
 
 	try:
 		print("Downloading: ", url)
@@ -173,7 +182,7 @@ def get_testata_source_and_write_on_file(news):
 			title = news.get_title()	
 
 			try:
-				# news.set_testata("Corriere dello Sport.it")
+				# news.set_testata("Il Messaggero")
 				parser_source_html = parserino.ParserSource(source, tags[news.get_testata()])
 				parsed_title, parsed_body = parser_source_html.parse()
 			except Exception as e:
@@ -182,25 +191,33 @@ def get_testata_source_and_write_on_file(news):
 				pass
 
 			if parsed_title != "":
-				print("Ho aggiornato il titolo")
+				print("Title updated.")
 				title = parsed_title
 				
 			if parsed_body != "":
-				print("Ho aggiornato il body")
+				print("Body updated.")
 				body = parsed_body
 
 			# Clean title and body from porcherie..
-			title = clean_string(title)
-			title = remove_sentences_to_ignore(str(title))
-			news.set_title(title)
-			body = str(body)
-			body = clean_string(body)
-			body = remove_sentences_to_ignore(str(body))
-			news.set_body(body)
-	
-	else:
+			try:
+				
+				title = clean_string(title)
+				print("TITLE: ",title, "\n")
 
-		print("Non posso scaricare")
+				keywords = get_keyword_from_string(title)
+				print(keywords, "\n")
+				
+				title = remove_sentences_to_ignore(str(title))
+				print(title,"\n")
+				
+				news.set_title(title)
+				body = str(body)
+				body = clean_string(body)
+				body = remove_sentences_to_ignore(str(body))
+				news.set_body(body)
+			except Exception as e:
+				print("Exception in get_testata_source_and_write_on_file():", e)
+				return False
 	
 	return store_news_in_file(news)
 
@@ -211,13 +228,7 @@ def parse_news_from_google(news):
 	# Testata url is successfully parsed
 	if parser.parse():
 
-		# DEBUG
-		# if news.get_testata() != "La Stampa":
-		# 	return False
-
-
-		print(news.get_testata_url())
-		print("News ha un titolo e body corto, provo a scaricare..")
+		print("I am trying to donwload from", news.get_testata_url())
 
 		# Try to get and store the body of the news given testata_url
 		try:
@@ -249,7 +260,6 @@ def parse_list_news_from_google(news, feed_url):
 		parse_news_from_google(news)
 
 def main():
-
 
 	load_parse_tags()
 	load_sentences_to_ignore()
@@ -284,7 +294,7 @@ def main():
 
 				root = ET.fromstring(text)
 				parse_list_news_from_google(root.iter('item'), RSS)
-				time.sleep(1)
+				time.sleep(4) # sleep 2
 
 		except Exception as e:
 			print("Except:",e)

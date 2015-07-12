@@ -95,7 +95,6 @@ class ParserSource(HTMLParser):
 		try:
 			source = str(self.source_html)
 			source = clean_accenti(source)
-
 			self.feed(source)
 			return (self.title, self.body)
 		except Exception as e:
