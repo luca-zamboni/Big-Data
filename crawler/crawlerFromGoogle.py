@@ -123,7 +123,7 @@ def clean_string(text, type, testata):
 	elif type == "BODY":
 		array_regex = regex_body
 
-	text = text.replace(testata,' ')
+	text = text.replace(testata,'')
 	text = re.sub('\n', '', text)
 	text = re.sub('\t', '', text)
 	text = ' '.join(text.split())
@@ -131,7 +131,8 @@ def clean_string(text, type, testata):
 	for reg_expr in array_regex:
 		text = re.sub(reg_expr, ' ', text)
 
-	return ' '.join(text.split())
+	text = ' '.join(text.split())
+	return text
 
 def remove_sentences_to_ignore(body):
 	for s in sentences_to_ignore:
@@ -139,23 +140,30 @@ def remove_sentences_to_ignore(body):
 	return body
 
 def get_keyword_from_string(text):
-	text = Text(text)
+
 	keywords = []
-	for entity in text.entities:
-		for e in entity:
-			keywords = keywords + [str(e)]
+	try:
+		text = Text(text)
+		
+		for entity in text.entities:
+			for e in entity:
+				keywords = keywords + [str(e)]
 
-	#  Are enough keywords to deal with?
-	if len(keywords) < MIN_NUM_KEYWORDS:
-		return ""
+		#  Are enough keywords to deal with?
+		if len(keywords) < MIN_NUM_KEYWORDS:
+			return ""
 
-	# Removes duplicate keywords
-	no_duplicates = set(keywords)
-	keywords = list(no_duplicates)
-	keywords = " ".join(keywords).lower()
+		# Removes duplicate keywords
+		no_duplicates = set(keywords)
+		keywords = list(no_duplicates)
+		keywords = " ".join(keywords).lower()
 
-	for c in string.punctuation:
-		keywords = keywords.replace(c, '')
+		for c in string.punctuation:
+			keywords = keywords.replace(c, '')
+	
+	except Exception as e:
+		print("Exception in get_keyword_from_string:", e)
+		pass
 
 	return ' '.join(keywords.split())
 
