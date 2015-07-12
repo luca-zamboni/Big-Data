@@ -116,6 +116,7 @@ def loadNews(remove_stop_word = True):
 		n.set_source_url(news['source_url'])
 		n.set_image_url(news['image_url'])
  		n.set_feed_url(news['feed_url'])
+ 		n.set_feed_url(news['keywords'])
 
  		if len(news['body'].lower()) > 1 :
 	 		list_news += [n]

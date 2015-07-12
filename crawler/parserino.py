@@ -165,10 +165,10 @@ class ParserSource(HTMLParser):
 		data = data.rstrip("\n")
 
 		if data != "" and self.inside_title and not self.scriptT:
-			self.title += data
+			self.title += " " + data
 
 		if data != "" and self.inside_body and not self.scriptB:
-			self.body += data
+			self.body += " " + data
 
 def remove_tags(raw_html):
   cleanr = re.compile('<.*?>')

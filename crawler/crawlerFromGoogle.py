@@ -9,6 +9,7 @@ import time
 import os.path	# files management and checks
 import jsonizer
 import parserino
+import string
 from socket import timeout
 from polyglot.text import Text
 
@@ -21,6 +22,8 @@ GOOGLE_NEWS_PATH = "newsG.txt"
 PARSE_TAGS_PATH = "crawler/parser.par"
 SENTENCES_TO_IGNORE_PATH = "crawler/sentences_to_ignore.txt"
 JSON_OUTPUT_PATH = "crawler/output_test.json"
+
+MIN_NUM_KEYWORDS = 4
 
 def load_sentences_to_ignore():
 
@@ -78,12 +81,16 @@ def load_parse_tags():
 	f.close()
 
 def clean_string(string):
-	# string = re.sub(' - .*', ' ', string)
-	string = re.sub('[\\\""]', '', string)
-	string = re.sub('\'', ' ', string)
+	string = re.sub(' - .*', ' ', string)
+	string = re.sub('[\\\""\|]', '', string)
+	string = re.sub('\\\"', '', string)
+	# string = re.sub('\'', ' ', string)
 	# string.rstrip('- ').rstrip(' -')
-	string = re.sub('\s+', ' ', string).replace(' ...',' ')
-	string = string.rstrip('\t').rstrip('\n')
+	# string = re.sub('\s+', ' ', string)
+	string = string.replace(' ...','')
+	string = string.replace('\t','')
+	string = string.replace('\n','')
+	string = ' '.join(string.split())
 	return string
 
 def remove_sentences_to_ignore(body):
@@ -91,13 +98,26 @@ def remove_sentences_to_ignore(body):
 		body = re.sub(s+'.*', ' ', body)
 	return body
 
-def get_keyword_from_string(string):
-	text = Text(string)
-	ret = ""
+def get_keyword_from_string(text):
+	text = Text(text)
+	keywords = []
 	for entity in text.entities:
-		# entity.tag, entity = e
-		ret = ret + " " + str(entity[0])
-	return ret
+		for e in entity:
+			keywords = keywords + [str(e)]
+
+	#  Are enough keywords to deal with?
+	if len(keywords) < MIN_NUM_KEYWORDS:
+		return ""
+
+	# Removes duplicate keywords
+	no_duplicates = set(keywords)
+	keywords = list(no_duplicates)
+	keywords = " ".join(keywords).lower()
+
+	for c in string.punctuation:
+		keywords = keywords.replace(c, '')
+
+	return ' '.join(keywords.split())
 
 load_parse_tags()
 
@@ -127,6 +147,7 @@ def store_news_in_file(news):
 		else:
 
 			newsFile = open(JSON_OUTPUT_PATH, 'w')
+			newsFile.write('[')
 
 		# No matter what, write the news..
 		newsFile.write(news.to_JSON())
@@ -169,17 +190,15 @@ def get_testata_source_and_write_on_file(news):
 
 	print(news.get_testata())
 
+	body = news.get_body()
+	title = news.get_title()
+
 	if news.get_testata() in tags:
 
 		source = dowload_testata_from_source(news.get_testata_url())
 
 		# Check if the download is successful
 		if source != "":
-
-			print("Download source testata riuscito.")
-
-			body = news.get_body()
-			title = news.get_title()	
 
 			try:
 				# news.set_testata("Il Messaggero")
@@ -191,33 +210,30 @@ def get_testata_source_and_write_on_file(news):
 				pass
 
 			if parsed_title != "":
-				print("Title updated.")
 				title = parsed_title
 				
 			if parsed_body != "":
-				print("Body updated.")
 				body = parsed_body
 
-			# Clean title and body from porcherie..
-			try:
-				
-				title = clean_string(title)
-				print("TITLE: ",title, "\n")
+	# Clean title and body from porcherie..
+	# Indentation in REALLY IMPORTANT HERE!
+	try:
 
-				keywords = get_keyword_from_string(title)
-				print(keywords, "\n")
-				
-				title = remove_sentences_to_ignore(str(title))
-				print(title,"\n")
-				
-				news.set_title(title)
-				body = str(body)
-				body = clean_string(body)
-				body = remove_sentences_to_ignore(str(body))
-				news.set_body(body)
-			except Exception as e:
-				print("Exception in get_testata_source_and_write_on_file():", e)
-				return False
+		title = clean_string(str(title))
+		title = remove_sentences_to_ignore(str(title))
+		news.set_title(title)
+
+		body = clean_string(str(body))
+		body = remove_sentences_to_ignore(str(body))
+		news.set_body(body)
+
+		keywords = get_keyword_from_string(title + body)
+		news.set_keywords(keywords)
+
+	except Exception as e:
+
+		print("Exception in get_testata_source_and_write_on_file():", e)
+		return False
 	
 	return store_news_in_file(news)
 
