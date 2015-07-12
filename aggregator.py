@@ -527,6 +527,25 @@ def clusteringByWord(groups,matrix):
 
 	return groups
 
+def getRappresentante(groups,matrix):
+	ret = []
+	for g in groups:
+		maxVal = 0.0
+		for nid in g:
+			avSim = 0.0
+			for nid2 in g:	
+				avSim += jcSig(matrix[nid1],matrix[nid2])
+			avSim /= len(g)
+			if maxVal < avSim:
+				maxVal = avSim
+				maxId = nid1
+		ret += (maxId,g)
+	return ret
+
+
+
+
+
 # MAIN
 def main():
 
@@ -594,6 +613,7 @@ def main():
 	groups = clusteringByWord(groups,matrix)
 	#groups = getAggregatedWithClustering(matrix,groups,list_clusters)
 	#print(groups)
+	print(getRappresentante(groups,matrix))
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)
