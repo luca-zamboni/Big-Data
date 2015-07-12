@@ -134,6 +134,23 @@ def clean_string(text, type, testata):
 	text = ' '.join(text.split())
 	return text
 
+def get_keyword_from_link(url):
+
+	regex = "(?:http|https)://[\w\d.-]+/([\w\d\/\-]*)"
+	try:
+		res = re.match(regex, url)
+		res = str(res.group(1))
+		res = re.sub('\d+', ' ', res)
+		res = res.replace('/',' ')
+		res = res.replace('_',' ')
+		res = res.replace('-',' ')
+		res = re.sub(' \w ', ' ', res)
+		return " ".join(res.split())
+	except Exception as e:
+		print(e)
+		pass
+	return ""
+
 def remove_sentences_to_ignore(body):
 	for s in sentences_to_ignore:
 		body = re.sub(s+'.*', ' ', body)
@@ -242,6 +259,11 @@ def get_testata_source_and_write_on_file(news):
 
 	print(news.get_testata())
 
+
+	print(get_keyword_from_link(news.get_testata_url()))
+
+	return False
+
 	body = news.get_body()
 	title = news.get_title()
 
@@ -280,6 +302,7 @@ def get_testata_source_and_write_on_file(news):
 		news.set_body(body)
 
 		keywords = get_keyword_from_string(title + body)
+		keywords += get_keyword_from_link(news.get_testata_url())
 		news.set_keywords(keywords)
 
 	except Exception as e:
