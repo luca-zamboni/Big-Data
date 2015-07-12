@@ -16,6 +16,6 @@ while True:
 
 	news = jsonizer.News(nid = nid, title = title, date = date, body = source, feed_url = url)
 	if parse_news_from_google(news):
-		print("TRUE")
-		print("News parsata :" + str(nid))
+		print(str(nid), "has been parsed!")
 		nid+=1
+		sleep(3)
