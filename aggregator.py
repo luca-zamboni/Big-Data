@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import os
 from loadnews import loadNews
 from loadnews import load_stop_words
-import rake
+#import rake
 
 sc = None
 
@@ -408,31 +408,32 @@ def degGetLdaGroups(texts):
 
 	return groups
 
+#maxZeroooosJaccardiano = 0
+#maxZeroooosNid = None
+#maxZeroooosNid2 = None
+#for nid1 in g:
+#	tempMaxZerosNid2 = None
+#	tempZerossJaccardiano = 0
+#	for nid2 in g:
+#		if jcSig(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
+#			tempMaxZerosNid2 = nid2
+#			tempZerossJaccardiano += 1
+
+#	if tempZerossJaccardiano > maxZeroooosJaccardiano:
+#		maxZeroooosJaccardiano = tempZerossJaccardiano
+#		maxZeroooosNid = nid1
+#		maxZeroooosNid2 = tempMaxZerosNid2
+		#if maxZeroooosJaccardiano >= 1:
+		#	asd((True,maxZeroooosNid,maxZeroooosNid2))
+		#	return True,maxZeroooosNid,maxZeroooosNid2
+
+	#print(nid1,maxZeroooosNid,maxZeroooosJaccardiano)
+
+#print(maxZeroooosNid,maxZeroooosJaccardiano)
+#if maxZeroooosJaccardiano > 0:
+#	return True,maxZeroooosNid,maxZeroooosNid2
+
 def isAFalse(g,matrix):
-	#maxZeroooosJaccardiano = 0
-	#maxZeroooosNid = None
-	#maxZeroooosNid2 = None
-	#for nid1 in g:
-	#	tempMaxZerosNid2 = None
-	#	tempZerossJaccardiano = 0
-	#	for nid2 in g:
-	#		if jcSig(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
-	#			tempMaxZerosNid2 = nid2
-	#			tempZerossJaccardiano += 1
-
-	#	if tempZerossJaccardiano > maxZeroooosJaccardiano:
-	#		maxZeroooosJaccardiano = tempZerossJaccardiano
-	#		maxZeroooosNid = nid1
-	#		maxZeroooosNid2 = tempMaxZerosNid2
-			#if maxZeroooosJaccardiano >= 1:
-			#	asd((True,maxZeroooosNid,maxZeroooosNid2))
-			#	return True,maxZeroooosNid,maxZeroooosNid2
-
-		#print(nid1,maxZeroooosNid,maxZeroooosJaccardiano)
-
-	#print(maxZeroooosNid,maxZeroooosJaccardiano)
-	#if maxZeroooosJaccardiano > 0:
-	#	return True,maxZeroooosNid,maxZeroooosNid2
 
 
 	for nid1,nid2 in list(itertools.combinations(g,2)):
@@ -479,14 +480,25 @@ def splittalo(g,matrix):
 def dissassemblalo(matrix,groups):
 
 	toDisassemble = []
-	
-	for i in range(0,len(groups)):
-		g = groups[i]
 
-		if isAFalse(g,matrix)[0]:
-			newG = splittalo(g,matrix)
-			del groups[i]
-			groups += newG
+	sc = SparkContext(appName="Jsonizer: Remove stop words")
+	parrGroup = sc.parallelize(groups)
+	groups = parrGroup.map(lambda g:splittalo(g,matrix)).collect()[0]
+	sc.stop()
+	
+	#for i in range(0,len(groups)):
+	#	g = groups[i]
+
+		### prova
+	#	if isAFalse(g,matrix)[0]:
+	#		newG = splittalo(g,matrix)
+	#		del groups[i]
+	#		groups += newG
+
+	#	if isAFalse(g,matrix)[0]:
+	#		newG = splittalo(g,matrix)
+	#		del groups[i]
+	#		groups += newG
 
 	return groups
 
@@ -500,7 +512,7 @@ def getCommonWord(group,matrix):
 
 		ret += [tmp]
 	
-	ret = sorted(range(len(ret)), key=lambda i: ret[i])[-4:]
+	ret = sorted(range(len(ret)), key=lambda i: ret[i])[-3:]
 	return ret
 
 def getSimilar(groups,matrix):
@@ -512,6 +524,8 @@ def getSimilar(groups,matrix):
 		words2 = set(getCommonWord(g2,matrix))
 		tmp = len(words1 & words2)
 		if mass < tmp:
+			if tmp > 0:
+				return tmp,g1,g2
 			mass = tmp
 			ret1 = g1
 			ret2 = g2
@@ -521,13 +535,13 @@ def getSimilar(groups,matrix):
 def clusteringByWord(groups,matrix):
 
 	sim,g1,g2 = getSimilar(groups,matrix)
-	while sim > 1:
+	while sim > 0:
 		sim,g1,g2 = getSimilar(groups,matrix)
-		if sim > 1:
+		if sim > 0:
 			groups.remove(g1)
 			groups.remove(g2)
 			groups += [g1+g2]
-			print(len(groups))
+			#print(len(groups))
 
 	return groups
 
@@ -535,7 +549,7 @@ def getRappresentante(groups,matrix):
 	ret = []
 	for g in groups:
 		maxVal = 0.0
-		for nid in g:
+		for nid1 in g:
 			avSim = 0.0
 			for nid2 in g:	
 				avSim += jcSig(matrix[nid1],matrix[nid2])
@@ -543,7 +557,7 @@ def getRappresentante(groups,matrix):
 			if maxVal < avSim:
 				maxVal = avSim
 				maxId = nid1
-		ret += (maxId,g)
+		ret += [(maxId,g)]
 	return ret
 
 
@@ -562,14 +576,14 @@ def main():
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 	#news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
-	news,clusters = loadNews(False)
+	news,clusters = loadNews(True)
 	list_clusters = [c[1] for c in clusters.items()]
 
 	#print("Numer of google cluters " + str(len(list_clusters)))
 
 	#print(len(list_clusters),list_clusters)
 
-	Rake = rake.Rake(STOP_WORDS_PATH)
+	#Rake = rake.Rake(STOP_WORDS_PATH)
 
 	for n in news:
 
@@ -579,20 +593,19 @@ def main():
 		
 		#for i in range(0,1):
 		# print("----")
-		try:
+		#try:
 			# print(n.get_body())
-			print(n.get_body())
-			print("\n")
-			s = Rake.run(n.get_body().lower());
-			print s
-			return
-		except Exception as e:
-			print(e)
-			pass
+		#	print(n.get_title())
+		#	print("\n")
+		#	s = Rake.run(n.get_title().lower());
+		#	print s
+		#	return
+		#except Exception as e:
+		#	print(e)
+		#	pass
 	
-	return
 
-			# s += (n.get_title()).lower() + " "
+		s = (n.get_title()).lower() + " "
 		#s += " " + n.get_body()
 
 
@@ -603,8 +616,8 @@ def main():
 		#	x.write(ss + " ")
 		#x.write("\n")
 
-	addGlobalShingle(s)
-	texts = texts + [(n.get_nid(),s)]
+		addGlobalShingle(s)
+		texts = texts + [(n.get_nid(),s)]
 
 	#x.close()
 
@@ -614,7 +627,7 @@ def main():
 	matrix = fillMatrix(texts)
 	#removeShinglesLowCount(matrix)
 	#permutations = getRandomPermutation()
-	#signatureMatrix = getSignatureMatrix(matrix,permutations)
+	#matrix = getSignatureMatrix(matrix,permutations)
 	#print(shingles)
 	#print(matrix)
 
@@ -630,10 +643,22 @@ def main():
 	groups = dissassemblalo(matrix,groups)
 
 	print("Riaggregating ")
-	groups = clusteringByWord(groups,matrix)
+	#groups = clusteringByWord(groups,matrix)
 	#groups = getAggregatedWithClustering(matrix,groups,list_clusters)
 	#print(groups)
-	print(getRappresentante(groups,matrix))
+
+	print("Rappresenting ")
+	rappGroups = getRappresentante(groups,matrix)
+
+	print(rappGroups)
+
+	for nid,g in rappGroups:
+		for n in news:
+			if n.get_nid() == nid:
+				try:
+					print(str(len(g)) + " " + str(n.get_title()))
+				except:
+					pass
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)
@@ -657,7 +682,7 @@ def main():
 			#print(a,fsc)
 			#print("---------------------------------")
 
-	print(groups)
+	#print(groups)
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":
