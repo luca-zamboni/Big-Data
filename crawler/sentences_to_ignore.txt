@@ -30,3 +30,6 @@ Adnkronos	- Adnkronos
 Reuters Italia	- Reuters Italia
 Corriere della Sera	- Corriere della Sera
 Il Secolo XIX	- Il Secolo XIX
+Onstage	- Onstage
+La Gazzetta dello Sport	- La Gazzetta dello Sport
+Tuttosport	- Tuttosport

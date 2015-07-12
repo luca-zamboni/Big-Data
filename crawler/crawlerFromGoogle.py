@@ -81,11 +81,9 @@ def load_parse_tags():
 	f.close()
 
 def clean_string(string):
-	string = re.sub(' - .*', ' ', string)
 	string = re.sub('[\\\""\|]', '', string)
 	string = re.sub('\\\"', '', string)
 	# string = re.sub('\'', ' ', string)
-	# string.rstrip('- ').rstrip(' -')
 	# string = re.sub('\s+', ' ', string)
 	string = string.replace(' ...','')
 	string = string.replace('\t','')
@@ -221,6 +219,7 @@ def get_testata_source_and_write_on_file(news):
 
 		title = clean_string(str(title))
 		title = remove_sentences_to_ignore(str(title))
+		title = title.replace(news.get_testata(),'')
 		news.set_title(title)
 
 		body = clean_string(str(body))
