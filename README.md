@@ -1,4 +1,23 @@
-# Big-Data
+
+# Runnable files
+
+## Crawler
+
+Crawling from Google news
+python3.4 crawler/crawlerFromGoogle.py
+
+## Converter
+
+Converting old files
+python3.4 crawler/converter.py
+
+## Aggregator
+
+Aggregating similar news
+./$SPARK_HOME/bin/spark-submit aggregator.py
+
+
+
 
 https://networkx.github.io/documentation/latest/tutorial/tutorial.html#drawing-graphs
 
