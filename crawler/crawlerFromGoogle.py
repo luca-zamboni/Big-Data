@@ -13,15 +13,23 @@ import string
 from socket import timeout
 from polyglot.text import Text
 
+# Global variables..
 tempnews = []
 tags = {}
-sentences_to_ignore = []
 nid = 0
 
+# IO file paths..
 GOOGLE_NEWS_PATH = "newsG.txt"
-PARSE_TAGS_PATH = "crawler/parser.par"
-SENTENCES_TO_IGNORE_PATH = "crawler/sentences_to_ignore.txt"
 JSON_OUTPUT_PATH = "crawler/output_test.json"
+PARSE_TAGS_PATH = "crawler/regex/parser.par"
+
+# Regular expression to catch and remove from strings..
+REGEX_TITLE_PATH = "crawler/regex/regex_title.par"
+regex_title = []
+REGEX_BODY_PATH = "crawler/regex/regex_body.par"
+regex_body = []
+SENTENCES_TO_IGNORE_PATH = "crawler/regex/sentences_to_ignore.par"
+sentences_to_ignore = []
 
 MIN_NUM_KEYWORDS = 4
 
@@ -40,9 +48,7 @@ def load_sentences_to_ignore():
 			break
 
 		line = line.split('\t')
-
 		sentences_to_ignore += [line[1]]
-
 	f.close()
 
 def load_parse_tags():
@@ -80,18 +86,70 @@ def load_parse_tags():
 
 	f.close()
 
-def clean_string(string):
-	string = re.sub(' - .*', ' ', string)
-	string = re.sub('[\\\""\|]', '', string)
-	string = re.sub('\\\"', '', string)
-	# string = re.sub('\'', ' ', string)
-	# string.rstrip('- ').rstrip(' -')
-	# string = re.sub('\s+', ' ', string)
-	string = string.replace(' ...','')
-	string = string.replace('\t','')
-	string = string.replace('\n','')
-	string = ' '.join(string.split())
-	return string
+def load_regex_title():
+
+	global regex_title
+
+	if regex_title != []:
+		return;
+
+	f = open(REGEX_TITLE_PATH, "r")
+	while True:
+		line = f.readline().strip("\n")
+		if line == "":
+			break
+		regex_title += [line]
+	f.close()
+
+def load_regex_body():
+
+	global regex_body
+
+	if regex_body != []:
+		return;
+
+	f = open(REGEX_BODY_PATH, "r")
+	while True:
+		line = f.readline().strip("\n")
+		if line == "":
+			break
+		regex_body += [line]
+	f.close()
+
+def clean_string(text, type, testata):
+
+	if type == "TITLE":
+		array_regex = regex_title
+	elif type == "BODY":
+		array_regex = regex_body
+
+	text = text.replace(testata,'')
+	text = re.sub('\n', '', text)
+	text = re.sub('\t', '', text)
+	text = ' '.join(text.split())
+
+	for reg_expr in array_regex:
+		text = re.sub(reg_expr, ' ', text)
+
+	text = ' '.join(text.split())
+	return text
+
+def get_keyword_from_link(url):
+
+	regex = "(?:http|https)://[\w\d.-]+/([\w\d\/\-]*)"
+	try:
+		res = re.match(regex, url)
+		res = str(res.group(1))
+		res = re.sub('\d+', ' ', res)
+		res = res.replace('/',' ')
+		res = res.replace('_',' ')
+		res = res.replace('-',' ')
+		res = re.sub(' \w ', ' ', res)
+		return " ".join(res.split())
+	except Exception as e:
+		print(e)
+		pass
+	return ""
 
 def remove_sentences_to_ignore(body):
 	for s in sentences_to_ignore:
@@ -99,27 +157,38 @@ def remove_sentences_to_ignore(body):
 	return body
 
 def get_keyword_from_string(text):
-	text = Text(text)
+
 	keywords = []
-	for entity in text.entities:
-		for e in entity:
-			keywords = keywords + [str(e)]
+	try:
+		text = Text(text)
+		
+		for entity in text.entities:
+			for e in entity:
+				keywords = keywords + [str(e)]
 
-	#  Are enough keywords to deal with?
-	if len(keywords) < MIN_NUM_KEYWORDS:
-		return ""
+		#  Are enough keywords to deal with?
+		if len(keywords) < MIN_NUM_KEYWORDS:
+			return ""
 
-	# Removes duplicate keywords
-	no_duplicates = set(keywords)
-	keywords = list(no_duplicates)
-	keywords = " ".join(keywords).lower()
+		# Removes duplicate keywords
+		no_duplicates = set(keywords)
+		keywords = list(no_duplicates)
+		keywords = " ".join(keywords).lower()
 
-	for c in string.punctuation:
-		keywords = keywords.replace(c, '')
+		for c in string.punctuation:
+			keywords = keywords.replace(c, '')
+	
+	except Exception as e:
+		print("Exception in get_keyword_from_string:", e)
+		pass
 
 	return ' '.join(keywords.split())
 
+# Initialize global variables for converter.py
 load_parse_tags()
+load_regex_title()
+load_regex_body()
+load_sentences_to_ignore()
 
 def store_news_in_file(news):
 
@@ -190,6 +259,11 @@ def get_testata_source_and_write_on_file(news):
 
 	print(news.get_testata())
 
+
+	print(get_keyword_from_link(news.get_testata_url()))
+
+	return False
+
 	body = news.get_body()
 	title = news.get_title()
 
@@ -216,18 +290,19 @@ def get_testata_source_and_write_on_file(news):
 				body = parsed_body
 
 	# Clean title and body from porcherie..
-	# Indentation in REALLY IMPORTANT HERE!
+	# Indentation is REALLY IMPORTANT HERE!
 	try:
 
-		title = clean_string(str(title))
+		title = clean_string(title, "TITLE", news.get_testata())
 		title = remove_sentences_to_ignore(str(title))
 		news.set_title(title)
 
-		body = clean_string(str(body))
+		body = clean_string(body, "BODY", news.get_testata())
 		body = remove_sentences_to_ignore(str(body))
 		news.set_body(body)
 
 		keywords = get_keyword_from_string(title + body)
+		keywords += get_keyword_from_link(news.get_testata_url())
 		news.set_keywords(keywords)
 
 	except Exception as e:
@@ -278,6 +353,8 @@ def parse_list_news_from_google(news, feed_url):
 def main():
 
 	load_parse_tags()
+	load_regex_title()
+	load_regex_body()
 	load_sentences_to_ignore()
 
 	while(True):
@@ -287,7 +364,7 @@ def main():
 			feed = []
 			xmls = []
 
-			response = urllib.request.urlopen("https://news.google.it")
+			response = urllib.request.urlopen("https://news.google.it", timeout = 10)
 			data = response.read()
 			text = data.decode('utf-8')
 			aTags = re.findall('<a [^>.]*>Copertura live</a>', text)
@@ -296,7 +373,7 @@ def main():
 
 				links = re.findall('href="[^".]*"', a)
 				url = "https://news.google.it/" + links[0][7:-1]
-				response = urllib.request.urlopen(url)
+				response = urllib.request.urlopen(url, timeout = 10)
 				data = response.read()
 				text = data.decode('utf-8')
 
@@ -304,7 +381,7 @@ def main():
 				tmp = re.findall('href="([^"]*)"', hrefRSS[0])[0].replace("amp;", "");
 				RSS = "https://" + tmp[7:]
 				
-				response = urllib.request.urlopen(RSS)
+				response = urllib.request.urlopen(RSS, timeout = 10)
 				data = response.read()
 				text = data.decode('utf-8')
 
