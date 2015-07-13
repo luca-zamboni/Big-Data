@@ -512,13 +512,13 @@ def getCommonWord(group,matrix):
 	for i in range(0,len(matrix[0])):
 		tmp = 0.0
 
-		sc = SparkContext(appName="Common Word")
-		parrGroup = sc.parallelize(group)
-		res = parrGroup.map(lambda nid:matrix[nid][i]).reduce(lambda a, b: a + b)
-		sc.stop()
+		#sc = SparkContext(appName="Common Word")
+		#parrGroup = sc.parallelize(group)
+		#res = parrGroup.map(lambda nid:matrix[nid][i]).reduce(lambda a, b: a + b)
+		#sc.stop()
 
-		#for nid in group:
-		#	tmp += matrix[nid][i]
+		for nid in group:
+			tmp += matrix[nid][i]
 
 		ret += [res]
 	

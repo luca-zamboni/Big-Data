@@ -4,6 +4,7 @@ import string
 import unicodedata
 import re
 from pyspark import SparkContext
+from polyglot.text import Text
 
 JSON_NEWS_PATH 	= "crawler/output.json"
 STOP_WORDS_PATH 	= "stopword.txt"
@@ -73,7 +74,7 @@ def fromNewsToTuple(list_news):
 def formNewsToIdTitleBodyUrl(list_news):
 	ret = []
  	for n in list_news:
- 		ret += [(n.get_nid(), n.get_title(), n.get_body(), n.get_testata_url())]
+ 		ret += [(n.get_nid(), n.get_title(), n.get_body(), n.get_source_url())]
  	return ret
 
 def reassemblyNews(list_news, tuples):
@@ -98,57 +99,60 @@ def reassemblyNewsAndSetKeywords(list_news, tuples):
  			list_news[i].set_keywords(keywords)
 
 
+
 def clean_title(title):
 	title = re.sub(' - .*', ' ', title)
 	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
 
-def get_keyword_from_string(text):
 
-	keywords = []
-	try:
-		text = Text(text)
-		
-		for entity in text.entities:
-			for e in entity:
-				keywords = keywords + [str(e)]
-
-		#  Are enough keywords to deal with?
-		if len(keywords) < MIN_NUM_KEYWORDS:
-			return ""
-
-		# Removes duplicate keywords
-		no_duplicates = set(keywords)
-		keywords = list(no_duplicates)
-		keywords = " ".join(keywords).lower()
-
-		for c in string.punctuation:
-			keywords = keywords.replace(c, '')
-	
-	except Exception as e:
-		print("Exception in get_keyword_from_string:", e)
-		pass
-
-	return ' '.join(keywords.split())
-
-def get_keywords_from_link(url):
-
-	regex = "(?:http|https)://[\w\d.-]+/([\w\d\/\-]*)"
-	try:
-		res = re.match(regex, url)
-		res = str(res.group(1))
-		res = re.sub('\d+', ' ', res)
-		res = res.replace('/',' ')
-		res = res.replace('_',' ')
-		res = res.replace('-',' ')
-		res = re.sub(' \w ', ' ', res)
-		return " ".join(res.split())
-	except Exception as e:
-		print(e)
-		pass
-	return ""
 
 def get_keywords_from_list_news(list_news):
+
+	def get_keyword_from_string(text):
+
+		keywords = []
+		try:
+			text = Text(text)
+			
+			for entity in text.entities:
+				for e in entity:
+					keywords = keywords + [str(e)]
+
+			#  Are enough keywords to deal with?
+			if len(keywords) < MIN_NUM_KEYWORDS:
+				return ""
+
+			# Removes duplicate keywords
+			no_duplicates = set(keywords)
+			keywords = list(no_duplicates)
+			keywords = " ".join(keywords).lower()
+
+			for c in string.punctuation:
+				keywords = keywords.replace(c, '')
+		
+		except Exception as e:
+			print("Exception in get_keyword_from_string:", e)
+			pass
+
+		return ' '.join(keywords)
+
+	def get_keyword_from_link(url):
+
+		regex = "(?:http|https)://[\w\d.-]+/([\w\d\/\-]*)"
+		try:
+			res = re.match(regex, url)
+			res = str(res.group(1))
+			res = re.sub('\d+', ' ', res)
+			res = res.replace('/',' ')
+			res = res.replace('_',' ')
+			res = res.replace('-',' ')
+			res = re.sub(' \w ', ' ', res)
+			return " ".join(res.split())
+		except Exception as e:
+			print(e)
+			pass
+		return ""
 
 	def get_keywords(tuple):
 
@@ -163,7 +167,7 @@ def get_keywords_from_list_news(list_news):
 
 	jsc = SparkContext(appName="LOADNEWS: Get keywords")
 	l = jsc.parallelize(formNewsToIdTitleBodyUrl(list_news))
-	l = l.map(lambda n:(n[0], get_keywords(n[1],n[2],n[3]).collect()
+	l = l.map(lambda n:(n[0], get_keywords((n[1],n[2],n[3])))).collect()
 	list_news = reassemblyNewsAndSetKeywords(list_news,l)
 	jsc.stop()
 
