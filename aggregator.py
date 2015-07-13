@@ -507,8 +507,6 @@ def getCommonWord(group,matrix):
 	#ret = [0.0 for cell in matrix[0]]
 	ret = []
 
-	
-
 	for i in range(0,len(matrix[0])):
 		tmp = 0.0
 
