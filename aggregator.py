@@ -482,7 +482,7 @@ def dissassemblalo(matrix,groups):
 
 	toDisassemble = []
 
-	sc = SparkContext(appName="Jsonizer: Remove stop words")
+	sc = SparkContext(appName="Splitter")
 	parrGroup = sc.parallelize(groups)
 	groups = parrGroup.map(lambda g:splittalo(g,matrix)).collect()[0]
 	sc.stop()
@@ -506,12 +506,21 @@ def dissassemblalo(matrix,groups):
 def getCommonWord(group,matrix):
 	#ret = [0.0 for cell in matrix[0]]
 	ret = []
+
+	
+
 	for i in range(0,len(matrix[0])):
 		tmp = 0.0
-		for nid in group:
-			tmp += matrix[nid][i]
 
-		ret += [tmp]
+		sc = SparkContext(appName="Common Word")
+		parrGroup = sc.parallelize(group)
+		res = parrGroup.map(lambda nid:matrix[nid][i]).reduce(lambda a, b: a + b)
+		sc.stop()
+
+		#for nid in group:
+		#	tmp += matrix[nid][i]
+
+		ret += [res]
 	
 	ret = sorted(range(len(ret)), key=lambda i: ret[i])[-3:]
 	return ret
@@ -525,14 +534,14 @@ def getSimilar(groups,matrix):
 		words2 = set(getCommonWord(g2,matrix))
 		tmp = len(words1 & words2)
 		if mass < tmp:
-			#if tmp > 0:
-			#	return tmp,g1,g2
+			if tmp > 0:
+				return tmp,g1,g2
 			mass = tmp
 			ret1 = g1
 			ret2 = g2
 	return mass,ret1,ret2
 
-
+#Riaggregato
 def clusteringByWord(groups,matrix):
 
 	sim,g1,g2 = getSimilar(groups,matrix)
@@ -654,8 +663,13 @@ def main():
 		#	print(e)
 		#	pass
 	
-		s =  n.get_title()
-		#s += " " + n.get_body()
+		#if n.get_keywords() == "":
+		#	s =  n.get_title()
+		#else:
+		#	s =  n.get_keywords()
+		##s += " " + n.get_body()
+
+		s = n.get_title() #+" " +  n.get_keywords()
 
 
 		#print(n.get_body())
@@ -694,25 +708,25 @@ def main():
 	groups = dissassemblalo(matrix,groups)
 
 	print("Riaggregating ")
-	#groups = clusteringByWord(groups,matrix)
+	groups = clusteringByWord(groups,matrix)
 	#groups = getAggregatedWithClustering(matrix,groups)
 	#print(groups)
 
 	
 
 	print("Rappresenting ")
-	#rappGroups = getRappresentante(groups,matrix)
+	rappGroups = getRappresentante(groups,matrix)
 
 	#print(rappGroups)
 	#print(bonta)
 
-	#for nid,g in rappGroups:
-	#	for n in news:
-	#		if n.get_nid() == nid:
-	#			try:
-	#				print(str(len(g)) + " " + str(n.get_title()))
-	#			except:
-	#				pass
+	for nid,g in rappGroups:
+		for n in news:
+			if n.get_nid() == nid:
+				try:
+					print(str(len(g)) + " " + str(n.get_title()))
+				except:
+					pass
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)

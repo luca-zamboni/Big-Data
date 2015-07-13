@@ -5,7 +5,7 @@ import unicodedata
 import re
 from pyspark import SparkContext
 
-JSON_NEWS_PATH 	= "crawler/300_with_keywords.json"
+JSON_NEWS_PATH 	= "crawler/output.json"
 STOP_WORDS_PATH 	= "stopword.txt"
 
 stop_words = []
