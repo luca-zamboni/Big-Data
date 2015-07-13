@@ -541,7 +541,7 @@ def getSimilar(groups,matrix):
 			ret2 = g2
 	return mass,ret1,ret2
 
-#Riaggregato
+#Riaggregator
 def clusteringByWord(groups,matrix):
 
 	sim,g1,g2 = getSimilar(groups,matrix)
