@@ -11,7 +11,6 @@ import jsonizer
 import parserino
 import string
 from socket import timeout
-from polyglot.text import Text
 
 # Global variables..
 tempnews = []
@@ -30,8 +29,6 @@ REGEX_BODY_PATH = "crawler/regex/regex_body.par"
 regex_body = []
 SENTENCES_TO_IGNORE_PATH = "crawler/regex/sentences_to_ignore.par"
 sentences_to_ignore = []
-
-MIN_NUM_KEYWORDS = 4
 
 def load_sentences_to_ignore():
 

@@ -76,6 +76,10 @@ def jcSig(l1,l2):
 			andL += 1
 		if l1[i] >= 1 or l2[i] >= 1: 
 			orL += 1
+
+	if orL == 0.0:
+		return 0.0
+
 	return andL/orL
 
 # Get shingles of a list of strings
@@ -520,7 +524,7 @@ def getCommonWord(group,matrix):
 		for nid in group:
 			tmp += matrix[nid][i]
 
-		ret += [res]
+		ret += [tmp]
 	
 	ret = sorted(range(len(ret)), key=lambda i: ret[i])[-3:]
 	return ret
@@ -635,7 +639,7 @@ def main():
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
 	#news = jsonizer.getNewsFromTxtByCategories()
 	#news = jsonizer.test()
-	news,clusters = loadNews(True)
+	news,clusters = loadNews(True, False)
 	list_clusters = [c[1] for c in clusters.items()]
 
 	#print("Numer of google cluters " + str(len(list_clusters)))
@@ -669,7 +673,7 @@ def main():
 		#	s =  n.get_keywords()
 		##s += " " + n.get_body()
 
-		s = n.get_title() #+" " +  n.get_keywords()
+		s = n.get_title()  
 
 
 		#print(n.get_body())
