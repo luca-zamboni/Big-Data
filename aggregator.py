@@ -74,7 +74,9 @@ def jcSig(l1,l2):
 	for i in range(0,len(l1)):
 		if l1[i] >= 1 and l2[i] >= 1:
 			andL += 1
-	return andL/len(l1)
+		if l1[i] >= 1 or l2[i] >= 1: 
+			orL += 1
+	return andL/orL
 
 # Get shingles of a list of strings
 def getShingleList(l):
@@ -162,7 +164,7 @@ def getCloserGroupsRandom(groups,distanceMatrix):
 	return dist,closer
 
 
-def getAggregatedWithClustering(signatureMatrix,groups,list_clusters):
+def getAggregatedWithClustering(signatureMatrix,groups):
 
 	# Instantiating distance matrix
 	distanceMatrix = [[] for i in range(0,len(signatureMatrix))]
@@ -182,7 +184,6 @@ def getAggregatedWithClustering(signatureMatrix,groups,list_clusters):
 		groups += [g1+g2]
 		groups.remove(g1)
 		groups.remove(g2)
-		print(dist,groups)
 		#print(dist,ts.get_purity_index(list_clusters,groups))
 
 	return groups
@@ -524,8 +525,8 @@ def getSimilar(groups,matrix):
 		words2 = set(getCommonWord(g2,matrix))
 		tmp = len(words1 & words2)
 		if mass < tmp:
-			if tmp > 0:
-				return tmp,g1,g2
+			#if tmp > 0:
+			#	return tmp,g1,g2
 			mass = tmp
 			ret1 = g1
 			ret2 = g2
@@ -560,9 +561,58 @@ def getRappresentante(groups,matrix):
 		ret += [(maxId,g)]
 	return ret
 
+def getClusterInternal(groups,matrix):
+	totAv = 0.0
+	ret = []
+	for g in groups:
+		lAv = 0.0
+		if len(g) > 1:
+			for nid1 in g:
+				localAv = 0.0
+				for nid2 in g:
+					if nid1 != nid2:
+						sim = jcSig(matrix[nid1],matrix[nid2])
+						localAv += sim
+				localAv /= len(g)
+				lAv += localAv
+			lAv /= len(g)
+		ret += [lAv]
+	return ret
 
+def externalCluster(groups,matrix):
+	tot = 0.0
+	for g1,g2 in list(itertools.combinations(groups,2)):
+		avTt = 0.0
+		for nid1 in g1:
+			avTmp = 0.0
+			for nid2 in g2:
+				sim = jcSig(matrix[nid1],matrix[nid2])
+				avTmp += sim
+			avTt += (avTmp / len(g2))
+		tot += (avTt / len(g1))
+	tot /= len(groups)
+	return tot
 
-
+def bontaCluster(groups,matrix):
+	totAv = 0.0
+	notCOunt = 0
+	for g in groups:
+		lAv = 0.0
+		if len(g) > 1:
+			for nid1 in g:
+				localAv = 0.0
+				for nid2 in g:
+					if nid1 != nid2:
+						sim = jcSig(matrix[nid1],matrix[nid2])
+						localAv += sim
+				localAv /= len(g)
+				lAv += localAv
+			lAv /= len(g)
+			totAv += lAv
+		else:
+			notCOunt += 1
+	totAv /= (len(groups)-notCOunt)
+	return totAv
 
 # MAIN
 def main():
@@ -604,8 +654,7 @@ def main():
 		#	print(e)
 		#	pass
 	
-
-		s = (n.get_title()).lower() + " "
+		s =  n.get_title()
 		#s += " " + n.get_body()
 
 
@@ -639,33 +688,41 @@ def main():
 	#for i in range(0,len(groups)):
 		#groups
 
+	#print(bontaCluster(groups,matrix))
+
 	print("Disassembling")
 	groups = dissassemblalo(matrix,groups)
 
 	print("Riaggregating ")
 	#groups = clusteringByWord(groups,matrix)
-	#groups = getAggregatedWithClustering(matrix,groups,list_clusters)
+	#groups = getAggregatedWithClustering(matrix,groups)
 	#print(groups)
 
+	
+
 	print("Rappresenting ")
-	rappGroups = getRappresentante(groups,matrix)
+	#rappGroups = getRappresentante(groups,matrix)
 
-	print(rappGroups)
+	#print(rappGroups)
+	#print(bonta)
 
-	for nid,g in rappGroups:
-		for n in news:
-			if n.get_nid() == nid:
-				try:
-					print(str(len(g)) + " " + str(n.get_title()))
-				except:
-					pass
+	#for nid,g in rappGroups:
+	#	for n in news:
+	#		if n.get_nid() == nid:
+	#			try:
+	#				print(str(len(g)) + " " + str(n.get_title()))
+	#			except:
+	#				pass
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)
 
 	#for i in range(23,40):
-		#groups = clusterKMeanSpark(signatureMatrix,i)
-		#print(groups)
+	#	groups = clusterKMeanSpark(matrix,i)
+	#	print(groups)
+	#	print("Bonta")
+	#	bonta = bontaCluster(groups,matrix)
+	#	print(bonta)
 	
 		#groups = dissassemblalo(matrix,groups)
 
@@ -683,6 +740,14 @@ def main():
 			#print("---------------------------------")
 
 	#print(groups)
+
+	#print(getClusterInternal(groups,matrix))
+
+	print("Bonta")
+	intCluster = bontaCluster(groups,matrix)
+	print(intCluster)
+	extCluster = externalCluster(groups,matrix)
+	print(extCluster)
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":

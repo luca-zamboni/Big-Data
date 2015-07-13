@@ -5,7 +5,7 @@ import unicodedata
 import re
 from pyspark import SparkContext
 
-JSON_NEWS_PATH 	= "crawler/output.txt"
+JSON_NEWS_PATH 	= "crawler/300_with_keywords.json"
 STOP_WORDS_PATH 	= "stopword.txt"
 
 stop_words = []
@@ -116,7 +116,7 @@ def loadNews(remove_stop_word = True):
 		n.set_source_url(news['source_url'])
 		n.set_image_url(news['image_url'])
  		n.set_feed_url(news['feed_url'])
- 		n.set_feed_url(news['keywords'])
+ 		n.set_keywords(news['keywords'])
 
  		if len(news['body'].lower()) > 1 :
 	 		list_news += [n]
