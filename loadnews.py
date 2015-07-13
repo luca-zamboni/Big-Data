@@ -57,7 +57,7 @@ def remove_stop_words(list_news):
 
 		return st
 
-	jsc = SparkContext(appName="Jsonizer: Remove stop words")
+	jsc = SparkContext(appName="LOADNEWS: Remove stop words")
 	l = jsc.parallelize(fromNewsToTuple(list_news))
 	l = l.map(lambda n:(n[0],remove_stop_words_from_string(n[1],stop_words),remove_stop_words_from_string(n[2],stop_words))).collect()
 	list_news = reassemblyNews(list_news,l)
@@ -70,27 +70,104 @@ def fromNewsToTuple(list_news):
  		ret += [(n.get_nid(), n.get_title(), n.get_body())]
  	return ret
 
+def formNewsToIdTitleBodyUrl(list_news):
+	ret = []
+ 	for n in list_news:
+ 		ret += [(n.get_nid(), n.get_title(), n.get_body(), n.get_testata_url())]
+ 	return ret
+
 def reassemblyNews(list_news, tuples):
 
  	# Sort tuples by nid
  	tuples.sort(key=lambda n: n[0])
 
  	for i in range(0, len(tuples)):
-
  		nid, t, b = tuples[i]
-
  		if list_news[i].get_nid() == nid:
  			list_news[i].set_title(t)
  			list_news[i].set_body(b)
+
+def reassemblyNewsAndSetKeywords(list_news, tuples):
+
+ 	# Sort tuples by nid
+ 	tuples.sort(key=lambda n: n[0])
+
+ 	for i in range(0, len(tuples)):
+ 		nid, keywords = tuples[i]
+ 		if list_news[i].get_nid() == nid:
+ 			list_news[i].set_keywords(keywords)
+
 
 def clean_title(title):
 	title = re.sub(' - .*', ' ', title)
 	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
 
-# 	return list_news
+def get_keyword_from_string(text):
 
-def loadNews(remove_stop_word = True):
+	keywords = []
+	try:
+		text = Text(text)
+		
+		for entity in text.entities:
+			for e in entity:
+				keywords = keywords + [str(e)]
+
+		#  Are enough keywords to deal with?
+		if len(keywords) < MIN_NUM_KEYWORDS:
+			return ""
+
+		# Removes duplicate keywords
+		no_duplicates = set(keywords)
+		keywords = list(no_duplicates)
+		keywords = " ".join(keywords).lower()
+
+		for c in string.punctuation:
+			keywords = keywords.replace(c, '')
+	
+	except Exception as e:
+		print("Exception in get_keyword_from_string:", e)
+		pass
+
+	return ' '.join(keywords.split())
+
+def get_keywords_from_link(url):
+
+	regex = "(?:http|https)://[\w\d.-]+/([\w\d\/\-]*)"
+	try:
+		res = re.match(regex, url)
+		res = str(res.group(1))
+		res = re.sub('\d+', ' ', res)
+		res = res.replace('/',' ')
+		res = res.replace('_',' ')
+		res = res.replace('-',' ')
+		res = re.sub(' \w ', ' ', res)
+		return " ".join(res.split())
+	except Exception as e:
+		print(e)
+		pass
+	return ""
+
+def get_keywords_from_list_news(list_news):
+
+	def get_keywords(tuple):
+
+		title, body, url = tuple
+
+		keywords = ""
+		keywords += get_keyword_from_string(title) + " "
+		keywords += get_keyword_from_string(body) + " "
+		keywords += get_keyword_from_link(url) + " "
+
+		return keywords
+
+	jsc = SparkContext(appName="LOADNEWS: Get keywords")
+	l = jsc.parallelize(formNewsToIdTitleBodyUrl(list_news))
+	l = l.map(lambda n:(n[0], get_keywords(n[1],n[2],n[3]).collect()
+	list_news = reassemblyNewsAndSetKeywords(list_news,l)
+	jsc.stop()
+
+def loadNews(remove_stop_word = True, get_keywords = True):
 
 	newsFile = open(JSON_NEWS_PATH, 'r')
 
@@ -107,7 +184,6 @@ def loadNews(remove_stop_word = True):
 	for news in list_json_news:
 
 		n = WrapNews()
-		#n.set_nid(int(news['nid']))
 		n.set_nid(nid)
 		n.set_title(clean_title(news['title'].lower()))
 		n.set_testata(news['testata'])
@@ -116,12 +192,9 @@ def loadNews(remove_stop_word = True):
 		n.set_source_url(news['source_url'])
 		n.set_image_url(news['image_url'])
  		n.set_feed_url(news['feed_url'])
- 		n.set_keywords(news['keywords'])
 
  		if len(news['body'].lower()) > 1 :
 	 		list_news += [n]
-
-	 		#print(nid,int(news['nid']))
 
 	 		if news['feed_url'] in clusters:
 	 			clusters[news['feed_url']] += [n.get_nid()]
@@ -132,8 +205,10 @@ def loadNews(remove_stop_word = True):
 
 	 	nnnid += 1
 
-	print("Number of news " + str((nid+1)))
+	print("Number of news: " + str((nid+1)))
 
+	if get_keywords:
+		get_keywords_from_list_news(list_news)
 
  	if remove_stop_word:
  		remove_stop_words(list_news)
@@ -142,9 +217,5 @@ def loadNews(remove_stop_word = True):
 
  	return list_news,clusters
 
- 	#for n in list_news:
- 		#print(n.get_body())
-
-# CHIAMATA AL MEIN
 if __name__ == "__main__":
 	loadNews()
