@@ -4,12 +4,14 @@ import string
 import unicodedata
 import re
 from pyspark import SparkContext
-from polyglot.text import Text
+# from polyglot.text import text
 
 JSON_NEWS_PATH 	= "crawler/output.json"
 STOP_WORDS_PATH 	= "stopword.txt"
 
 stop_words = []
+
+MIN_NUM_KEYWORDS = 4
 
 def load_stop_words():
 	global stop_words
@@ -99,13 +101,10 @@ def reassemblyNewsAndSetKeywords(list_news, tuples):
  			list_news[i].set_keywords(keywords)
 
 
-
 def clean_title(title):
 	title = re.sub(' - .*', ' ', title)
 	title = re.sub('\s+', ' ', title).strip().replace(' ...',' ')
 	return title
-
-
 
 def get_keywords_from_list_news(list_news):
 
@@ -117,7 +116,11 @@ def get_keywords_from_list_news(list_news):
 			
 			for entity in text.entities:
 				for e in entity:
-					keywords = keywords + [str(e)]
+					try:
+						k = e.encode('utf-8')
+						keywords += [k]
+					except Exception as e:
+						pass
 
 			#  Are enough keywords to deal with?
 			if len(keywords) < MIN_NUM_KEYWORDS:
@@ -130,12 +133,12 @@ def get_keywords_from_list_news(list_news):
 
 			for c in string.punctuation:
 				keywords = keywords.replace(c, '')
-		
+
 		except Exception as e:
-			print("Exception in get_keyword_from_string:", e)
+			print "Exception in get_keyword_from_string:", e
 			pass
 
-		return ' '.join(keywords)
+		return ' '.join(keywords.split())
 
 	def get_keyword_from_link(url):
 
@@ -150,7 +153,7 @@ def get_keywords_from_list_news(list_news):
 			res = re.sub(' \w ', ' ', res)
 			return " ".join(res.split())
 		except Exception as e:
-			print(e)
+			print e
 			pass
 		return ""
 
@@ -159,9 +162,23 @@ def get_keywords_from_list_news(list_news):
 		title, body, url = tuple
 
 		keywords = ""
-		keywords += get_keyword_from_string(title) + " "
-		keywords += get_keyword_from_string(body) + " "
-		keywords += get_keyword_from_link(url) + " "
+
+		try:
+			title = title.encode('utf-8')
+			keywords += get_keyword_from_string(title) + " "
+		except Exception as e:
+			pass
+
+		try:
+			body = body.encode('utf-8')
+			keywords += get_keyword_from_string(body) + " "
+		except Exception as e:
+			pass
+
+		try:
+			keywords += get_keyword_from_link(url) + " "
+		except Exception as e:
+			pass		
 
 		return keywords
 
@@ -189,7 +206,7 @@ def loadNews(remove_stop_word = True, get_keywords = True):
 
 		n = WrapNews()
 		n.set_nid(nid)
-		n.set_title(clean_title(news['title'].lower()))
+		n.set_title(news['title'])
 		n.set_testata(news['testata'])
 		n.set_date(news['date'])
 		n.set_body(news['body'].lower())
