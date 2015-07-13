@@ -4,7 +4,7 @@ import string
 import unicodedata
 import re
 from pyspark import SparkContext
-from polyglot.text import Text
+# from polyglot.text import text
 
 JSON_NEWS_PATH 	= "crawler/output.json"
 STOP_WORDS_PATH 	= "stopword.txt"

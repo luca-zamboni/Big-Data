@@ -12,13 +12,10 @@ from pylab import plot,show
 from scipy import stats
 import time
 import numpy as np
-# from sklearn import cluster
-# import networkx as nx
 import matplotlib.pyplot as plt
 import os
 from loadnews import loadNews
 from loadnews import load_stop_words
-#import rake
 
 sc = None
 
@@ -760,6 +757,8 @@ def main():
 	#print(groups)
 
 	#print(getClusterInternal(groups,matrix))
+
+	groups = [g for g in groups if len(g) > 2]
 
 	print("Bonta")
 	intCluster = bontaCluster(groups,matrix)
