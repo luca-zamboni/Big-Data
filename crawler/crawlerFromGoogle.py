@@ -134,55 +134,10 @@ def clean_string(text, type, testata):
 	text = ' '.join(text.split())
 	return text
 
-def get_keyword_from_link(url):
-
-	regex = "(?:http|https)://[\w\d.-]+/([\w\d\/\-]*)"
-	try:
-		res = re.match(regex, url)
-		res = str(res.group(1))
-		res = re.sub('\d+', ' ', res)
-		res = res.replace('/',' ')
-		res = res.replace('_',' ')
-		res = res.replace('-',' ')
-		res = re.sub(' \w ', ' ', res)
-		return " ".join(res.split())
-	except Exception as e:
-		print(e)
-		pass
-	return ""
-
 def remove_sentences_to_ignore(body):
 	for s in sentences_to_ignore:
 		body = re.sub(s+'.*', ' ', body)
 	return body
-
-def get_keyword_from_string(text):
-
-	keywords = []
-	try:
-		text = Text(text)
-		
-		for entity in text.entities:
-			for e in entity:
-				keywords = keywords + [str(e)]
-
-		#  Are enough keywords to deal with?
-		if len(keywords) < MIN_NUM_KEYWORDS:
-			return ""
-
-		# Removes duplicate keywords
-		no_duplicates = set(keywords)
-		keywords = list(no_duplicates)
-		keywords = " ".join(keywords).lower()
-
-		for c in string.punctuation:
-			keywords = keywords.replace(c, '')
-	
-	except Exception as e:
-		print("Exception in get_keyword_from_string:", e)
-		pass
-
-	return ' '.join(keywords.split())
 
 # Initialize global variables for converter.py
 load_parse_tags()
@@ -258,8 +213,6 @@ def dowload_testata_from_source(url):
 def get_testata_source_and_write_on_file(news):
 
 	print(news.get_testata())
-
-
 	print(get_keyword_from_link(news.get_testata_url()))
 
 	return False
@@ -300,10 +253,6 @@ def get_testata_source_and_write_on_file(news):
 		body = clean_string(body, "BODY", news.get_testata())
 		body = remove_sentences_to_ignore(str(body))
 		news.set_body(body)
-
-		keywords = get_keyword_from_string(title + body)
-		keywords += get_keyword_from_link(news.get_testata_url())
-		news.set_keywords(keywords)
 
 	except Exception as e:
 
