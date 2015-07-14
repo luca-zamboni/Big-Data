@@ -707,7 +707,7 @@ def main():
 		#	s =  n.get_keywords()
 		##s += " " + n.get_body()
 
-		s = " ".join(n.get_title().split()[0:15]) + n.get_body()
+		s = " ".join(n.get_title().split()[0:15])
 
 
 		#print(n.get_body())
