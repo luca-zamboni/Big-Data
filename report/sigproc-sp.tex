@@ -151,11 +151,10 @@ Each feed rss downloaded by the crawler is parsed and for each news written in i
 Afterward, the news are stored in a json file. We decided to store articles in a single file rather than divide them in multiple files. However, this process can be easily converted in a distributed one using a NoSQL Database Management System like MongoDb, in which each document is an article.
 
 \subsection{Text optimization with Spark}
-
+\vspace{2mm}
 Once we stored the list of news, we use Spark to parallelize some functions.
 
 % REMOVE STOP WORDS
-
 % l = jsc.parallelize(fromNewsToTuple(list_news))
 % l = l.map(lambda n:(n[0],remove_stop_words_from_string(n[1],stop_words),remove_stop_words_from_string(n[2],stop_words))).collect()
 % list_news = reassemblyNews(list_news,l)
@@ -170,7 +169,7 @@ Firstly, a combination of map-reduce Spark's APIs is used in order to remove sto
 % list_news = reassemblyNewsAndSetKeywords(list_news,l)
 % jsc.stop()
 
-Secondly, the keywords and entities extraction operation is performed in Spark as follows: given the list of news, a map function is used to split the list, then each news is treated independently so the keywords that belong to the title, the body and the feed url can be extract in parallel. As result of the previous operation, the set of keywords for each article is taken as input by the merge function which stores them in a new attribute.
+Secondly, the keywords and entities extraction operation is performed in Spark as follows: given the list of news, a map function is used to split that list, then each news is treated independently so the keywords that belong to the title, the body and the feed url can be extract in parallel. As result of the previous operation, the set of keywords for each article is taken as input by the merge function which stores them in a new attribute.
 
 Thirdly, duplicates are also removed using Spark. In this case, the map function works as follows: news are considered as a tuple \textit{(id,title)} so 
 
