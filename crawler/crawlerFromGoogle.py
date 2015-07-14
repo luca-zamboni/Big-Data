@@ -210,9 +210,6 @@ def dowload_testata_from_source(url):
 def get_testata_source_and_write_on_file(news):
 
 	print(news.get_testata())
-	print(get_keyword_from_link(news.get_testata_url()))
-
-	return False
 
 	body = news.get_body()
 	title = news.get_title()
