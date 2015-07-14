@@ -90,8 +90,8 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	return s.split()
-	#return [s[i:i + n] for i in range(len(s) - n + 1)]
+	#return s.split()
+	return [s[i:i + n] for i in range(len(s) - n + 1)]
 
 def getCloserGroupsFurther(groups,distanceMatrix):
 	closer = (None,None)

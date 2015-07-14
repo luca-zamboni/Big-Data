@@ -213,12 +213,31 @@ Number of news & Internal & External & Time (s) \\
 \caption{Performance and quality unsing title and body}
 \end{table}
 
-
 As we can see from the tables \ref{table:title} and \ref{table:body} we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster because internal are higher and external lower. We can definitely say that on this dataset usign only the title as information is better.
+The third test is to see if there is difference beetween shingles and word in performance and quality result. We choose shingles of 7 characters.
+\begin{table}[]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 26       \\
+500            & 0.268    & 0.117    & 72       \\
+\end{tabular}
+\end{table}
 
+\begin{table}[]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.116    & 0.025    & 150      \\
+500            & 0.187    & 0.054    & 651      \\
+\end{tabular}
+\end{table}
 
-
-
+As we can see in table  the difference in time is really high so we choosed to consider only word as information for the news becasue the ratio beetween the Internal and external similarity is the same in both cases.
 
 \section{Big Data}
 \vspace{2mm}
