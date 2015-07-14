@@ -704,7 +704,7 @@ def main():
 		#	s =  n.get_keywords()
 		##s += " " + n.get_body()
 
-		s = " ".join(n.get_title().split()[0:15]  )
+		s = " ".join(n.get_title().split()[0:15]) + n.get_body()
 
 
 		#print(n.get_body())
@@ -761,20 +761,20 @@ def main():
 	#print(bonta)
 	rappGroups = sorted(rappGroups, key=lambda i: len(i[1]))
 
-	for nid,g in rappGroups:
-		if len(g) > 2:
-			for n in news:
-				if n.get_nid() == nid:
-					try:
-						print(str(len(g)) + " " + str(n.get_title()))
-					except:
-						pass
-				if n.get_nid() in g:
-					try:
-						print( "SUB ------ " + str(n.get_title()))
-					except:
-						pass
-			print("\n\n")
+	#for nid,g in rappGroups:
+	#	if len(g) > 2:
+	#		for n in news:
+	#			if n.get_nid() == nid:
+	#				try:
+	#					print(str(len(g)) + " " + str(n.get_title()))
+	#				except:
+	#					pass
+	#			if n.get_nid() in g:
+	#				try:
+	#					print( "SUB ------ " + str(n.get_title()))
+	#				except:
+	#					pass
+	#		print("\n\n")
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)

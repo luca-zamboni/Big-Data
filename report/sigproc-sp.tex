@@ -158,6 +158,26 @@ We decided to choose as representative news the most similar news to the other n
 
 Now that we have cluster of news and the representative news to show to the user we decided to delete the cluster with less than M news. This because we want to present to the user the most important news of the day. In thi way we not only present the most important but we delete also clusters that hava a small ammount of news that in general are not important and maybe are a repetition of a bigger cluster that in some we has been devided.
 
+\subsection{Experiments}
+The measures used to validate our approach are the internal and external averege of similarity. The internal is defined as follow. In every cluster we comput the average similarity for every news in the cluster and after we computer the average of this measure. The external instead is defined as the average of similarity for every news with other news of other clusters. Internal must be higher than external and  higher is the distance beetween internal and external better is the clustering.
+Test are made on: Processo - Intel core i7 2.6 GH , Ram - 8 GB
+The first experiment is to test if wthe part we we try to reggregate is usefull.
+
+
+The second experiment experiment that we did is to determine if the quality is higher if we use title and the body of the news.
+
+\begin{table}[]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{ccccc}
+              & Number of news & Internal & External & Time (s) \\
+ONLY TITLE    & 500            & 0.268    & 0.117    & 86,5     \\
+TITILE + BODY &                &          &          &         
+\end{tabular}
+\end{table}
+
+
 \section{Big Data}
 \vspace{2mm}
 
