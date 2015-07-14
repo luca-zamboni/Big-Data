@@ -226,7 +226,7 @@ def loadNews(remove_stop_word = True, get_keywords = True):
 
 	 	nnnid += 1
 
-	print("Number of news: " + str((nid+1)))
+	#print("Number of news: " + str((nid+1)))
 
 	if get_keywords:
 		get_keywords_from_list_news(list_news)
@@ -236,7 +236,7 @@ def loadNews(remove_stop_word = True, get_keywords = True):
 
  	newsFile.close()
 
- 	return list_news,clusters
+ 	return list_news[0:1000],clusters
 
 if __name__ == "__main__":
 	loadNews()
