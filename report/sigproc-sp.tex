@@ -111,9 +111,35 @@ Every day lots of articles are published by many newspapers and websites. As a c
 \vspace{2mm}
 The best example from which we took inspiration is Google News. It is simple, fast and personilizable. News may be filtered by personalized interests, locations and other preferences. The aim of our work is to help readers to read news that really represent their interests. In this way, readers do not have to read all the articles that are published and do not have to skip news for which they are not interested in.
 
-\section{Problem Statement}
+%\section{Problem Statement}
+%vspace{2mm}
+%The problem we face in is twofold: a tipical scenario as the one described in the section 1 can be divided into two steps. The first phase is to find the right way to aggregate similar articles. The second phase is to chose the article from each group which represent the entire cluster. The first challenge we face in was to understand how when different news have to be considered similar.
+
+\section{Data mining}
 \vspace{2mm}
-The problem we face in is twofold: a tipical scenario as the one described in the section 1 can be divided into two steps. The first phase is to find the right way to aggregate similar articles. The second phase is to chose the article from each group which represent the entire cluster. The first challenge we face in was to understand how when different news have to be considered similar.
+\subsection{The Problem}
+\vspace{2mm}
+The problem is to present to the user tha main news happened the day before. We start from a dataset of news collected from different source. Our goals is divided in two main task:
+\begin{enumerate}
+\item Find similar news in a day and cluster it together.
+\item Find a rappresentative news for each cluster to present to the user.
+\end{enumerate}
+We also try to have a trade of beetween quality and performance. We need high performance also because the idea is replicate google news that has a lot of sources for each country and a lot of users with gigabytes of data.
+\subsection{Solution}
+The first step is remove eventual news duplication. This is caused because different newspapers copy the text of the news from other newspapers.\\
+The second step is to remove the stop word from the dataset. We remove stop word because they are common and repeated for every news so they doesn't give any information about the news.\\
+For similarity measure of the news we need to have an high value if the two news have a lot of common word over the totality of the word of each news.For this fact we choosed as similarity the jaccard similarity. The jaccard similarity is largerly used for comparing sets and document like our case. The jaccard similarity is defined in the following formula.$$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
+To optimize the jaccard similarity we have builded a matrix where the row are the element present in the all set and the column are the document. The cell can take value 1 if the element is present in the relative document and 0 if not. With this matrix every jaccard similarity computation have a complexity on O(n) and in this way we compare number which cost a lot less of comparing string. \\
+With this matrix we can do another stop of optimization. We can build a signature matrix using a min hash function as described in [CIT]. If the number of permutation is high (e.g. 100 permutation) this signature matrix preserve the distance beetween document loosing only a few information. The advantage of having this signature matrix is that it occupies in memory a space proportion to (Documents per Number of permutation) instead of having (Document per Number of item). In this way we save a lot space and a lot time in computation.
+
+We tryed different tecniques to try to cluster news.
+Our first attempt to cluster news is the agglomerative clustering. This is the very basic idea. We start with clusters of one news each. Now with a recoursive strategy we continuesly merge the 2 cluster with the lowest distance. We stop we the distance of the two closer cluster over a threashold value.\\
+The distance measure used is: $$ 1 - jaccard(C_1,C_2)$$
+We always merge the two closer cluster. To determine the distance beetween to cluster we used different tecnique. The first one is to choose for each of the two cluster the closest point to the other cluster and take the distance of this two point as the distance of the two cluster. The second tecnique, similarly as the first, is to choose for each of the two cluster the further point to the other cluster and take the distance of this two point as the distance of the two cluster. The third is take the average of the distance beetween the point of the two cluster as the distance of the two clusters.\\
+We this clustering method we faced 2 main problems. The first one is that there was always few cluster really big with a lot of news and a lot of small clusters. This happened with all of the three of distance measure beetween clusters, also with takeing the average that we taught it was the best. The second problem is the difficulty of determine the threshold value to stop the clustering. If is too high there are few clusters with a lot of news and if it is to small there are a too much clusters with few news each.\\
+After we faced this two problems we decided to abandon this idea and we changed clustering method.
+
+The second method used.
 
 \section{Big Data}
 \vspace{2mm}
