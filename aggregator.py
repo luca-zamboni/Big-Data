@@ -21,7 +21,7 @@ sc = None
 
 N_SHINGLES = 7
 THRESHOLD_SIMILARITY = 0.999
-THRESHOLD_DEAGGREGATION = 0.0000
+THRESHOLD_DEAGGREGATION = 0.01
 THRESHOLD_AGGREGATION = 2
 N_PERM = 1000
 THRESHOLD_COUNT = 2
@@ -78,6 +78,9 @@ def jcSig(l1,l2):
 		return 0.0
 
 	return andL/orL
+	#s1 = set(l1)
+	#s2 = set(l2)
+	#return float(len(s1 & s2))/len(s1 | s2)
 
 # Get shingles of a list of strings
 def getShingleList(l):
@@ -410,31 +413,6 @@ def degGetLdaGroups(texts):
 
 	return groups
 
-#maxZeroooosJaccardiano = 0
-#maxZeroooosNid = None
-#maxZeroooosNid2 = None
-#for nid1 in g:
-#	tempMaxZerosNid2 = None
-#	tempZerossJaccardiano = 0
-#	for nid2 in g:
-#		if jcSig(matrix[nid1],matrix[nid2]) <= THRESHOLD_DEAGGREGATION:
-#			tempMaxZerosNid2 = nid2
-#			tempZerossJaccardiano += 1
-
-#	if tempZerossJaccardiano > maxZeroooosJaccardiano:
-#		maxZeroooosJaccardiano = tempZerossJaccardiano
-#		maxZeroooosNid = nid1
-#		maxZeroooosNid2 = tempMaxZerosNid2
-		#if maxZeroooosJaccardiano >= 1:
-		#	asd((True,maxZeroooosNid,maxZeroooosNid2))
-		#	return True,maxZeroooosNid,maxZeroooosNid2
-
-	#print(nid1,maxZeroooosNid,maxZeroooosJaccardiano)
-
-#print(maxZeroooosNid,maxZeroooosJaccardiano)
-#if maxZeroooosJaccardiano > 0:
-#	return True,maxZeroooosNid,maxZeroooosNid2
-
 def isAFalse(g,matrix):
 
 
@@ -449,14 +427,15 @@ def splittalo(g,matrix):
 	if b:
 		g1 = [n1]
 		g2 = [n2]
+
 		for nid in g:
 			if nid != n1 and nid != n2:
 				sim1 = 0.0
 				sim2 = 0.0
 				for tmp in g1:
-					sim1 += jcSig(matrix[n1],matrix[nid])
-				for tmp in g1:
-					sim2 += jcSig(matrix[n2],matrix[nid])
+					sim1 += jcSig(matrix[tmp],matrix[nid])
+				for tmp in g2:
+					sim2 += jcSig(matrix[tmp],matrix[nid])
 
 
 				if sim1 / len(g1) > sim2 / len(g2):
@@ -481,28 +460,80 @@ def splittalo(g,matrix):
 
 def dissassemblalo(matrix,groups):
 
-	toDisassemble = []
+	for i in range(0,len(groups)):
+		g = groups[i]
 
-	sc = SparkContext(appName="Splitter")
-	parrGroup = sc.parallelize(groups)
-	groups = parrGroup.map(lambda g:splittalo(g,matrix)).collect()[0]
-	sc.stop()
-	
-	#for i in range(0,len(groups)):
-	#	g = groups[i]
+		if isAFalse(g,matrix)[0]:
+			newG = splittalo(g,matrix)
+			del groups[i]
+			groups += newG
 
-		### prova
-	#	if isAFalse(g,matrix)[0]:
-	#		newG = splittalo(g,matrix)
-	#		del groups[i]
-	#		groups += newG
-
-	#	if isAFalse(g,matrix)[0]:
-	#		newG = splittalo(g,matrix)
-	#		del groups[i]
-	#		groups += newG
+		if isAFalse(g,matrix)[0]:
+			newG = splittalo(g,matrix)
+			del groups[i]
+			groups += newG
 
 	return groups
+
+
+def parallelDisassembler(matrix,groups):
+
+
+	def splitGroup(g):
+		b,n1,n2 = isAFalse(g,matrix)
+		if b:
+			g1 = [n1]
+			g2 = [n2]
+
+			for nid in g:
+				if nid != n1 and nid != n2:
+					sim1 = 0.0
+					sim2 = 0.0
+					for tmp in g1:
+						sim1 += jcSig(matrix[tmp],matrix[nid])
+					for tmp in g2:
+						sim2 += jcSig(matrix[tmp],matrix[nid])
+
+
+					if sim1 / len(g1) > sim2 / len(g2):
+						g1 += [nid]
+					else:
+						g2 += [nid]
+
+			return g1,g2
+
+		return ([],g)
+
+	tmp = len(groups)
+	sc = SparkContext(appName="Splitter")
+	parrGroup = sc.parallelize(groups)
+	groups = parrGroup.map(splitGroup).collect()
+	tmpgrp = []
+	for g1,g2 in groups:
+		tmpgrp += [g1]
+		tmpgrp += [g2]
+
+	groups = tmpgrp
+
+	while len(groups) != tmp :
+
+		tmp = len(groups)
+		#print(tmp)
+
+		parrGroup = sc.parallelize(groups)
+		groups = parrGroup.map(splitGroup).collect()
+		tmpgrp = []
+		for g1,g2 in groups:
+			if g1 != []:
+				tmpgrp += [g1]
+			tmpgrp += [g2]
+
+		groups = tmpgrp
+
+	sc.stop()
+
+	return groups
+
 
 def getCommonWord(group,matrix):
 	#ret = [0.0 for cell in matrix[0]]
@@ -513,11 +544,12 @@ def getCommonWord(group,matrix):
 
 		#sc = SparkContext(appName="Common Word")
 		#parrGroup = sc.parallelize(group)
-		#res = parrGroup.map(lambda nid:matrix[nid][i]).reduce(lambda a, b: a + b)
+		#tmp = parrGroup.map(lambda nid:matrix[nid][i]).reduce(lambda a, b: a + b)
 		#sc.stop()
 
 		for nid in group:
 			tmp += matrix[nid][i]
+		#print(tmp)
 
 		ret += [tmp]
 	
@@ -544,9 +576,9 @@ def getSimilar(groups,matrix):
 def clusteringByWord(groups,matrix):
 
 	sim,g1,g2 = getSimilar(groups,matrix)
-	while sim > 0:
+	while sim > 1:
 		sim,g1,g2 = getSimilar(groups,matrix)
-		if sim > 0:
+		if sim > 1:
 			groups.remove(g1)
 			groups.remove(g2)
 			groups += [g1+g2]
@@ -556,7 +588,8 @@ def clusteringByWord(groups,matrix):
 
 def getRappresentante(groups,matrix):
 	ret = []
-	for g in groups:
+
+	def getMax(g):
 		maxVal = 0.0
 		for nid1 in g:
 			avSim = 0.0
@@ -566,25 +599,28 @@ def getRappresentante(groups,matrix):
 			if maxVal < avSim:
 				maxVal = avSim
 				maxId = nid1
-		ret += [(maxId,g)]
-	return ret
 
-def getClusterInternal(groups,matrix):
-	totAv = 0.0
-	ret = []
-	for g in groups:
-		lAv = 0.0
-		if len(g) > 1:
-			for nid1 in g:
-				localAv = 0.0
-				for nid2 in g:
-					if nid1 != nid2:
-						sim = jcSig(matrix[nid1],matrix[nid2])
-						localAv += sim
-				localAv /= len(g)
-				lAv += localAv
-			lAv /= len(g)
-		ret += [lAv]
+		return (maxId,g)
+
+	sc = SparkContext(appName="Rappresenting")
+	parrGroup = sc.parallelize(groups)
+	ret = parrGroup.map(getMax).collect()
+	sc.stop()
+
+
+
+	#for g in groups:
+	#	maxVal = 0.0
+	#	for nid1 in g:
+	#		avSim = 0.0
+	#		for nid2 in g:	
+	#			avSim += jcSig(matrix[nid1],matrix[nid2])
+	#		avSim /= len(g)
+	#		if maxVal < avSim:
+	#			maxVal = avSim
+	#			maxId = nid1
+	#	ret += [(maxId,g)]
+
 	return ret
 
 def externalCluster(groups,matrix):
@@ -668,7 +704,7 @@ def main():
 		#	s =  n.get_keywords()
 		##s += " " + n.get_body()
 
-		s = n.get_title()  
+		s = " ".join(n.get_title().split()[0:15]  )
 
 
 		#print(n.get_body())
@@ -687,9 +723,11 @@ def main():
 	#print(len(shingles))
 	print("Filling Matrix")
 	matrix = fillMatrix(texts)
+
 	#removeShinglesLowCount(matrix)
 	#permutations = getRandomPermutation()
 	#matrix = getSignatureMatrix(matrix,permutations)
+
 	#print(shingles)
 	#print(matrix)
 
@@ -704,10 +742,13 @@ def main():
 	#print(bontaCluster(groups,matrix))
 
 	print("Disassembling")
-	groups = dissassemblalo(matrix,groups)
+	#groups = dissassemblalo(matrix,groups)
+	groups = parallelDisassembler(matrix,groups)
 
 	print("Riaggregating ")
 	groups = clusteringByWord(groups,matrix)
+
+
 	#groups = getAggregatedWithClustering(matrix,groups)
 	#print(groups)
 
@@ -718,43 +759,26 @@ def main():
 
 	#print(rappGroups)
 	#print(bonta)
+	rappGroups = sorted(rappGroups, key=lambda i: len(i[1]))
 
 	for nid,g in rappGroups:
-		for n in news:
-			if n.get_nid() == nid:
-				try:
-					print(str(len(g)) + " " + str(n.get_title()))
-				except:
-					pass
+		if len(g) > 2:
+			for n in news:
+				if n.get_nid() == nid:
+					try:
+						print(str(len(g)) + " " + str(n.get_title()))
+					except:
+						pass
+				if n.get_nid() in g:
+					try:
+						print( "SUB ------ " + str(n.get_title()))
+					except:
+						pass
+			print("\n\n")
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)
-
-	#for i in range(23,40):
-	#	groups = clusterKMeanSpark(matrix,i)
-	#	print(groups)
-	#	print("Bonta")
-	#	bonta = bontaCluster(groups,matrix)
-	#	print(bonta)
-	
-		#groups = dissassemblalo(matrix,groups)
-
-	#print(transformInRealMatrix(matrix))
-	#print(shinglesCount)
-
-		#print(groups)
-		#a,fsc = ts.get_purity_index(list_clusters,groups)
-		#print(i,a,fsc)
-		#if a > 0.9:
-			#print(i)
-			#print(groups)
-
-			#print(a,fsc)
-			#print("---------------------------------")
-
-	#print(groups)
-
-	#print(getClusterInternal(groups,matrix))
+	#groups = clusterKMeanSpark(matrix,12)
 
 	groups = [g for g in groups if len(g) > 2]
 
