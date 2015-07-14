@@ -14,6 +14,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import time
 from loadnews import loadNews
 from loadnews import load_stop_words
 
@@ -665,6 +666,8 @@ def main():
 	texts = []
 	matrix = {}
 
+	now = time.time()
+
 	#x = open("input-lda/input.txt","w")
 
 	#news = jsonizer.getListNewsFromJson(remove_stop_word = True)
@@ -718,6 +721,8 @@ def main():
 		texts = texts + [(n.get_nid(),s)]
 
 	#x.close()
+
+	print("Number of news: " + str(len(news)))
 
 
 	#print(len(shingles))
@@ -782,7 +787,8 @@ def main():
 
 	groups = [g for g in groups if len(g) > 2]
 
-	print("Bonta")
+	print((time.time() - now))
+	#print("Bonta")
 	intCluster = bontaCluster(groups,matrix)
 	print(intCluster)
 	extCluster = externalCluster(groups,matrix)
