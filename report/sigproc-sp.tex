@@ -161,22 +161,32 @@ Now that we have cluster of news and the representative news to show to the user
 \subsection{Experiments}
 The measures used to validate our approach are the internal and external averege of similarity. The internal is defined as follow. In every cluster we comput the average similarity for every news in the cluster and after we computer the average of this measure. The external instead is defined as the average of similarity for every news with other news of other clusters. Internal must be higher than external and  higher is the distance beetween internal and external better is the clustering.
 Test are made on: Processo - Intel core i7 2.6 GH , Ram - 8 GB
-The first experiment is to test if wthe part we we try to reggregate is usefull.
-\begin{table}[h]
+The first experiment is to test if wthe part we we try to reggregate is usefull under the prospect of quality and performance.
+\begin{table}[!ht]
 \centering
-\label{my-label}
+\label{table:norea}
 \begin{tabular}{cccc}
-Number of News & Internal & External & Time (s) \\
-500            & 0.268    & 0.117    & 398      \\
-               &          &          &          \\
-               &          &          &          \\
-500            & 0.158    & 0.171    &          \\
-               &          &          &          \\
-               &          &          &         
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 26       \\
+500            & 0.268    & 0.117    & 72       \\
+1000           & 0.353    & 0.125    & 240      \\ 
 \end{tabular}
-\caption{My caption}
+\caption{Test without reassembling}
 \end{table}
 
+\begin{table}[!ht]
+\centering
+\label{table:sirea}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 24       \\
+500            & 0.265    & 0.115    & 70       \\
+1000           & 0.351    & 0.132    & 242     
+\end{tabular}
+\caption{Test with reassembling}
+\end{table}
+
+As we can see in the tables \ref{table:norea} and \ref{table:sirea} the performance and the quality of aggregating are the same in both table. So we can conclude that the rissembler part is not really usefull but sometimes it increase the quality by a bit.
 The second experiment experiment that we did is to determine if the quality is higher if we use title and the body of the news as information for the clustering.
 
 \begin{table}[!ht]
@@ -198,17 +208,36 @@ Number of news & Internal & External & Time (s) \\
 Number of news & Internal & External & Time (s) \\
 250            & 0.115    & 0.124    & 120      \\
 500            & 0.145    & 0.165    & 398      \\
-1000           &          &          &   
+1000           & 0.275    & 0.206    & 1538 
 \end{tabular}
 \caption{Performance and quality unsing title and body}
 \end{table}
 
+As we can see from the tables \ref{table:title} and \ref{table:body} we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster because internal are higher and external lower. We can definitely say that on this dataset usign only the title as information is better.
+The third test is to see if there is difference beetween shingles and word in performance and quality result. We choose shingles of 7 characters.
+\begin{table}[]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 26       \\
+500            & 0.268    & 0.117    & 72       \\
+\end{tabular}
+\end{table}
 
-As we can see from the tables \ref{table:title} and \ref{table:body} we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster. We can definitely say that on this dataset usign only the title as information is better.
+\begin{table}[]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.116    & 0.025    & 150      \\
+500            & 0.187    & 0.054    & 651      \\
+\end{tabular}
+\end{table}
 
-
-
-
+As we can see in table  the difference in time is really high so we choosed to consider only word as information for the news becasue the ratio beetween the Internal and external similarity is the same in both cases.
 
 \section{Big Data}
 \vspace{2mm}
