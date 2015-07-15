@@ -591,7 +591,7 @@ def getRappresentante(groups,matrix):
 	ret = []
 
 	def getMax(g):
-		maxVal = -10.0
+		maxVal = 0.0
 		for nid1 in g:
 			avSim = 0.0
 			for nid2 in g:	
@@ -729,8 +729,8 @@ def main():
 	print("Filling Matrix")
 	matrix = fillMatrix(texts)
 
-	removeShinglesLowCount(matrix)
-	permutations = getRandomPermutation()
+	#removeShinglesLowCount(matrix)
+	#permutations = getRandomPermutation()
 	#matrix = getSignatureMatrix(matrix,permutations)
 
 	#print(shingles)
@@ -754,6 +754,7 @@ def main():
 	groups = clusteringByWord(groups,matrix)
 
 
+	print(len(groups))
 	groups = [g for g in groups if len(g) > 2]
 	#groups = getAggregatedWithClustering(matrix,groups)
 	#print(groups)
@@ -761,7 +762,7 @@ def main():
 	
 
 	print("Rappresenting ")
-	rappGroups = getRappresentante(groups,matrix)
+	#rappGroups = getRappresentante(groups,matrix)
 
 	#print(rappGroups)
 	#print(bonta)
