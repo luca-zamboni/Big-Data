@@ -125,36 +125,47 @@ We started from a dataset of news collected from different sources. As written i
 Performance and quality of the results have to be considered together: we need high performance to deal with a huge dataset of articles and at the same time we need quality in order to provide to readers relevent articles with no duplicates.
 \subsection{Solution}
 \vspace{2mm}
-The first step is remove news duplicates. In fact, the same articles might be shared among many sources.\\
-The second step is to remove the stop words from the text of the articles. Stop words are usually conjuction, adjective, preposition that are commonly used and repeted over articles. This operation is done because they do not give any additional information about the context of the articles.\\
-The two main attributes that a news has are body and a title. However, we noticed that in many cases considering only the title for the clustering part is more convenient because the title is a collection of few words, tipically keywords, that summarize the entire news.
+The first step is to remove duplicates. In fact, the same articles might be shared among many sources.\\
+The second step is to remove the stop words from the text of the articles. Stop words are usually conjuctions, adjectives, prepositions that are commonly used and repeted over articles. This operation is done because they do not give any additional information about the context of the articles.\\
 
-Another advantage of using only the title is that the it has fewer word than the body, so the performance are increased. 
-For similarity measure of the news we need to have an high value if the two news have a lot of common word over the totality of the word of each news.
+The two attributes that each news has are title and body. However, we noticed that in many cases considering only the title for the clustering part is more convenient because the title is a collection of few words, tipically keywords, that summarize the entire news.
 
+For the similarity measure between news we need to find the right algorithm which consider two articles similar if they have a lot of common words.
 
-For this part we decided to use the Jaccard similarity as similarity measure. In fact, it is largerly used for comparing sets and document like our case. The Jaccard similarity is defined as follows: $$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
+For this part we decided to use the Jaccard similarity because it is largerly used for comparing documents like in our case. This similarity measure is defined as follows:
 
-To optimize the jaccard similarity we have builded a matrix where the row are the element present in the all set and the column are the document. The cell can take value 1 if the element is present in the relative document and 0 if not. With this matrix every jaccard similarity computation have a complexity on O(n) and in this way we compare number which cost a lot less of comparing string. \\
-With this matrix we can do another stop of optimization. We can build a signature matrix using a min hash function as described in \cite{book:MMD}. If the number of permutation is high (e.g. 100 permutation) this signature matrix preserve the distance beetween document loosing only a few information. The advantage of having this signature matrix is that it occupies in memory a space proportion to (Documents per Number of permutation) instead of having (Document per Number of item). In this way we save a lot space and a lot time in computation.
+$$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
 
-We tryed different tecniques to try to cluster news.
-Our first attempt to cluster news is the agglomerative clustering. This is the very basic idea. The advantage of this method is that is easy to implement and it has a very good performance. The algorithms starts with clusters of one news each. With a recoursive strategy we continuesly merge the 2 cluster with the lowest distance. We stop we the distance of the two closer cluster over a threashold value.\\
-The distance measure used is: $$ distance(C_1,C_2) = 1 - jaccard(C_1,C_2)$$
-We always merge the two closer cluster. To determine the distance beetween to cluster we used different tecnique. The first one is to choose for each of the two cluster the closest point to the other cluster and take the distance of this two point as the distance of the two cluster. The second tecnique, similarly as the first, is to choose for each of the two cluster the further point to the other cluster and take the distance of this two point as the distance of the two cluster. The third is take the average of the distance beetween the point of the two cluster as the distance of the two clusters.\\
-We this clustering method we faced 2 main problems. The first one is that there was always few cluster really big with a lot of news and a lot of small clusters. This happened with all of the three of distance measure beetween clusters, also with takeing the average that we taught it was the best. The second problem is the difficulty of determine the threshold value to stop the clustering. If is too high there are few clusters with a lot of news and if it is to small there are a too much clusters with few news each.\\
-After we faced this two problems we decided to abandon this idea and we changed clustering method.
+In order to use the Jaccard similarity between news, we built a matrix called \textit{characteristic matrix} \cite{book:MMD}. This matrix is defined as follows: rows are the set of words in the dataset while columns are the articles. Each cell can take value 1 if the element is in the relative document and 0 if not.
 
-The second algorithm taken n consideration for the clustering task is K-Means.\\
-K-Means is a well known algorithm. We used for the vector of a document the column in the matrix described before. We this clustering we face 3 main problems. The first is like the one before and is decide the number of cluster. The second one is due to the fact that K-Means need an eucliden distance to decide centroids and an euclidean distance beetween document is not well defined. We saw after a little test that with a small dataset were terrible. The last problem was that K-Means is really slow for our taks. Even with medium datasets (500 news) the time of execution was really high. \\
-Also in this case we decided to not follow this way.
+A problem of this matrix is that it is really sparse, due to the fact that there are a lot of zeros. To optimize the computation of the Jaccard similarity within this matrix we build a new one, which is significantly smaller. The new matrix is called \textit{signature matrix} and it uses a min hash function. As written in \cite{book:MMD}, if the number of permutation is high (e.g. 100 permutations) this signature matrix preserves the distance beetween documents (in our case articles). The advantage of having this matrix is that the space occupied in memory is proportionated to the number of permutations instead of the number of words.
 
-Our final approach in order to perform the clustering is made in two principle steps:
+Once that the matrix is defined, different tecniques were experimented in order to cluster news.
+
+Our first attempt was to cluster news using an agglomerative clustering. The advantage of this method is that is easy to implement and it usually has good performance. 
+
+The algorithm starts with clusters composed by one news each. Afterwards, a recursive strategy is used in order to merge clusters that have the lowest distance between them. The algorithm stops when a threshold value is reached. The distance measure used is:
+$$ distance(e_1,e_2) = 1 - jaccard(e_1,e_2)$$
+We always merge the two closer cluster. To determine the distance between two clusters we used different tecniques:
 \begin{enumerate}
-\item Start with a single cluster and divide it with recursive strategy.
-\item Reaggregate clusters that are similar.
+\item The first one is obtained by considering the distance of two news which belong to different clusters and that have the closest distance. The value is actually the closest distance found.
+\item The second tecnique is the dual of the first one. So rather than consider the closest distance, the further distance is taken.
+\item The third is the average of the distances beetween news of the two clusters.
 \end{enumerate}
-To divide the cluster we used the following method. For every news in the cluster we compute the jaccard similarity with the other news in the cluster. When we find a news that have similarity 0 (it means that they have no words in common) we split the cluster in the following way. We put the two no correlated in two different clusters. For every other news we put it in the cluster with the higher similarity with the mean of all other object of the cluster. In this way is garanted that the algorithm will stop with a certain number of cluster, in this way we solved the problem that we had with the previous algorithm. It is also garanted that the news in a cluster have at least 1 word in common with the other news.\\
+While we were experimenting these methods we faced two main problems:
+
+The first was that all the three methods gave us always a few number of clusters with a lot of news. This happened also considering the average distances (the third method) we considered the best one. The second problem was the difficulty of determine the threshold value of the algorithms. If it is too high it is likely that few clusters with a lot of news are resulted. On the other hand, if it is too small it is probably that there are a lot of clusters with few news for each.\\
+
+After we faced these two problems we decided to change to another clustering method. The second algorithm we taken in consideration was \textit{K-Means}. We used the column in the characteristic matrix as the vector for a document. With this method we faced three main problems: The first was the same as the one described before and it was about the number of clusters. The second one was due to the fact that K-Means needs an euclidean distance to decide the centroids of the clusters and between articles is not the best measure of comparison. The last problem was that K-Means was really slow for our tasks even with datasets of 500 or 1000 news.
+
+As a consequence, we decided to follow a new approach based on two main steps:
+\begin{enumerate}
+\item We start by putting all the news in one single cluster and we divide it with the recursive strategy mentioned before.
+\item We merge (aggregate) the clusters that are similar each other.
+\end{enumerate}
+In order to divide the clusters we used the following method. For each cluster, the Jaccard similarity is computed between all the pais of news the belong to the same group. When we find two news that have a similarity value equal to 0 (it means that they have no words in common) we split the cluster in the following way.
+
+We put the two no correlated articles in two new clusters. Afterward, for every other news that belong to the selected cluster, we put it in the cluster with the higher similarity with the mean of all other object of the cluster. In this way is garanted that the algorithm will stop with a certain number of cluster, in this way we solved the problem that we had with the previous algorithm. It is also garanted that the news in a cluster have at least 1 word in common with the other news.\\
 At this point we try to reaggregate some clusters. In order to do this we used the following approach. Fo each cluster we computer the N frequent words. After that, we merge cluster that have at least 2 of the n frequent word in common.
 
 Now that we have cluster we need to extract the representative news for each cluster.\\
@@ -164,13 +175,13 @@ Now that we have cluster of news and the representative news to show to the user
 
 \subsection{Experiments}
 \vspace{2mm}
-The measures used to validate our approaches were the internal and external average measures of similarity. The first is the average distance among all the clusters between every pair of news in the same cluster. The final internal values is the average of whole the internal values of the clusters. The second instead is the dual of the previous: the average distance is calculated considering pari of news which not belong in the same clusters.
+The measures used to validate our approaches were the internal and external average measures of similarity. The first is the average distance among all the clusters between every pair of news in the same cluster. The final internal values is the average of whole the internal values of the clusters. The second instead is the dual of the previous: the average distance is calculated considering pair of news which do not belong to the same clusters.
 
-We expected that the internal distance must be higher than external. In addition, the higher is the distance beetween internal and external the better are the clusters.
+We expected that the internal distance must be higher than the external one. In addition, the higher is the distance beetween internal and external the better are the clusters.
 
-Three tests were conducted on the dataset and were performed on a machine with \textit{Intel core i7 2.6 GH}, 8 GB of RAM.
-In all the tests a datasets of 250, 500 and 1000 news were considered.
-The first experiment was to test the performance and the quality of clusters before and after the aggregation phase. 
+Four tests were conducted on three datasets of 250, 500 and 1000 news and were performed on a single machine with \textit{Intel core i7 2.6 GH}, 8 GB of RAM.
+
+The first experiment was to test the performance and the quality of the clusters before and after the aggregation phase. 
 
 \begin{table}[!ht]
 \centering
@@ -181,7 +192,7 @@ Number of news & Internal & External & Time (s) \\
 500            & 0.268    & 0.117    & 72       \\
 1000           & 0.353    & 0.125    & 240      \\ 
 \end{tabular}
-\caption{Test with no aggregation}
+\caption{Tests with no aggregation}
 \end{table}
 
 \begin{table}[!ht]
@@ -193,12 +204,43 @@ Number of news & Internal & External & Time (s) \\
 500            & 0.265    & 0.115    & 70       \\
 1000           & 0.351    & 0.132    & 242     
 \end{tabular}
-\caption{Test with aggregation}
+\caption{Tests with aggregation}
 \end{table}
 
-As can be seen in both the tables \ref{table:norea} and \ref{table:sirea} the performance and the quality of the aggregation are the same. Hence, we can conclude that for the dataset we used the aggregation phase does not increase a lot the quality of the clusters.
+As can be seen in both the tables \ref{table:norea} and \ref{table:sirea}, the performance and the quality of the aggregation are the same. Hence, we can say that for the dataset we used the aggregation phase does not increase neither the quality of the clusters nor the performance. As conclusion we decided to do not consider the aggregation phase in our process for the rest of our experiments.
 
-The second experiment we did was to determine the quality of the clusters using only the title or both the title and the body as information of the news.
+% TEST 2 OK
+
+The second test was conducted to get the internal and external results with respect to the building of the characteristic matrix using first the set of words and then the set of shingles. For the second case, shingles were defined as groups of seven characters.
+
+\begin{table}[h]
+\centering
+\label{table:matrix_words}
+\caption{Internal and external measures using words}
+\label{my-label}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 26       \\
+500            & 0.268    & 0.117    & 72       \\
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Internal and external measures using shingles.}
+\label{table:matrix_shingles}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.116    & 0.025    & 150      \\
+500            & 0.187    & 0.054    & 651      \\
+\end{tabular}
+\end{table}
+
+Considering a comparision between the tables above, the differences between the internal and the external similarities are the same for both the tecniques. However, the time spent for the whole process which uses the set of words to build the characteristic matrix is definitively lower than the process which uses a matrix built by the set of shingles. As conclusion, we decided to use a characteristic matrix built starting from the set of words.
+
+% TEST 3 OK
+
+The third test we did was to determine the quality of the clusters considering only the title or both the title and the body as information of the news.
 
 \begin{table}[!ht]
 \centering
@@ -224,35 +266,41 @@ Number of news & Internal & External & Time (s) \\
 \caption{Performance and quality using both the title and the body.}
 \end{table}
 
-As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure provided us better results not onli in term of performance but also in terms of quality of cluster. Moreover, 
+As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure gives us better results not only in term of performance but also in terms of quality of clusters. The reason is that titles have fewer words than the body so the words which belong to the first have more likelihood to be keywords. Moreover, while the internal values in table \ref{table:title} are always higher than the ones in table \ref{table:body}, the external values are lower. Hence, we can conclude that usign only the title as information on this dataset we obtained the best performance and quality.
 
-we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster because internal are higher and external lower. We can definitely say that on this dataset usign only the title as information is better.
-The third test is to see if there is difference beetween shingles and word in performance and quality result. We choose shingles of 7 characters.
-\begin{table}[]
+% TEST 4 da fare
+
+The last test we did was 
+
+As expected, using a signature matrix rather than the entire matrix performs better in terms of speed.
+
+Despite the internal and the external ratio remains the same for both the signature and the entire matrix, the values are higher in the fist case. As conclusion, we decided to use only the entire matrix even though the signature matrix can be considered to increase performance with a little loss of quality.
+
+\begin{table}[!h]
 \centering
-\caption{My caption}
-\label{my-label}
+\label{table:matrix}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.051    & 26       \\
 500            & 0.268    & 0.117    & 72       \\
+1000           & 0.353    & 0.125    & 240      \\
 \end{tabular}
+\caption{Results using the characteristic Matrix}
 \end{table}
 
-\begin{table}[]
+\begin{table}[!h]
 \centering
-\caption{My caption}
-\label{my-label}
+\label{table:sigmatrix}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
-250            & 0.116    & 0.025    & 150      \\
-500            & 0.187    & 0.054    & 651      \\
+250            & 0.204    & 0.050    & 22       \\
+500            & 0.265    & 0.115    & 46       \\
+1000           & 0.350    & 0.131    & 120 
 \end{tabular}
+\caption{Results using the signature matrix}
 \end{table}
 
-As we can see in table  the difference in time is really high so we choosed to consider only word as information for the news becasue the ratio beetween the Internal and external similarity is the same in both cases.
-
-Despite the value of the internal and external measures are lower than the expected one, we personally verified the results and they are well defined. 
+Despite the value of the internal and external measures are lower than the expected one, we personally verified the results and clusters are well defined.
 
 \section{Big Data}
 \vspace{2mm}
@@ -327,33 +375,7 @@ From the table representing the serial execution \ref{serial} and the parallel \
 
 
 \section{Conclusions}
-This paragraph will end the body of this sample document.
-
-
-
-\begin{table}[!ht]
-\centering
-\label{table:matrix}
-\begin{tabular}{cccc}
-Number of news & Internal & External & Time (s) \\
-250            & 0.204    & 0.051    & 26       \\
-500            & 0.268    & 0.117    & 72       \\
-1000           & 0.353    & 0.125    & 240      \\
-\end{tabular}
-\caption{Normal Matrix}
-\end{table}
-
-\begin{table}[!ht]
-\centering
-\label{table:sigmatrix}
-\begin{tabular}{cccc}
-Number of news & Internal & External & Time (s) \\
-250            & 0.367    & 0.107    & 10      \\
-500            & 0.350    & 0.188    & 32      \\
-1000           & 0.385    & 0.164    & 187 
-\end{tabular}
-\caption{Signature Matrix}
-\end{table}
+Google News is a well known 
 
 
 \bibliographystyle{abbrv}
