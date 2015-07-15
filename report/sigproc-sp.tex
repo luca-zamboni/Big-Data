@@ -107,7 +107,7 @@ Every day lots of articles are published by many newspapers and websites. As a c
 
 \section{Motivating Example}
 \vspace{2mm}
-The best example from which we took inspiration is Google News. It is simple, fast and personilizable. News may be filtered by personalized interests, locations and other preferences. The aim of our work is to help readers to read news that really represent their interests. In this way, readers do not have to read all the articles that are published and do not have to skip news for which they are not interested in.
+The best example from which we took inspiration is Google News. It is simple, fast and personilizable. News may be filtered by personalized interests, locations and other preferences. The aim of our work is to help readers to read news that really represent their interests. In this way, readers do not have to read all the articles that are published during the day and do not have to skip news for which they are not interested in.
 
 %\section{Problem Statement}
 %vspace{2mm}
@@ -129,13 +129,12 @@ The first step is remove news duplicates. In fact, the same articles might be sh
 The second step is to remove the stop words from the text of the articles. Stop words are usually conjuction, adjective, preposition that are commonly used and repeted over articles. This operation is done because they do not give any additional information about the context of the articles.\\
 The two main attributes that a news has are body and a title. However, we noticed that in many cases considering only the title for the clustering part is more convenient because the title is a collection of few words, tipically keywords, that summarize the entire news.
 
- Another advantage of using only the title is that the it has fewer word than the body, so the performance are increased. 
+Another advantage of using only the title is that the it has fewer word than the body, so the performance are increased. 
 For similarity measure of the news we need to have an high value if the two news have a lot of common word over the totality of the word of each news.
 
 
 For this part we decided to use the Jaccard similarity as similarity measure. In fact, it is largerly used for comparing sets and document like our case. The Jaccard similarity is defined as follows: $$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
 
-For every test we also tried to substitute words with shingles of different length. The shingles have the advantage that can be more precise but the performace are really worst.
 To optimize the jaccard similarity we have builded a matrix where the row are the element present in the all set and the column are the document. The cell can take value 1 if the element is present in the relative document and 0 if not. With this matrix every jaccard similarity computation have a complexity on O(n) and in this way we compare number which cost a lot less of comparing string. \\
 With this matrix we can do another stop of optimization. We can build a signature matrix using a min hash function as described in \cite{book:MMD}. If the number of permutation is high (e.g. 100 permutation) this signature matrix preserve the distance beetween document loosing only a few information. The advantage of having this signature matrix is that it occupies in memory a space proportion to (Documents per Number of permutation) instead of having (Document per Number of item). In this way we save a lot space and a lot time in computation.
 
@@ -329,6 +328,32 @@ From the table representing the serial execution \ref{serial} and the parallel \
 
 \section{Conclusions}
 This paragraph will end the body of this sample document.
+
+
+
+\begin{table}[!ht]
+\centering
+\label{table:matrix}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 26       \\
+500            & 0.268    & 0.117    & 72       \\
+1000           & 0.353    & 0.125    & 240      \\
+\end{tabular}
+\caption{Normal Matrix}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\label{table:sigmatrix}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.367    & 0.107    & 10      \\
+500            & 0.350    & 0.188    & 32      \\
+1000           & 0.385    & 0.164    & 187 
+\end{tabular}
+\caption{Signature Matrix}
+\end{table}
 
 
 \bibliographystyle{abbrv}

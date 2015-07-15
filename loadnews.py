@@ -236,7 +236,7 @@ def loadNews(remove_stop_word = True, get_keywords = True):
 
  	newsFile.close()
 
- 	return list_news[0:1000],clusters
+ 	return list_news[0:250],clusters
 
 if __name__ == "__main__":
 	loadNews()
