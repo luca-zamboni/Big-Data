@@ -135,7 +135,7 @@ In order to use the Jaccard similarity between news, we built a matrix called \t
 
 A problem of this matrix is that it is really sparse, due to the fact that there are a lot of zeros. To optimize the computation of the Jaccard similarity within this matrix we build a new one, which is significantly smaller. The new matrix is called \textit{signature matrix} and it uses a min hash function. As written in \cite{book:MMD}, if the number of permutation is high (e.g. 100 permutations) this signature matrix preserves the distance beetween documents (in our case articles). The advantage of having this matrix is that the space occupied in memory is proportionated to the number of permutations instead of the number of words.
 
-Once that the matrix is defined, different tecniques were experimented in order to cluster news.
+Once that the matrix is defined, different tecniques were experimented in order to cluster news. Some of them were took from \cite{book:comparison}
 
 Our first attempt was to cluster news using an agglomerative clustering. The advantage of this method is that is easy to implement and it usually has good performance. 
 
@@ -180,7 +180,7 @@ Four tests were conducted on three datasets of 250, 500 and 1000 news and were p
 
 The first experiment was to test the performance and the quality of the clusters before and after the aggregation phase. 
 
-\begin{table}[!ht]
+\begin{table}[!h]
 \centering
 
 \begin{tabular}{cccc}
@@ -193,7 +193,7 @@ Number of news & Internal & External & Time (s) \\
 \label{table:norea}
 \end{table}
 
-\begin{table}[!ht]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
@@ -209,7 +209,7 @@ As can be seen in both the Tables \ref{table:norea} and \ref{table:sirea}, the p
 
 The second test was conducted to get the internal and external results with respect to the building of the characteristic matrix using first the set of words and then the set of shingles. For the second case, shingles were defined as groups of seven characters.
 
-\begin{table}[h]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
@@ -220,7 +220,7 @@ Number of news & Internal & External & Time (s) \\
 \label{table:matrix_words}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
@@ -235,7 +235,7 @@ Considering a comparision between the Tables above, the differences between the 
 
 The third test we did was to determine the quality of the clusters considering only the title or both the title and the body as information of the news.
 
-\begin{table}[!ht]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
@@ -247,7 +247,7 @@ Number of news & Internal & External & Time (s) \\
 \label{table:title}
 \end{table}
 
-\begin{table}[!ht]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
@@ -293,6 +293,8 @@ The quality of results are the same in case of small datasets and also with larg
 
 Despite the value of the internal and external measures are lower than the expected one, for every the test we personally verified the results and clusters are well defined.
 
+\newpage
+
 \section{Big Data}
 \vspace{2mm}
 
@@ -324,9 +326,9 @@ Another function used in order to aggregate clusters is the one which find the m
 
 \subsection{Experiments}
 \vspace{2mm}
-We tested the parallelization with spark with 4 machines: 2 computer with: CPU i7 and 8GB of RAM each. We used a network with a low bandwidth.
+We tested the parallelization with spark with 4 machines: 2 computers with: CPU i7 and 8GB of RAM each. We used a network with a low bandwidth.
 
-\begin{table}[!ht]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Time (s) \\
@@ -338,7 +340,7 @@ Number of news & Time (s) \\
 \label{serial}
 \end{table}
 
-\begin{table}[!ht]
+\begin{table}[!h]
 \centering
 \begin{tabular}{cccc}
 Number of news & Time (s) \\
@@ -350,7 +352,7 @@ Number of news & Time (s) \\
 \label{parallel}
 \end{table}
 
-From the Table representing the serial execution \ref{serial} and the parallel \ref{parallel} we can see that the in the parallel execution the time of computation is increased as opposed to what we thought. This is due to the fact that the parallel computer are only two and the time of computation for a single map is lower that the time used to transfer data from a pc to the other.
+From the Table \ref{serial} and \ref{parallel} which represent the serial execution and the parallel respectively we can see that in the parallel execution the time of computation is increased as opposed to what we thought. This is due to the fact that the parallel computer are only two and the time of computation for a single map is lower that the time used to transfer data from a pc to the other.
 
 We think that this bad result is due to the fact that the computer were only two and we should test it on a cluster with an higher number of computer (like amazon clusters) and also a network with a larger bandwidth. If we do so we expect to reduce a lot the global time of computation.
 
