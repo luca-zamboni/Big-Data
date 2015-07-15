@@ -28,8 +28,6 @@
 
 \documentclass{acm_proc_article-sp}
 
-\usepackage{listings}
-
 \begin{document}
 
 \title{Summarization: data analysis on italian articles}
@@ -119,17 +117,24 @@ The best example from which we took inspiration is Google News. It is simple, fa
 \vspace{2mm}
 \subsection{The Problem}
 \vspace{2mm}
-The problem is to present to the user tha main news happened the day before. We start from a dataset of news collected from different source. Our goals is divided in two main task:
+We started from a dataset of news collected from different sources. As written in Section 1, our goal is twofold:
 \begin{enumerate}
-\item Find similar news in a day and cluster it together.
-\item Find a rappresentative news for each cluster to present to the user.
+\item We have to find similar news and then we have to cluster them together.
+\item We have to find the most rappresentative article for each cluster.
 \end{enumerate}
-We also try to have a trade of beetween quality and performance. We need high performance also because the idea is replicate google news that has a lot of sources for each country and a lot of users with gigabytes of data.
+Performance and quality of the results have to be considered together: we need high performance to deal with a huge dataset of articles and at the same time we need quality in order to provide to readers relevent articles with no duplicates.
 \subsection{Solution}
-The first step is remove eventual news duplication. This is caused because different newspapers copy the text of the news from other newspapers.\\
-The second step is to remove the stop word from the dataset. We remove stop word because they are common and repeated for every news so they doesn't give any information about the news.\\
-For every news we have a body and a title. We noticed in many cases that using only the title for the clustering part is more convenient because the title is a collection of words, tipically keywords, that summarize the entire news. This increase of quality using only the title, is due also at the fact that our dataset it was taken from internet pages of newspaper, as explained in the big data part, so in some cases are present also words that are not part of the news. Another advantage of using only the title is that the it has fewer word than the body, so the performance are increased. 
-For similarity measure of the news we need to have an high value if the two news have a lot of common word over the totality of the word of each news.For this fact we choosed as similarity the jaccard similarity. The jaccard similarity is largerly used for comparing sets and document like our case. The jaccard similarity is defined in the following formula.$$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
+\vspace{2mm}
+The first step is remove news duplicates. In fact, the same articles might be shared among many sources.\\
+The second step is to remove the stop words from the text of the articles. Stop words are usually conjuction, adjective, preposition that are commonly used and repeted over articles. This operation is done because they do not give any additional information about the context of the articles.\\
+The two main attributes that a news has are body and a title. However, we noticed that in many cases considering only the title for the clustering part is more convenient because the title is a collection of few words, tipically keywords, that summarize the entire news.
+
+ Another advantage of using only the title is that the it has fewer word than the body, so the performance are increased. 
+For similarity measure of the news we need to have an high value if the two news have a lot of common word over the totality of the word of each news.
+
+
+For this part we decided to use the Jaccard similarity as similarity measure. In fact, it is largerly used for comparing sets and document like our case. The Jaccard similarity is defined as follows: $$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
+
 For every test we also tried to substitute words with shingles of different length. The shingles have the advantage that can be more precise but the performace are really worst.
 To optimize the jaccard similarity we have builded a matrix where the row are the element present in the all set and the column are the document. The cell can take value 1 if the element is present in the relative document and 0 if not. With this matrix every jaccard similarity computation have a complexity on O(n) and in this way we compare number which cost a lot less of comparing string. \\
 With this matrix we can do another stop of optimization. We can build a signature matrix using a min hash function as described in \cite{book:MMD}. If the number of permutation is high (e.g. 100 permutation) this signature matrix preserve the distance beetween document loosing only a few information. The advantage of having this signature matrix is that it occupies in memory a space proportion to (Documents per Number of permutation) instead of having (Document per Number of item). In this way we save a lot space and a lot time in computation.
@@ -159,9 +164,15 @@ We decided to choose as representative news the most similar news to the other n
 Now that we have cluster of news and the representative news to show to the user we decided to delete the cluster with less than M news. This because we want to present to the user the most important news of the day. In thi way we not only present the most important but we delete also clusters that hava a small ammount of news that in general are not important and maybe are a repetition of a bigger cluster that in some we has been devided.
 
 \subsection{Experiments}
-The measures used to validate our approach are the internal and external averege of similarity. The internal is defined as follow. In every cluster we comput the average similarity for every news in the cluster and after we computer the average of this measure. The external instead is defined as the average of similarity for every news with other news of other clusters. Internal must be higher than external and  higher is the distance beetween internal and external better is the clustering.
-Test are made on: Processo - Intel core i7 2.6 GH , Ram - 8 GB
-The first experiment is to test if wthe part we we try to reggregate is usefull under the prospect of quality and performance.
+\vspace{2mm}
+The measures used to validate our approaches were the internal and external average measures of similarity. The first is the average distance among all the clusters between every pair of news in the same cluster. The final internal values is the average of whole the internal values of the clusters. The second instead is the dual of the previous: the average distance is calculated considering pari of news which not belong in the same clusters.
+
+We expected that the internal distance must be higher than external. In addition, the higher is the distance beetween internal and external the better are the clusters.
+
+Three tests were conducted on the dataset and were performed on a machine with \textit{Intel core i7 2.6 GH}, 8 GB of RAM.
+In all the tests a datasets of 250, 500 and 1000 news were considered.
+The first experiment was to test the performance and the quality of clusters before and after the aggregation phase. 
+
 \begin{table}[!ht]
 \centering
 \label{table:norea}
@@ -171,7 +182,7 @@ Number of news & Internal & External & Time (s) \\
 500            & 0.268    & 0.117    & 72       \\
 1000           & 0.353    & 0.125    & 240      \\ 
 \end{tabular}
-\caption{Test without reassembling}
+\caption{Test with no aggregation}
 \end{table}
 
 \begin{table}[!ht]
@@ -183,11 +194,12 @@ Number of news & Internal & External & Time (s) \\
 500            & 0.265    & 0.115    & 70       \\
 1000           & 0.351    & 0.132    & 242     
 \end{tabular}
-\caption{Test with reassembling}
+\caption{Test with aggregation}
 \end{table}
 
-As we can see in the tables \ref{table:norea} and \ref{table:sirea} the performance and the quality of aggregating are the same in both table. So we can conclude that the rissembler part is not really usefull but sometimes it increase the quality by a bit.
-The second experiment experiment that we did is to determine if the quality is higher if we use title and the body of the news as information for the clustering.
+As can be seen in both the tables \ref{table:norea} and \ref{table:sirea} the performance and the quality of the aggregation are the same. Hence, we can conclude that for the dataset we used the aggregation phase does not increase a lot the quality of the clusters.
+
+The second experiment we did was to determine the quality of the clusters using only the title or both the title and the body as information of the news.
 
 \begin{table}[!ht]
 \centering
@@ -198,7 +210,7 @@ Number of news & Internal & External & Time (s) \\
 500            & 0.268    & 0.117    & 72       \\
 1000           & 0.353    & 0.125    & 240      \\
 \end{tabular}
-\caption{Performance and quality unsing only the title}
+\caption{Performance and quality using only the title.}
 \end{table}
 
 \begin{table}[!ht]
@@ -210,10 +222,12 @@ Number of news & Internal & External & Time (s) \\
 500            & 0.145    & 0.165    & 398      \\
 1000           & 0.275    & 0.206    & 1538 
 \end{tabular}
-\caption{Performance and quality unsing title and body}
+\caption{Performance and quality using both the title and the body.}
 \end{table}
 
-As we can see from the tables \ref{table:title} and \ref{table:body} we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster because internal are higher and external lower. We can definitely say that on this dataset usign only the title as information is better.
+As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure provided us better results not onli in term of performance but also in terms of quality of cluster. Moreover, 
+
+we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster because internal are higher and external lower. We can definitely say that on this dataset usign only the title as information is better.
 The third test is to see if there is difference beetween shingles and word in performance and quality result. We choose shingles of 7 characters.
 \begin{table}[]
 \centering
@@ -248,14 +262,9 @@ We started by collecting data from the Google News's website. We built a crawler
 % Copertura live..
 Each feed rss downloaded by the crawler is parsed and for each news written in it we extract some attributes. The most relevant ones are the following: title, body, name of the source, publication date, url of the Google's feed and url of the source.
 
-A problem we face in this part was that both the titles and the articles provided by Google were extremely short: less than 70 and 250 characters respectively. Therefore, we decided to get the real articles from the major sources such as \textit{Corriere della Sera}, \textit{La Repubblica}, \textit{ANSA.it}, etc. In order to do that, Google News has been used simply as a mean to get the source url from the feed rss. Afterwards, the crawler is run again to get articles published in the new urls obtained, and then they are finally parsed to retrieve the new values of title and the body.
+A problem we face in this part was that both the titles and the articles provided by Google were extremely short: less than 70 and 250 characters respectively. Therefore, we decided to get the real articles from the major sources such as \textit{Corriere della Sera}, \textit{La Repubblica}, \textit{ANSA.it}, etc. In order to do that, Google News has been used simply as a mean to get the source url from the feed rss. Afterwards, the crawler is run again to get articles published in the new urls obtained, and finally they are parsed in order to retrieve the new values of the title and the body. In case the original articles are no longer available, only the information retrieve from the Google News's homepage are considered.
 
-% source of articles because the url of the source was already provided in the feed url.
-
-
-Afterward, the news are stored in a json file.
-
-We decided to store articles in a single file rather than divide them in multiple files. However, due to the json extension we decided to use, this process can be easily converted in a distributed one using the NoSQL Database Management System MongoDb. Hence, each article can be managed as a document and stored in a distributed environment.
+Once each article is parsed, it is stored in a json file. We decided to store articles in a single file rather than divide them in multiple files. However, due to the json extension we decided to use, this process can be easily converted in a distributed one using the NoSQL Database Management System MongoDb. Hence, each article can be managed as a document and stored in a distributed environment.
 
 \subsection{Text optimization with Spark}
 \vspace{2mm}
@@ -280,7 +289,7 @@ Secondly, the keywords and entities extraction operation is performed in Spark a
 
 Thirdly, duplicates are also removed using Spark. In this case, the map function works as follows: news are considered as a tuple \textit{(id,title)} so
 
-The process that tries to find for each cluster a pair of news which have no correlation between them is executed in Spark similarly to the other processes described in this section. Clusters are first converted in RDDs and then parallelized so the map function disagregates clust. Finally, the resulting clusters are collect in a single list of clusters.
+The process that tries to find for each cluster a pair of news which have no correlation between them is executed in Spark similarly to the other processes described in this section. Clusters are first converted in RDDs and then parallelized so the map function disagregates them. Finally, the resulting clusters are collect in a single list of clusters.
 
 Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact, the entire list of clusters is distributed so the selection of the most representative element of the group can be done by independently from one cluster to another.
 
