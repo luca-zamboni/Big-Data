@@ -182,66 +182,61 @@ The first experiment was to test the performance and the quality of the clusters
 
 \begin{table}[!ht]
 \centering
-\label{table:norea}
+
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.051    & 26       \\
 500            & 0.268    & 0.117    & 72       \\
 1000           & 0.353    & 0.125    & 240      \\ 
 \end{tabular}
-\caption{Tests with no aggregation}
+\caption{Tests with no aggregation.}
+\label{table:norea}
 \end{table}
 
 \begin{table}[!ht]
 \centering
-\label{table:sirea}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.051    & 24       \\
 500            & 0.265    & 0.115    & 70       \\
 1000           & 0.351    & 0.132    & 242     
 \end{tabular}
-\caption{Tests with aggregation}
+\caption{Tests with aggregation.}
+\label{table:sirea}
 \end{table}
 
-As can be seen in both the tables \ref{table:norea} and \ref{table:sirea}, the performance and the quality of the aggregation are the same. Hence, we can say that for the dataset we used the aggregation phase does not increase neither the quality of the clusters nor the performance. As conclusion we decided to do not consider the aggregation phase in our process for the rest of our experiments.
-
-% TEST 2 OK
+As can be seen in both the Tables \ref{table:norea} and \ref{table:sirea}, the performance and the quality of the aggregation are the same. Hence, we can say that for the dataset we used the aggregation phase does not increase neither the quality of the clusters nor the performance. As conclusion we decided to do not consider the aggregation phase in our process for the rest of our experiments.
 
 The second test was conducted to get the internal and external results with respect to the building of the characteristic matrix using first the set of words and then the set of shingles. For the second case, shingles were defined as groups of seven characters.
 
 \begin{table}[h]
 \centering
-\label{table:matrix_words}
-\caption{Internal and external measures using words}
-\label{my-label}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.051    & 26       \\
 500            & 0.268    & 0.117    & 72       \\
 \end{tabular}
+\caption{Internal and external measures using words}
+\label{table:matrix_words}
 \end{table}
 
 \begin{table}[h]
 \centering
-\caption{Internal and external measures using shingles.}
-\label{table:matrix_shingles}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.116    & 0.025    & 150      \\
 500            & 0.187    & 0.054    & 651      \\
 \end{tabular}
+\caption{Internal and external measures using shingles.}
+\label{table:matrix_shingles}
 \end{table}
 
-Considering a comparision between the tables above, the differences between the internal and the external similarities are the same for both the tecniques. However, the time spent for the whole process which uses the set of words to build the characteristic matrix is definitively lower than the process which uses a matrix built by the set of shingles. As conclusion, we decided to use a characteristic matrix built starting from the set of words.
-
-% TEST 3 OK
+Considering a comparision between the Tables above, the differences between the internal and the external similarities are the same for both the tecniques. However, the time spent for the whole process which uses the set of words to build the characteristic matrix is definitively lower than the process which uses a matrix built by the set of shingles. As conclusion, we decided to use a characteristic matrix built starting from the set of words.
 
 The third test we did was to determine the quality of the clusters considering only the title or both the title and the body as information of the news.
 
 \begin{table}[!ht]
 \centering
-\label{table:title}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.051    & 26       \\
@@ -249,11 +244,11 @@ Number of news & Internal & External & Time (s) \\
 1000           & 0.353    & 0.125    & 240      \\
 \end{tabular}
 \caption{Performance and quality using only the title.}
+\label{table:title}
 \end{table}
 
 \begin{table}[!ht]
 \centering
-\label{table:body}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.115    & 0.124    & 120      \\
@@ -261,17 +256,15 @@ Number of news & Internal & External & Time (s) \\
 1000           & 0.275    & 0.206    & 1538 
 \end{tabular}
 \caption{Performance and quality using both the title and the body.}
+\label{table:body}
 \end{table}
 
-As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure gives us better results not only in term of performance but also in terms of quality of clusters. The reason is that titles have fewer words than the body so the words which belong to the first have more likelihood to be keywords. Moreover, while the internal values in table \ref{table:title} are always higher than the ones in table \ref{table:body}, the external values are lower. Hence, we can conclude that usign only the title as information on this dataset we obtained the best performance and quality.
-
-% TEST 4 da fare
+As can be seen in Table \ref{table:title} and Table \ref{table:body}, using only the title as comparision measure gives us better results not only in term of performance but also in terms of quality of clusters. The reason is that titles have fewer words than the body so the words which belong to the first have more likelihood to be keywords. Moreover, while the internal values in Table \ref{table:title} are always higher than the ones in Table \ref{table:body}, the external values are lower. Hence, we can conclude that usign only the title as information on this dataset we obtained the best performance and quality.
 
 The last test we did was to compare the performance and the quality result if we use the characteristic matrix or the signature matrix.
 
 \begin{table}[!h]
 \centering
-\label{table:matrix}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.051    & 26       \\
@@ -279,11 +272,11 @@ Number of news & Internal & External & Time (s) \\
 1000           & 0.353    & 0.125    & 240      \\
 \end{tabular}
 \caption{Results using the characteristic Matrix}
+\label{table:matrix}
 \end{table}
 
 \begin{table}[!h]
 \centering
-\label{table:sigmatrix}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.204    & 0.050    & 22       \\
@@ -291,6 +284,7 @@ Number of news & Internal & External & Time (s) \\
 1000           & 0.350    & 0.131    & 120 
 \end{tabular}
 \caption{Results using the signature matrix}
+\label{table:sigmatrix}
 \end{table}
 
 As expected, using a signature matrix rather than the entire matrix performs better in terms of speed.
@@ -316,36 +310,24 @@ Once each article is parsed, it is stored in a json file. We decided to store ar
 \vspace{2mm}
 Once we stored the list of news, we use Spark to parallelize some functions.
 
-% REMOVE STOP WORDS
-% l = jsc.parallelize(fromNewsToTuple(list_news))
-% l = l.map(lambda n:(n[0],remove_stop_words_from_string(n[1],stop_words),remove_stop_words_from_string(n[2],stop_words))).collect()
-% list_news = reassemblyNews(list_news,l)
-
 Firstly, a combination of map-reduce Spark's APIs is used in order to remove stop words from both the title and the body of each article. In fact, the operation of removing words from text is independent from one article to another and it has been implemented as follows: first, the list of news is mapped into a list of tuples of the form \textit{(id, title, body)} so the remove function can be done in parallel by working on single articles. Afterwards, the remove of the stop words is performed. As result a new tuple is provided with no stop words, so the entire list of tuples can be merged into a list of news overriding the old values of title and body with the new ones.
-
-% KEYWORDS
-
-% jsc = SparkContext(appName="LOADNEWS: Get keywords")
-% l = jsc.parallelize(formNewsToIdTitleBodyUrl(list_news))
-% l = l.map(lambda n:(n[0], get_keywords((n[1],n[2],n[3])))).collect()
-% list_news = reassemblyNewsAndSetKeywords(list_news,l)
-% jsc.stop()
 
 Secondly, the keywords and entities extraction operation is performed in Spark as follows: given the list of news, a map function is used to split that list, then each news is treated independently so the keywords that belong to the title, the body and the feed url can be extract in parallel. As result of the previous operation, the set of keywords for each article is taken as input by the merge function which stores them in a new attribute.
 
-Thirdly, duplicates are also removed using Spark. In this case, the map function works as follows: news are considered as a tuple \textit{(id,title)} so
+Thirdly, duplicates are also removed using Spark. In this case, news are considered as tuples of the form \textit{(id,title)}. The map function takes in input one of these tuples and emits a pair \textit{(title,id)} in which the title is used as key by the reducer. After that, we use the function \textit{reduceByKey(args)} that takes in input two ids that has the same title. At this point only on of them is returned.
 
-The process that tries to find for each cluster a pair of news which have no correlation between them is executed in Spark similarly to the other processes described in this section. Clusters are first converted in RDDs and then parallelized so the map function disagregates them. Finally, the resulting clusters are collect in a single list of clusters.
+The process that divides a cluster into two sub-groups is executed in Spark similarly to the other processes described in this section. Each cluster in the set of clusters is mapped with a function that returns a set of sub-clusters. Once the list of sub-clusters is returned we apply again the previous map function. We repeat these steps untill a fixed point is reached: the clusters are no longer splitted so we return the list. This can be done because the division of a single cluster is independent from the others.
 
-Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact the choose of represents is indipendent for each cluster. Now we can convert the array with clusters in RDDs and we apply the function map returning the representant for every news.
+Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. Also this task is indipendent for each cluster. Now we can convert the array with clusters in RDDs and we apply the function map returning the representant for every news.
+
+Another function used in order to aggregate clusters is the one which find the most common words for each article. It is not implemented yet in map-reduce. However, it can be easily converted into a function that can be run in parallel using a simple word count.
 
 \subsection{Experiments}
-
+\vspace{2mm}
 We tested the parallelization with spark with 4 machines: 2 computer with: CPU i7 and 8GB of RAM each. We used a network with a low bandwidth.
 
 \begin{table}[!ht]
 \centering
-\label{serial}
 \begin{tabular}{cccc}
 Number of news & Time (s) \\
 250            & 26       \\
@@ -353,11 +335,11 @@ Number of news & Time (s) \\
 1000           & 240      \\
 \end{tabular}
 \caption{Serial execution on 1 machine}
+\label{serial}
 \end{table}
 
 \begin{table}[!ht]
 \centering
-\label{parallel}
 \begin{tabular}{cccc}
 Number of news & Time (s) \\
 250            & 36       \\
@@ -365,17 +347,20 @@ Number of news & Time (s) \\
 1000           & 272      \\
 \end{tabular}
 \caption{Parallel execution over 2 machines}
+\label{parallel}
 \end{table}
 
-From the table representing the serial execution \ref{serial} and the parallel \ref{parallel} we can see that the in the parallel execution the time of computation is increased as opposed to what we thought. This is due to the fact that the parallel computer are only two and the time of computation for a single map is lower that the time used to transfer data from a pc to the other. \\We think that this bad result is due to the fact that the computer were only two and we should test it on a cluster with an higher number of computer (like amazon clusters) and also a network with a larger bandwidth. If we do so we expect to reduce a lot the global time of computation.
+From the Table representing the serial execution \ref{serial} and the parallel \ref{parallel} we can see that the in the parallel execution the time of computation is increased as opposed to what we thought. This is due to the fact that the parallel computer are only two and the time of computation for a single map is lower that the time used to transfer data from a pc to the other.
+
+We think that this bad result is due to the fact that the computer were only two and we should test it on a cluster with an higher number of computer (like amazon clusters) and also a network with a larger bandwidth. If we do so we expect to reduce a lot the global time of computation.
 
 %To the best of our knowledge the time spent for the execution might be reduce if the number of computer and the network bandwith is increased.
 
 
-\section{Conclusions}
-Google News is a well known 
-
-
+\section{Conclusion}
+\vspace{2mm}
+We started by developing a crawler that downloads news from the Google New's website. We tried different algorithms which were used to address the initial problem of clustering news into groups. In this part of the project two main problems raised up. We tried different methods in order to cluster articles and at the end we found one that fits our needs. Our approach is based on two main steps: one in which clusters are divided into sub-groups and one which tries to merge similar groups. Once that the clusters are defined, the most representative news for each clusters was selected. We tried different techniques in order to optimize this process both in terms of quality and performance. All these techniques were tested using a dataset of different sizes and what we expected is the same as the final results.
+We found that using only the title with no stop words as information for each news and using the signature matrix allowed us to reach the best quality and performance.
 \bibliographystyle{abbrv}
 \bibliography{sigproc-sp}
 \balancecolumns
