@@ -136,7 +136,7 @@ For similarity measure of the news we need to have an high value if the two news
 For this part we decided to use the Jaccard similarity as similarity measure. In fact, it is largerly used for comparing sets and document like our case. The Jaccard similarity is defined as follows: $$Jaccard(A,B) = \frac{\left\vert A \cap B \right\vert}{\left\vert A \cup B \right\vert}$$
 
 For every test we also tried to substitute words with shingles of different length. The shingles have the advantage that can be more precise but the performace are really worst.
-To optimize the jaccard similarity we have builded a matrix where the row are the element present in the all set and the column are the document. The cell can take value 1 if the element is present in the relative document and 0 if not. With this matrix every jaccard similarity computation have a complexity on O(n) and in this way we compare number which cost a lot less of comparing string. \\
+To optimize the jaccard similarity we built a matrix called \textit{characteristic matrix} where the row are the element present in the all set and the column are the document. The cell can take value 1 if the element is present in the relative document and 0 if not. With this matrix every jaccard similarity computation have a complexity on O(n) and in this way we compare number which cost a lot less of comparing string. \\
 With this matrix we can do another stop of optimization. We can build a signature matrix using a min hash function as described in \cite{book:MMD}. If the number of permutation is high (e.g. 100 permutation) this signature matrix preserve the distance beetween document loosing only a few information. The advantage of having this signature matrix is that it occupies in memory a space proportion to (Documents per Number of permutation) instead of having (Document per Number of item). In this way we save a lot space and a lot time in computation.
 
 We tryed different tecniques to try to cluster news.
@@ -197,9 +197,9 @@ Number of news & Internal & External & Time (s) \\
 \caption{Test with aggregation}
 \end{table}
 
-As can be seen in both the tables \ref{table:norea} and \ref{table:sirea} the performance and the quality of the aggregation are the same. Hence, we can conclude that for the dataset we used the aggregation phase does not increase a lot the quality of the clusters.
+As can be seen in both the tables \ref{table:norea} and \ref{table:sirea}, the performance and the quality of the aggregation are the same. Hence, we can conclude that for the dataset we used the aggregation phase does not increase neither the quality of the clusters nor the performance. As conclusion we decided to do not consider the aggregation phase in our process for the rest of our experiments.
 
-The second experiment we did was to determine the quality of the clusters using only the title or both the title and the body as information of the news.
+The second test we did was to determine the quality of the clusters using only the title or both the title and the body as information of the news.
 
 \begin{table}[!ht]
 \centering
@@ -225,13 +225,14 @@ Number of news & Internal & External & Time (s) \\
 \caption{Performance and quality using both the title and the body.}
 \end{table}
 
-As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure provided us better results not onli in term of performance but also in terms of quality of cluster. Moreover, 
+As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure gives us better results not only in term of performance but also in terms of quality of clusters. Moreover, while the internal values in table \ref{table:title} are always higher than the ones in table \ref{table:body}, the external values are lower. Hence, we can conclude that usign only the title as information on this dataset we obtained the best performance and quality.
 
-we can conclude that using only the title of a news is convinient not only in performance of the algorithm, but also in quality of cluster because internal are higher and external lower. We can definitely say that on this dataset usign only the title as information is better.
-The third test is to see if there is difference beetween shingles and word in performance and quality result. We choose shingles of 7 characters.
-\begin{table}[]
+The second test was conducted to get the internal and external results of the building of the characteristic matrix using first the set of words and then the set of shingles. For the second case, shingles were defined as groups of seven characters.
+
+\begin{table}[h]
 \centering
-\caption{My caption}
+\label{table:matrix_words}
+\caption{Internal and external measures using words}
 \label{my-label}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
@@ -240,10 +241,10 @@ Number of news & Internal & External & Time (s) \\
 \end{tabular}
 \end{table}
 
-\begin{table}[]
+\begin{table}[h]
 \centering
-\caption{My caption}
-\label{my-label}
+\caption{Internal and external measures using shingles.}
+\label{table:matrix_shingles}
 \begin{tabular}{cccc}
 Number of news & Internal & External & Time (s) \\
 250            & 0.116    & 0.025    & 150      \\
@@ -294,7 +295,7 @@ The process that tries to find for each cluster a pair of news which have no cor
 Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact, the entire list of clusters is distributed so the selection of the most representative element of the group can be done by independently from one cluster to another.
 
 \section{Conclusions}
-This paragraph will end the body of this sample document.
+Google News is a well known 
 
 
 \bibliographystyle{abbrv}
