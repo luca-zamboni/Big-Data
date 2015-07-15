@@ -292,7 +292,7 @@ Thirdly, duplicates are also removed using Spark. In this case, the map function
 
 The process that tries to find for each cluster a pair of news which have no correlation between them is executed in Spark similarly to the other processes described in this section. Clusters are first converted in RDDs and then parallelized so the map function disagregates them. Finally, the resulting clusters are collect in a single list of clusters.
 
-Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact, the entire list of clusters is distributed so the selection of the most representative element of the group can be done by independently from one cluster to another.
+Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact the choose of represents is indipendent for each cluster. Now we can convert the array with clusters in RDDs and we apply the function map returning the representant for everyone.
 
 \subsection{Experiments}
 
