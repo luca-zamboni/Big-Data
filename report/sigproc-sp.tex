@@ -127,9 +127,9 @@ Performance and quality of the results have to be considered together: we need h
 \vspace{2mm}
 The first step is remove news duplicates. In fact, the same articles might be shared among many sources.\\
 The second step is to remove the stop words from the text of the articles. Stop words are usually conjuction, adjective, preposition that are commonly used and repeted over articles. This operation is done because they do not give any additional information about the context of the articles.\\
-The two main attributes that a news has are body and a title. However, we noticed that in many cases considering only the title for the clustering part is more convenient because the title is a collection of few words, tipically keywords, that summarize the entire news.
+The two main attributes that a news has are title and body. However, we noticed that in many cases considering only the title for the clustering part is more convenient because the title is a collection of few words, tipically keywords, that summarize the entire news.
 
- Another advantage of using only the title is that the it has fewer word than the body, so the performance are increased. 
+% qui
 For similarity measure of the news we need to have an high value if the two news have a lot of common word over the totality of the word of each news.
 
 
@@ -169,8 +169,8 @@ The measures used to validate our approaches were the internal and external aver
 
 We expected that the internal distance must be higher than external. In addition, the higher is the distance beetween internal and external the better are the clusters.
 
-Three tests were conducted on the dataset and were performed on a machine with \textit{Intel core i7 2.6 GH}, 8 GB of RAM.
-In all the tests a datasets of 250, 500 and 1000 news were considered.
+Four tests were conducted on three datasets of 250, 500 and 1000 news and were performed on a single machine with \textit{Intel core i7 2.6 GH}, 8 GB of RAM.
+
 The first experiment was to test the performance and the quality of clusters before and after the aggregation phase. 
 
 \begin{table}[!ht]
@@ -199,7 +199,40 @@ Number of news & Internal & External & Time (s) \\
 
 As can be seen in both the tables \ref{table:norea} and \ref{table:sirea}, the performance and the quality of the aggregation are the same. Hence, we can conclude that for the dataset we used the aggregation phase does not increase neither the quality of the clusters nor the performance. As conclusion we decided to do not consider the aggregation phase in our process for the rest of our experiments.
 
-The second test we did was to determine the quality of the clusters using only the title or both the title and the body as information of the news.
+% TEST 2 OK
+
+The second test was conducted to get the internal and external results with respect to the building of the characteristic matrix using first the set of words and then the set of shingles. For the second case, shingles were defined as groups of seven characters.
+
+\begin{table}[h]
+\centering
+\label{table:matrix_words}
+\caption{Internal and external measures using words}
+\label{my-label}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.204    & 0.051    & 26       \\
+500            & 0.268    & 0.117    & 72       \\
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Internal and external measures using shingles.}
+\label{table:matrix_shingles}
+\begin{tabular}{cccc}
+Number of news & Internal & External & Time (s) \\
+250            & 0.116    & 0.025    & 150      \\
+500            & 0.187    & 0.054    & 651      \\
+\end{tabular}
+\end{table}
+
+Considering a comparision between the tables above, the difference between the internal and the external similarity is the same for both the tecniques. However, the time spent for the whole process which uses the set of words to build the characteristic matrix is definitively lower than the process which uses a matrix build by the set of shingles. As conclusion, we decided to use a characteristic matrix build starting from the set of words.
+
+Despite the value of the internal and external measures are lower than the expected one, we personally verified the results and clusters are well defined. 
+
+% TEST 3 OK
+
+The third test we did was to determine the quality of the clusters using only the title or both the title and the body as information of the news.
 
 \begin{table}[!ht]
 \centering
@@ -225,36 +258,9 @@ Number of news & Internal & External & Time (s) \\
 \caption{Performance and quality using both the title and the body.}
 \end{table}
 
-As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure gives us better results not only in term of performance but also in terms of quality of clusters. Moreover, while the internal values in table \ref{table:title} are always higher than the ones in table \ref{table:body}, the external values are lower. Hence, we can conclude that usign only the title as information on this dataset we obtained the best performance and quality.
+As can be seen in the tables \ref{table:title} and \ref{table:body}, using only the title as comparision measure gives us better results not only in term of performance but also in terms of quality of clusters. The reason is that the title has fewer words than the body so the words which belong to the first have more likelihood to be keywords. Moreover, while the internal values in table \ref{table:title} are always higher than the ones in table \ref{table:body}, the external values are lower. Hence, we can conclude that usign only the title as information on this dataset we obtained the best performance and quality.
 
-The second test was conducted to get the internal and external results of the building of the characteristic matrix using first the set of words and then the set of shingles. For the second case, shingles were defined as groups of seven characters.
 
-\begin{table}[h]
-\centering
-\label{table:matrix_words}
-\caption{Internal and external measures using words}
-\label{my-label}
-\begin{tabular}{cccc}
-Number of news & Internal & External & Time (s) \\
-250            & 0.204    & 0.051    & 26       \\
-500            & 0.268    & 0.117    & 72       \\
-\end{tabular}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Internal and external measures using shingles.}
-\label{table:matrix_shingles}
-\begin{tabular}{cccc}
-Number of news & Internal & External & Time (s) \\
-250            & 0.116    & 0.025    & 150      \\
-500            & 0.187    & 0.054    & 651      \\
-\end{tabular}
-\end{table}
-
-As we can see in table  the difference in time is really high so we choosed to consider only word as information for the news becasue the ratio beetween the Internal and external similarity is the same in both cases.
-
-Despite the value of the internal and external measures are lower than the expected one, we personally verified the results and they are well defined. 
 
 \section{Big Data}
 \vspace{2mm}
