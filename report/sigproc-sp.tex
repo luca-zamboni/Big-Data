@@ -160,13 +160,15 @@ As a consequence, we decided to follow a new approach based on two main steps:
 \end{enumerate}
 In order to divide the clusters we used the following method. For each cluster, the Jaccard similarity is computed between all the pais of news the belong to the same group. When we find two news that have a similarity value equal to 0 (it means that they have no words in common) we split the cluster in the following way.
 
-We put the two no correlated articles in two new clusters. Afterward, for every other news that belong to the selected cluster, we put it in the cluster with the higher similarity with the mean of all other object of the cluster. In this way is garanted that the algorithm will stop with a certain number of cluster, in this way we solved the problem that we had with the previous algorithm. It is also garanted that the news in a cluster have at least 1 word in common with the other news.\\
-At this point we try to reaggregate some clusters. In order to do this we used the following approach. Fo each cluster we computer the N frequent words. After that, we merge cluster that have at least 2 of the n frequent word in common.
+We put the two no correlated articles in two new clusters. Afterward, for every other news that belong to the selected cluster, we put it in the cluster with the highest similarity. In this way, is guaranteed that the algorithm always terminates with a finite number of clusters. In this way, the previous problem we had about the number of cluster is solved. Another advantage of this method is that it is also garanted that news in the same cluster have at least one word in common.
 
-Now that we have cluster we need to extract the representative news for each cluster.\\
-We decided to choose as representative news the most similar news to the other news to the cluster. To do this we compute the average similarity and we took the the news that have the higher.
+Once a fixed point is reached, we try to aggregate clusters that might be divided.
 
-Now that we have cluster of news and the representative news to show to the user we decided to delete the cluster with less than M news. This because we want to present to the user the most important news of the day. In thi way we not only present the most important but we delete also clusters that hava a small ammount of news that in general are not important and maybe are a repetition of a bigger cluster that in some we has been devided.
+In order to do this we use the following approach: for each cluster we compute the N most frequent words and after that, we merge cluster that have at least two out of the N frequent words in common.
+
+Here an optimization is done: we decided to delete the clusters that have less than M news because we want to provide to readers the most important news of the day. In this way we delete clusters that usually are less relevant and might contain information that are already in bigger clusters.
+
+Now that the clusters are well defined, we need to extract the most representative news for each cluster. We decided to choose as representative news the most similar one to the other news to the cluster. To do this we compute the average similarity and we take the news that have the highest one. At the same time 
 
 \subsection{Experiments}
 \vspace{2mm}
