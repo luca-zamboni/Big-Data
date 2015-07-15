@@ -96,11 +96,6 @@
 % - Experimental Evaluation: Multiple experiments that show that your approach works well  comparison  with related work, stress-test to higher data sizes, user evaluation etc.) 
 
 \maketitle
-\begin{abstract}
-\vspace{2mm}
-This is a beautiful abstract.
-\end{abstract}
-
 \section{Introduction}
 \vspace{2mm}
 Every day lots of articles are published by many newspapers and websites. As a consequence, the same news is repeated in many sources causing confusion to readers which have to choose the most interesting ones. Fortunately, there are websites which everyday explore articles from different surces and group them together. The most famous one is Google News\footnote{https://news.google.com}. It actually \textit{aggregates} headlines from news sources worldwide which treat the same news and gives to readers a list of the most \textit{representative} ones for each group. While the title provided by Google is the same as the one written in the source, the body is a paragraph of the article which belongs to the source and allows readers to get instantaneously significant information. The aims of our work is to replicate what Google News provides, focusing on italian articles. The proposed solution provides to readers a list of articles with no duplicates: for each group of similar news we provide the most representative one to show.
@@ -270,11 +265,7 @@ As can be seen in the tables \ref{table:title} and \ref{table:body}, using only 
 
 % TEST 4 da fare
 
-The last test we did was 
-
-As expected, using a signature matrix rather than the entire matrix performs better in terms of speed.
-
-Despite the internal and the external ratio remains the same for both the signature and the entire matrix, the values are higher in the fist case. As conclusion, we decided to use only the entire matrix even though the signature matrix can be considered to increase performance with a little loss of quality.
+The last test we did was to compare the performance and the quality result if we use the characteristic matrix or the signature matrix.
 
 \begin{table}[!h]
 \centering
@@ -300,7 +291,11 @@ Number of news & Internal & External & Time (s) \\
 \caption{Results using the signature matrix}
 \end{table}
 
-Despite the value of the internal and external measures are lower than the expected one, we personally verified the results and clusters are well defined.
+As expected, using a signature matrix rather than the entire matrix performs better in terms of speed.
+The quality of results are the same in case of small datasets and also with larger dataset. We can conclude that with the signature matrix we do not lose qualit but we gain in performance so we decide to performe our clustering over the signature matrix.
+
+
+Despite the value of the internal and external measures are lower than the expected one, for every the test we personally verified the results and clusters are well defined.
 
 \section{Big Data}
 \vspace{2mm}
@@ -340,7 +335,7 @@ Thirdly, duplicates are also removed using Spark. In this case, the map function
 
 The process that tries to find for each cluster a pair of news which have no correlation between them is executed in Spark similarly to the other processes described in this section. Clusters are first converted in RDDs and then parallelized so the map function disagregates them. Finally, the resulting clusters are collect in a single list of clusters.
 
-Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact the choose of represents is indipendent for each cluster. Now we can convert the array with clusters in RDDs and we apply the function map returning the representant for everyone.
+Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact the choose of represents is indipendent for each cluster. Now we can convert the array with clusters in RDDs and we apply the function map returning the representant for every news.
 
 \subsection{Experiments}
 
