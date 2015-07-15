@@ -591,7 +591,7 @@ def getRappresentante(groups,matrix):
 	ret = []
 
 	def getMax(g):
-		maxVal = 0.0
+		maxVal = -10.0
 		for nid1 in g:
 			avSim = 0.0
 			for nid2 in g:	
@@ -729,8 +729,8 @@ def main():
 	print("Filling Matrix")
 	matrix = fillMatrix(texts)
 
-	#removeShinglesLowCount(matrix)
-	#permutations = getRandomPermutation()
+	removeShinglesLowCount(matrix)
+	permutations = getRandomPermutation()
 	#matrix = getSignatureMatrix(matrix,permutations)
 
 	#print(shingles)
@@ -754,6 +754,7 @@ def main():
 	groups = clusteringByWord(groups,matrix)
 
 
+	groups = [g for g in groups if len(g) > 2]
 	#groups = getAggregatedWithClustering(matrix,groups)
 	#print(groups)
 
@@ -764,35 +765,34 @@ def main():
 
 	#print(rappGroups)
 	#print(bonta)
-	rappGroups = sorted(rappGroups, key=lambda i: len(i[1]))
+	#rappGroups = sorted(rappGroups, key=lambda i: len(i[1]))
 
-	for nid,g in rappGroups:
-		if len(g) > 2:
-			for n in news:
-				if n.get_nid() == nid:
-					try:
-						print(str(len(g)) + " " + str(n.get_title()))
-					except:
-						pass
-				if n.get_nid() in g:
-					try:
-						print( "SUB ------ " + str(n.get_title()))
-					except:
-						pass
-			print("\n\n")
+	#for nid,g in rappGroups:
+	#	if len(g) > 2:
+	#		for n in news:
+	#			if n.get_nid() == nid:
+	#				try:
+	#					print("representative : " + str(n.get_title()))
+	#				except:
+	#					pass
+	#			if n.get_nid() in g:
+	#				try:
+	#					print( " -- " + str(n.get_title()))
+	#				except:
+	#					pass
+	#		print("\n\n")
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)
 	#groups = clusterKMeanSpark(matrix,12)
 
-	groups = [g for g in groups if len(g) > 2]
 
-	print((time.time() - now))
-	#print("Bonta")
+	print("Execution time " + str(time.time() - now))
+
 	intCluster = bontaCluster(groups,matrix)
-	print(intCluster)
+	print("Internal " + str(intCluster))
 	extCluster = externalCluster(groups,matrix)
-	print(extCluster)
+	print("External " + str(extCluster))
 
 # CHIAMATA AL MEIN
 if __name__ == "__main__":
