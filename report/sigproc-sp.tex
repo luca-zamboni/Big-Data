@@ -146,8 +146,8 @@ We always merge the two closer cluster. To determine the distance beetween to cl
 We this clustering method we faced 2 main problems. The first one is that there was always few cluster really big with a lot of news and a lot of small clusters. This happened with all of the three of distance measure beetween clusters, also with takeing the average that we taught it was the best. The second problem is the difficulty of determine the threshold value to stop the clustering. If is too high there are few clusters with a lot of news and if it is to small there are a too much clusters with few news each.\\
 After we faced this two problems we decided to abandon this idea and we changed clustering method.
 
-The second algorithm used for the clustering task is K-Means.\\
-K-Means is a well known algorithm. We used for the vector of a document the column in the matrix described before. We this clustering we face 3 main problems. The first is like the one before. Decide the number of cluster. The second one is due to the fact that K-Means need an eucliden distance to decide centroids. And an euclidean distance beetween document is not well defined so the clusters also with a small dataset where terrible. The last problem was that K-Means is really slow also if it is parallelized.\\
+The second algorithm taken n consideration for the clustering task is K-Means.\\
+K-Means is a well known algorithm. We used for the vector of a document the column in the matrix described before. We this clustering we face 3 main problems. The first is like the one before and is decide the number of cluster. The second one is due to the fact that K-Means need an eucliden distance to decide centroids and an euclidean distance beetween document is not well defined. We saw after a little test that with a small dataset were terrible. The last problem was that K-Means is really slow for our taks. Even with medium datasets (500 news) the time of execution was really high. \\
 Also in this case we decided to not follow this way.
 
 Our final approach in order to perform the clustering is made in two principle steps:
@@ -253,6 +253,8 @@ Number of news & Internal & External & Time (s) \\
 
 As we can see in table  the difference in time is really high so we choosed to consider only word as information for the news becasue the ratio beetween the Internal and external similarity is the same in both cases.
 
+Despite the value of the internal and external measures are lower than the expected one, we personally verified the results and they are well defined. 
+
 \section{Big Data}
 \vspace{2mm}
 
@@ -292,6 +294,38 @@ Thirdly, duplicates are also removed using Spark. In this case, the map function
 The process that tries to find for each cluster a pair of news which have no correlation between them is executed in Spark similarly to the other processes described in this section. Clusters are first converted in RDDs and then parallelized so the map function disagregates them. Finally, the resulting clusters are collect in a single list of clusters.
 
 Find the article which represents a cluster is also computed in parallel using map-reduce in Spark. In fact, the entire list of clusters is distributed so the selection of the most representative element of the group can be done by independently from one cluster to another.
+
+\subsection{Experiments}
+
+We tested the parallelization with spark with 4 machines: 2 computer with: CPU i7 and 8GB of RAM each. We used a network with a low bandwidth.
+
+\begin{table}[!ht]
+\centering
+\label{serial}
+\begin{tabular}{cccc}
+Number of news & Time (s) \\
+250            & 26       \\
+500            & 72       \\
+1000           & 240      \\
+\end{tabular}
+\caption{Serial execution on 1 machine}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\label{parallel}
+\begin{tabular}{cccc}
+Number of news & Time (s) \\
+250            & 36       \\
+500            & 84       \\
+1000           & 272      \\
+\end{tabular}
+\caption{Parallel execution over 2 machines}
+\end{table}
+
+From the table representing the serial execution \ref{serial} and the parallel \ref{parallel} we can see that the in the parallel execution the time of computation is increased as opposed to what we thought. This is due to the fact that the parallel computer are only two and the time of computation for a single map is lower that the time used to transfer data from a pc to the other. \\We think that this bad result is due to the fact that the computer were only two and we should test it on a cluster with an higher number of computer (like amazon clusters) and also a network with a larger bandwidth. If we do so we expect to reduce a lot the global time of computation.
+%To the best of our knowledge the time spent for the execution might be reduce if the number of computer and the network bandwith is increased.
+
 
 \section{Conclusions}
 This paragraph will end the body of this sample document.

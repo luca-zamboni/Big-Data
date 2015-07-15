@@ -90,8 +90,8 @@ def getShingleList(l):
 
 # Get shingles of a string of length n
 def getShingle(s,n = N_SHINGLES):
-	#return s.split()
-	return [s[i:i + n] for i in range(len(s) - n + 1)]
+	return s.split()
+	#return [s[i:i + n] for i in range(len(s) - n + 1)]
 
 def getCloserGroupsFurther(groups,distanceMatrix):
 	closer = (None,None)
@@ -766,20 +766,20 @@ def main():
 	#print(bonta)
 	rappGroups = sorted(rappGroups, key=lambda i: len(i[1]))
 
-	#for nid,g in rappGroups:
-	#	if len(g) > 2:
-	#		for n in news:
-	#			if n.get_nid() == nid:
-	#				try:
-	#					print(str(len(g)) + " " + str(n.get_title()))
-	#				except:
-	#					pass
-	#			if n.get_nid() in g:
-	#				try:
-	#					print( "SUB ------ " + str(n.get_title()))
-	#				except:
-	#					pass
-	#		print("\n\n")
+	for nid,g in rappGroups:
+		if len(g) > 2:
+			for n in news:
+				if n.get_nid() == nid:
+					try:
+						print(str(len(g)) + " " + str(n.get_title()))
+					except:
+						pass
+				if n.get_nid() in g:
+					try:
+						print( "SUB ------ " + str(n.get_title()))
+					except:
+						pass
+			print("\n\n")
 
 	#groups = getKmeanCluster(matrix)
 	#groups = degGetLdaGroups(texts)
